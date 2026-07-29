@@ -28,6 +28,7 @@ export type BuildTableOptionsParams<TData extends MRT_RowData> = {
   mergedInitialState: MRT_TableOptions<TData>['initialState'];
   onRowClick?: (row: MRT_Row<TData>) => void;
   pagination: MRT_PaginationState;
+  renderDetailPanel?: (row: MRT_Row<TData>) => React.ReactNode;
   renderRowActionMenuItems?: (row: MRT_Row<TData>) => React.ReactNode;
   restTableOptions: Omit<
     Partial<MRT_TableOptions<TData>>,
@@ -113,6 +114,7 @@ export const buildTableOptions = <TData extends MRT_RowData>({
   mergedInitialState,
   onRowClick,
   pagination,
+  renderDetailPanel,
   renderRowActionMenuItems,
   restTableOptions,
   rowCount,
@@ -146,6 +148,12 @@ export const buildTableOptions = <TData extends MRT_RowData>({
     ? {
         renderRowActionMenuItems: ({ row }: { row: MRT_Row<TData> }) =>
           renderRowActionMenuItems(row),
+      }
+    : {}),
+  ...(renderDetailPanel
+    ? {
+        renderDetailPanel: ({ row }: { row: MRT_Row<TData> }) =>
+          renderDetailPanel(row),
       }
     : {}),
   ...restTableOptions,

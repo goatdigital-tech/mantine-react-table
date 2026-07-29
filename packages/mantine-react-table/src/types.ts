@@ -113,6 +113,10 @@ export type MRT_RowData = Record<string, any>;
 
 export type MRT_CellValue = unknown;
 
+export type MRT_ColumnAccessorKey<TData extends MRT_RowData> =
+  | ({} & string)
+  | (DeepKeys<TData> & string);
+
 export type MRT_ColumnFiltersState = ColumnFiltersState;
 export type MRT_ColumnOrderState = ColumnOrderState;
 export type MRT_ColumnPinningState = ColumnPinningState;
@@ -409,7 +413,7 @@ export type MRT_ColumnDef<TData extends MRT_RowData, TValue = unknown> = {
    * @example accessorKey: 'username' //simple
    * @example accessorKey: 'name.firstName' //deep key dot notation
    */
-  accessorKey?: ({} & string) | DeepKeys<TData>;
+  accessorKey?: MRT_ColumnAccessorKey<TData>;
   AggregatedCell?: (props: {
     cell: MRT_Cell<TData, TValue>;
     column: MRT_Column<TData, TValue>;

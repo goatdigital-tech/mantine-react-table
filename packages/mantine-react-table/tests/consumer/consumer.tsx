@@ -23,6 +23,7 @@ export type ConsumerTableProps<TData extends MRT_RowData> = {
   columns: MRT_ColumnDef<TData>[];
   data: TData[];
   onRowClick?: (row: MRT_Row<TData>) => void;
+  renderDetailPanel?: (row: MRT_Row<TData>) => ReactNode;
   renderRowActionMenuItems?: (row: MRT_Row<TData>) => ReactNode;
   tableOptions?: Partial<MRT_TableOptions<TData>>;
 };
@@ -50,6 +51,7 @@ export const ConsumerTable = <TData extends MRT_RowData>({
   columns,
   data,
   onRowClick,
+  renderDetailPanel,
   renderRowActionMenuItems,
   tableOptions,
 }: ConsumerTableProps<TData>) => {
@@ -73,6 +75,7 @@ export const ConsumerTable = <TData extends MRT_RowData>({
     mergedInitialState,
     onRowClick,
     pagination,
+    renderDetailPanel,
     renderRowActionMenuItems,
     restTableOptions,
     rowCount: data.length,
@@ -86,3 +89,18 @@ export const ConsumerTable = <TData extends MRT_RowData>({
 
   return <MantineReactTable table={table} />;
 };
+
+type ExampleRow = {
+  name: {
+    first: string;
+  };
+};
+
+const exampleColumns: MRT_ColumnDef<ExampleRow>[] = [
+  { accessorKey: 'name.first', header: 'First name' },
+  { accessorKey: 'runtimeDefinedKey', header: 'Runtime key' },
+];
+
+export const ExampleConsumer = () => (
+  <ConsumerTable columns={exampleColumns} data={[]} />
+);
