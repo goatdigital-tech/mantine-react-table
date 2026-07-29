@@ -78,6 +78,10 @@
     "storybook:build": "storybook build",
     "storybook:dev": "storybook dev -p 6007",
     "storybook:serve": "serve storybook-static --listen 6008 --no-clipboard",
+    "test:types": "pnpm test:types:ts6 && pnpm test:types:ts7",
+    "test:types:install": "pnpm --dir tests/consumer install --ignore-workspace --frozen-lockfile",
+    "test:types:ts6": "pnpm --dir tests/consumer check:ts6",
+    "test:types:ts7": "pnpm --dir tests/consumer check:ts7",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots"
   },
