@@ -41,7 +41,25 @@
       }
     },
     "./package.json": "./package.json",
-    "./locales/*": "./locales/*",
+    "./locales/*": {
+      "import": {
+        "types": "./locales/*/index.esm.d.mts",
+        "default": "./locales/*/index.esm.mjs"
+      },
+      "require": {
+        "types": "./locales/*/index.d.cts",
+        "default": "./locales/*/index.cjs"
+      }
+    },
+    "./locales/*/index.cjs": {
+      "types": "./locales/*/index.d.cts",
+      "default": "./locales/*/index.cjs"
+    },
+    "./locales/*/index.esm.mjs": {
+      "types": "./locales/*/index.esm.d.mts",
+      "default": "./locales/*/index.esm.mjs"
+    },
+    "./locales/*/package.json": "./locales/*/package.json",
     "./styles.css": "./styles.css"
   },
   "files": [

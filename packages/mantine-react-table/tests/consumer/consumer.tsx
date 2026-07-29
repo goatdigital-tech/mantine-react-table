@@ -18,6 +18,9 @@ import {
   type MRT_VisibilityState,
   useMantineReactTable,
 } from 'mantine-react-table';
+import { MRT_Localization_PT_BR } from 'mantine-react-table/locales/pt-BR';
+import { MRT_Localization_PT_BR as MRT_Localization_PT_BR_Direct } from 'mantine-react-table/locales/pt-BR/index.esm.mjs';
+import { MRT_Localization_TH } from 'mantine-react-table/locales/th';
 
 export type ConsumerTableProps<TData extends MRT_RowData> = {
   columns: MRT_ColumnDef<TData>[];
@@ -46,6 +49,12 @@ const setPagination: Dispatch<SetStateAction<MRT_PaginationState>> = () =>
   undefined;
 const setSorting: Dispatch<SetStateAction<MRT_SortingState>> = () => undefined;
 const sorting: MRT_SortingState = [];
+
+export const consumerLocalizations = [
+  MRT_Localization_PT_BR,
+  MRT_Localization_PT_BR_Direct,
+  MRT_Localization_TH,
+];
 
 export const ConsumerTable = <TData extends MRT_RowData>({
   columns,
