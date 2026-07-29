@@ -92,7 +92,7 @@ export type Xor<A, B> =
   | Prettify<{ [k in keyof B]?: never } & A>;
 
 export type HTMLPropsRef<T extends HTMLElement> = {
-  ref?: Ref<T> | null;
+  ref?: null | Ref<T>;
 } & Omit<
   HTMLProps<T>,
   'color' | 'data' | 'label' | 'ref' | 'size' | 'style' | 'type'
