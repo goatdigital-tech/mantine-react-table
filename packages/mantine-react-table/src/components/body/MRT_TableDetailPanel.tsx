@@ -122,7 +122,7 @@ export const MRT_TableDetailPanel = <TData extends MRT_RowData>({
         {rowVirtualizer ? (
           row.getIsExpanded() && DetailPanel
         ) : (
-          <Collapse in={row.getIsExpanded()}>{DetailPanel}</Collapse>
+          <Collapse expanded={row.getIsExpanded()}>{DetailPanel}</Collapse>
         )}
       </TableTd>
     </TableTr>
