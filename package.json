@@ -1,36 +1,99 @@
 {
-  "name": "mantine-react-table-turbo",
+  "version": "2.0.0-beta.9",
+  "license": "MIT",
+  "name": "mantine-react-table",
+  "description": "A fully featured Mantine implementation of TanStack React Table V8, written from the ground up in TypeScript.",
   "author": "Kevin Vandy",
-  "private": true,
-  "packageManager": "pnpm@9.3.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
+  "keywords": [
+    "react-table",
+    "mantine",
+    "tanstack table",
+    "data table",
+    "data grid"
   ],
-  "scripts": {
-    "build": "turbo run build --parallel",
-    "dev": "turbo run dev --parallel",
-    "docs:build": "turbo run lib:build && turbo run docs:build --no-cache --force",
-    "docs:build-local": "turbo run docs:build --no-cache --force",
-    "docs:dev": "turbo run docs:dev",
-    "docs:sitemap": "turbo run docs:sitemap",
-    "docs:start": "turbo run docs:start",
-    "lib:build": "cp README.md packages/mantine-react-table/README.md && turbo run lib:build",
-    "lib:build-locales": "turbo run lib:build-locales",
-    "lib:build-lib": "turbo run lib:build-lib",
-    "lib:dev": "turbo run lib:dev",
-    "format": "prettier --write \"**/*.{js,ts,tsx,md}\"",
-    "lint": "turbo run lint",
-    "start": "turbo run start --parallel",
-    "storybook": "turbo run storybook",
-    "storybook:build": "turbo run storybook:build",
-    "storybook:dev": "turbo run storybook"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/goatdigital-tech/mantine-react-table"
   },
-  "devDependencies": {
-    "prettier": "^3.3.3",
-    "turbo": "^2.1.3"
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/kevinvandy"
   },
+  "homepage": "https://www.mantine-react-table.com/",
+  "bugs": {
+    "url": "https://github.com/goatdigital-tech/mantine-react-table/issues"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "main": "dist/index.cjs",
+  "module": "dist/index.esm.mjs",
+  "types": "dist/index.esm.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.esm.d.mts",
+        "default": "./dist/index.esm.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json",
+    "./locales/*": {
+      "import": {
+        "types": "./locales/*/index.esm.d.mts",
+        "default": "./locales/*/index.esm.mjs"
+      },
+      "require": {
+        "types": "./locales/*/index.d.cts",
+        "default": "./locales/*/index.cjs"
+      }
+    },
+    "./locales/*/index.cjs": {
+      "types": "./locales/*/index.d.cts",
+      "default": "./locales/*/index.cjs"
+    },
+    "./locales/*/index.esm.mjs": {
+      "types": "./locales/*/index.esm.d.mts",
+      "default": "./locales/*/index.esm.mjs"
+    },
+    "./locales/*/package.json": "./locales/*/package.json",
+    "./styles.css": "./styles.css"
+  },
+  "files": [
+    "dist",
+    "locales",
+    "styles.css",
+    "src"
+  ],
+  "size-limit": [
+    {
+      "path": "dist/index.cjs",
+      "limit": "53 KB"
+    },
+    {
+      "path": "dist/index.esm.mjs",
+      "limit": "50 KB"
+    }
+  ],
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=16"
+  },
+  "dependencies": {
+    "@tanstack/match-sorter-utils": "8.19.4",
+    "@tanstack/react-table": "8.21.3",
+    "@tanstack/react-virtual": "3.11.2"
+  },
+  "peerDependencies": {
+    "@mantine/core": ">=9.0.0-alpha.0",
+    "@mantine/dates": ">=9.0.0-alpha.0",
+    "@mantine/hooks": ">=9.0.0-alpha.0",
+    "@tabler/icons-react": ">=2.23.0",
+    "clsx": ">=2",
+    "dayjs": ">=1.11",
+    "react": ">=18.0",
+    "react-dom": ">=18.0"
   }
 }
