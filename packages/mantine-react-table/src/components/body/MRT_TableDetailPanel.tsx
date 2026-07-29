@@ -17,7 +17,7 @@ import { parseFromValuesOrFunc } from '../../utils/utils';
 import { MRT_EditCellTextInput } from '../inputs/MRT_EditCellTextInput';
 
 interface Props<TData extends MRT_RowData> extends TableTdProps {
-  parentRowRef: RefObject<HTMLTableRowElement>;
+  parentRowRef: RefObject<HTMLTableRowElement | null>;
   renderedRowIndex?: number;
   row: MRT_Row<TData>;
   rowVirtualizer?: MRT_RowVirtualizer;
