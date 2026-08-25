@@ -756,7 +756,7 @@ const MRT_TableBodyRow = (_a) => {
         xl: 69,
         xs: 37,
     };
-    const rowHeight =
+    const rowHeight = 
     // @ts-ignore
     parseInt((_d = tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.style) === null || _d === void 0 ? void 0 : _d.height, 10) ||
         ((_f = defaultRowHeightByDensity[density]) !== null && _f !== void 0 ? _f : defaultRowHeightByDensity['md']);
@@ -3305,7 +3305,7 @@ const useMRT_TableInstance = (definedTableOptions) => {
         statefulTableOptions.state.isLoading,
         statefulTableOptions.state.showSkeletons,
     ]);
-    const table = useTable(Object.assign(Object.assign({}, statefulTableOptions), { globalFilterFn: (globalFilterFn !== null && globalFilterFn !== void 0 ? globalFilterFn : 'fuzzy'),
+    const table = useTable(Object.assign(Object.assign({}, statefulTableOptions), { 
         // Hand TanStack-aware slices over to our external atoms — library writes
         // (e.g. `table.setPageIndex(...)`, drag-resize) flow straight into them.
         atoms: {
@@ -3313,30 +3313,16 @@ const useMRT_TableInstance = (definedTableOptions) => {
             columnResizing: columnResizingAtom,
             grouping: groupingAtom,
             pagination: paginationAtom,
-        } }), (state) => state);
+        }, globalFilterFn: (globalFilterFn !== null && globalFilterFn !== void 0 ? globalFilterFn : 'fuzzy') }), (state) => state);
     // v9 spells the resize setter `setcolumnResizing` (lowercase 'c') because
     // it's auto-generated from the state-key name. Expose a camelCase alias so
     // MRT consumers don't need to know about that quirk; route writes through
     // our owned atom directly.
     table.setColumnResizing = columnResizingAtom.set;
-    // The v9 store doesn't track MRT-only slices, so `table.state` is missing
-    // them after `useTable` returns. Patch them in here so all MRT components
-    // can read `table.state.density`, `table.state.isFullScreen`, etc.
-    table.state = Object.assign(Object.assign({}, table.state), { columnFilterFns,
-        creatingRow,
-        density,
-        draggingColumn,
-        draggingRow,
-        editingCell,
-        editingRow,
-        globalFilterFn,
-        hoveredColumn,
-        hoveredRow,
-        isFullScreen,
-        showAlertBanner,
-        showColumnFilters,
-        showGlobalFilter,
-        showToolbarDropZone });
+    // The v9 store does not track MRT-only or externally controlled state.
+    // Restore the complete option state so every MRT component sees the same
+    // values that were used to build the table.
+    table.state = Object.assign(Object.assign({}, table.state), statefulTableOptions.state);
     // v8-style `getState()` alias for any consumer that still calls it.
     table.getState = () => table.state;
     table.refs = {
@@ -3693,7 +3679,7 @@ const MRT_TablePaper = (_a) => {
             if (tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.ref) {
                 tablePaperProps.ref.current = ref;
             }
-        },
+        }, 
         // rare case where we should use inline styles to guarantee highest specificity
         style: (theme) => (Object.assign(Object.assign({ zIndex: isFullScreen ? 200 : undefined }, parseFromValuesOrFunc(tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.style, theme)), (isFullScreen
             ? {
