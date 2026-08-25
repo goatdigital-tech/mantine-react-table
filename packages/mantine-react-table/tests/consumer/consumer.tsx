@@ -111,5 +111,9 @@ const exampleColumns: MRT_ColumnDef<ExampleRow>[] = [
 ];
 
 export const ExampleConsumer = () => (
-  <ConsumerTable columns={exampleColumns} data={[]} />
+  <ConsumerTable
+    columns={exampleColumns}
+    data={[]}
+    tableOptions={{ renderTopToolbar: ({ table }) => table.getState().density }}
+  />
 );

@@ -29,9 +29,20 @@ V1 released July 18, 2023
 
 ### _Quickly Create React Data Tables with Mantine_
 
-### __Built with [Mantine <sup>V7</sup>](https://mantine.dev/) and [TanStack Table <sup>V8</sup>](https://tanstack.com/table/v8)__
+### __Built with [Mantine <sup>V9</sup>](https://mantine.dev/) and [TanStack Table <sup>V9</sup>](https://tanstack.com/table/latest)__
 
 <img src="https://mantine-react-table.com/banner.png" alt="MRT" height="50"/>
+
+## Fork branches
+
+- `main` contains the complete source workspace.
+- `prebuilt` contains the standalone package committed at the repository root.
+
+Install this fork from the distribution branch:
+
+```bash
+npm install "github:goatdigital-tech/mantine-react-table#prebuilt"
+```
 
 ## Learn More
 

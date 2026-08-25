@@ -1,18 +1,17 @@
-import clsx from 'clsx';
+import clsx from 'clsx'
 
-import classes from './MRT_TablePaper.module.css';
+import { Paper } from '@mantine/core'
 
-import { Paper, type PaperProps } from '@mantine/core';
-
-import { MRT_TableContainer } from './MRT_TableContainer';
-
-import { type MRT_RowData, type MRT_TableInstance } from '../../types';
-import { assignRef, parseFromValuesOrFunc } from '../../utils/utils';
-import { MRT_BottomToolbar } from '../toolbar/MRT_BottomToolbar';
-import { MRT_TopToolbar } from '../toolbar/MRT_TopToolbar';
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import { MRT_BottomToolbar } from '../toolbar/MRT_BottomToolbar'
+import { MRT_TopToolbar } from '../toolbar/MRT_TopToolbar'
+import { MRT_TableContainer } from './MRT_TableContainer'
+import classes from './MRT_TablePaper.module.css'
+import type { MRT_RowData, MRT_TableInstance } from '../../types'
+import type { PaperProps } from '@mantine/core'
 
 interface Props<TData extends MRT_RowData> extends PaperProps {
-  table: MRT_TableInstance<TData>;
+  table: MRT_TableInstance<TData>
 }
 
 export const MRT_TablePaper = <TData extends MRT_RowData>({
@@ -20,7 +19,7 @@ export const MRT_TablePaper = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    getState,
+    state,
     options: {
       enableBottomToolbar,
       enableTopToolbar,
@@ -29,13 +28,13 @@ export const MRT_TablePaper = <TData extends MRT_RowData>({
       renderTopToolbar,
     },
     refs: { tablePaperRef },
-  } = table;
-  const { isFullScreen } = getState();
+  } = table
+  const { isFullScreen } = state
 
   const tablePaperProps = {
     ...parseFromValuesOrFunc(mantinePaperProps, { table }),
     ...rest,
-  };
+  }
 
   return (
     <Paper
@@ -49,8 +48,10 @@ export const MRT_TablePaper = <TData extends MRT_RowData>({
         tablePaperProps?.className,
       )}
       ref={(ref: HTMLDivElement) => {
-        tablePaperRef.current = ref;
-        assignRef(tablePaperProps?.ref, ref);
+        tablePaperRef.current = ref
+        if (tablePaperProps?.ref) {
+          tablePaperProps.ref.current = ref
+        }
       }}
       // rare case where we should use inline styles to guarantee highest specificity
       style={(theme) => ({
@@ -85,5 +86,5 @@ export const MRT_TablePaper = <TData extends MRT_RowData>({
           <MRT_BottomToolbar table={table} />
         ))}
     </Paper>
-  );
-};
+  )
+}

@@ -1,8 +1,8 @@
 {
-  "version": "2.0.0-beta.9",
+  "version": "3.0.0-beta.1",
   "license": "MIT",
   "name": "mantine-react-table",
-  "description": "A fully featured Mantine implementation of TanStack React Table V8, written from the ground up in TypeScript.",
+  "description": "A fully featured Mantine implementation of TanStack React Table V9, written from the ground up in TypeScript.",
   "author": "Kevin Vandy",
   "keywords": [
     "react-table",
@@ -71,15 +71,15 @@
   "size-limit": [
     {
       "path": "dist/index.cjs",
-      "limit": "53 KB"
+      "limit": "80 KB"
     },
     {
       "path": "dist/index.esm.mjs",
-      "limit": "50 KB"
+      "limit": "75 KB"
     }
   ],
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "scripts": {
     "build": "pnpm lib:build",
@@ -108,9 +108,9 @@
     "@babel/core": "^7.25.8",
     "@babel/preset-react": "^7.25.7",
     "@faker-js/faker": "^9.0.3",
-    "@mantine/core": "9.0.0-alpha.3",
-    "@mantine/dates": "9.0.0-alpha.3",
-    "@mantine/hooks": "9.0.0-alpha.3",
+    "@mantine/core": "9.5.1",
+    "@mantine/dates": "9.5.1",
+    "@mantine/hooks": "9.5.1",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-typescript": "^11.1.6",
@@ -125,10 +125,9 @@
     "@storybook/react": "^8.6.17",
     "@storybook/react-vite": "^8.6.17",
     "@storybook/testing-library": "^0.2.2",
-    "@tabler/icons-react": "3.37.1",
     "@types/node": "^22.7.5",
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
     "@vitejs/plugin-react": "^4.5.0",
@@ -141,8 +140,8 @@
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "prop-types": "^15.8.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "rollup": "^4.24.0",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-delete": "^2.1.0",
@@ -159,15 +158,17 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "@tanstack/match-sorter-utils": "8.19.4",
-    "@tanstack/react-table": "8.21.3",
-    "@tanstack/react-virtual": "3.11.2"
+    "@hugeicons/core-free-icons": "4.3.0",
+    "@hugeicons/react": "1.1.10",
+    "@tanstack/match-sorter-utils": "9.1.2",
+    "@tanstack/react-store": "0.11.1",
+    "@tanstack/react-table": "9.1.2",
+    "@tanstack/react-virtual": "3.14.9"
   },
   "peerDependencies": {
     "@mantine/core": ">=9.0.0-alpha.0",
     "@mantine/dates": ">=9.0.0-alpha.0",
     "@mantine/hooks": ">=9.0.0-alpha.0",
-    "@tabler/icons-react": ">=2.23.0",
     "clsx": ">=2",
     "dayjs": ">=1.11",
     "react": ">=18.0",
