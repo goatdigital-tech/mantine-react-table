@@ -3,6 +3,25 @@ import { useMemo, useRef } from 'react'
 import { useCreateAtom, useSelector } from '@tanstack/react-store'
 import { useTable } from '@tanstack/react-table'
 
+import type {
+  MRT_Cell,
+  MRT_Column,
+  MRT_ColumnDef,
+  MRT_ColumnFilterFnsState,
+  MRT_ColumnOrderState,
+  MRT_ColumnResizingState,
+  MRT_DefinedTableOptions,
+  MRT_DensityState,
+  MRT_FilterOption,
+  MRT_GroupingState,
+  MRT_PaginationState,
+  MRT_Row,
+  MRT_RowData,
+  MRT_StatefulTableOptions,
+  MRT_TableInstance,
+  MRT_TableState,
+  MRT_Updater,
+} from '../types'
 import {
   getAllLeafColumnDefs,
   getColumnId,
@@ -28,25 +47,6 @@ import { getMRT_RowPinningColumnDef } from './display-columns/getMRT_RowPinningC
 import { getMRT_RowSelectColumnDef } from './display-columns/getMRT_RowSelectColumnDef'
 import { getMRT_RowSpacerColumnDef } from './display-columns/getMRT_RowSpacerColumnDef'
 import { useMRT_Effects } from './useMRT_Effects'
-import type {
-  MRT_Cell,
-  MRT_Column,
-  MRT_ColumnDef,
-  MRT_ColumnFilterFnsState,
-  MRT_ColumnOrderState,
-  MRT_ColumnResizingState,
-  MRT_DefinedTableOptions,
-  MRT_DensityState,
-  MRT_FilterOption,
-  MRT_GroupingState,
-  MRT_PaginationState,
-  MRT_Row,
-  MRT_RowData,
-  MRT_StatefulTableOptions,
-  MRT_TableInstance,
-  MRT_TableState,
-  MRT_Updater,
-} from '../types'
 
 /**
  * The MRT hook that wraps the TanStack `useTable` hook and adds MRT-specific
@@ -352,7 +352,6 @@ export const useMRT_TableInstance = <TData extends MRT_RowData>(
   const table = useTable(
     {
       ...(statefulTableOptions as any),
-      globalFilterFn: (globalFilterFn ?? 'fuzzy') as any,
       // Hand TanStack-aware slices over to our external atoms — library writes
       // (e.g. `table.setPageIndex(...)`, drag-resize) flow straight into them.
       atoms: {
@@ -361,6 +360,7 @@ export const useMRT_TableInstance = <TData extends MRT_RowData>(
         grouping: groupingAtom,
         pagination: paginationAtom,
       },
+      globalFilterFn: (globalFilterFn ?? 'fuzzy') as any,
     },
     (state) => state, // default selector
   ) as unknown as MRT_TableInstance<TData>
@@ -371,26 +371,12 @@ export const useMRT_TableInstance = <TData extends MRT_RowData>(
   // our owned atom directly.
   table.setColumnResizing = columnResizingAtom.set as any
 
-  // The v9 store doesn't track MRT-only slices, so `table.state` is missing
-  // them after `useTable` returns. Patch them in here so all MRT components
-  // can read `table.state.density`, `table.state.isFullScreen`, etc.
+  // The v9 store does not track MRT-only or externally controlled state.
+  // Restore the complete option state so every MRT component sees the same
+  // values that were used to build the table.
   table.state = {
     ...table.state,
-    columnFilterFns,
-    creatingRow,
-    density,
-    draggingColumn,
-    draggingRow,
-    editingCell,
-    editingRow,
-    globalFilterFn,
-    hoveredColumn,
-    hoveredRow,
-    isFullScreen,
-    showAlertBanner,
-    showColumnFilters,
-    showGlobalFilter,
-    showToolbarDropZone,
+    ...statefulTableOptions.state,
   }
 
   // v8-style `getState()` alias for any consumer that still calls it.
