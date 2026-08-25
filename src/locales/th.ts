@@ -1,4 +1,4 @@
-import { type MRT_Localization } from '..';
+import type { MRT_Localization } from '..'
 
 export const MRT_Localization_TH: MRT_Localization = {
   actions: 'เมนูเครื่องมือ',
@@ -11,12 +11,11 @@ export const MRT_Localization_TH: MRT_Localization = {
   clearSelection: 'ล้างการเลือก',
   clearSort: 'ล้างการเรียงลำดับ',
   clickToCopy: 'คลิกเพื่อคัดลอก',
-  copy: 'คัดลอก',
   collapse: 'ย่อ',
   collapseAll: 'ย่อทั้งหมด',
   columnActions: 'การจัดการคอลัมน์',
   copiedToClipboard: 'คัดลอกไปยังคลิปบอร์ดแล้ว',
-
+  copy: 'คัดลอก',
   dropToGroupBy: 'ลากมาเพื่อจัดกลุ่มตามคอลัมน์ "{column}"',
   edit: 'แก้ไข',
   expand: 'ขยาย',
@@ -37,7 +36,8 @@ export const MRT_Localization_TH: MRT_Localization = {
   filterGreaterThanOrEqualTo: 'กรองเมื่อมากกว่าหรือเท่ากับ',
   filterInNumberRange: 'กรองเมื่อค่าอยู่อยู่ในช่วง',
   filterIncludesString: 'กรองเมื่อมีข้อความว่า',
-  filterIncludesStringSensitive: 'กรองเมื่อมีข้อความว่า (ตรงตามตัวพิมพ์ใหญ่-เล็ก)',
+  filterIncludesStringSensitive:
+    'กรองเมื่อมีข้อความว่า (ตรงตามตัวพิมพ์ใหญ่-เล็ก)',
   filterLessThan: 'กรองเมื่อน้อยกว่า',
   filterLessThanOrEqualTo: 'กรองเมื่อน้อยกว่าหรือเท่ากับ',
   filterMode: 'โหมดการกรอง: {filterType}',
@@ -94,4 +94,4 @@ export const MRT_Localization_TH: MRT_Localization = {
   ungroupByColumn: 'ยกเลิกการจัดกลุ่มตาม "{column}"',
   unpin: 'ยกเลิกการตรึง',
   unpinAll: 'ยกเลิกการตรึงทั้งหมด',
-};
+}

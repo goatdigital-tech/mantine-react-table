@@ -1,13 +1,47 @@
 import { jsx, Fragment, jsxs } from 'react/jsx-runtime';
 import clsx from 'clsx';
-import { useState, memo, useEffect, useRef, useMemo, useCallback, Fragment as Fragment$1, useReducer, createElement, useLayoutEffect } from 'react';
-import { Highlight, CopyButton, Tooltip, UnstyledButton, Select, MultiSelect, TextInput, useDirection, TableTd, Skeleton, TableTr, Collapse, Box, ActionIcon, Text, TableTbody, Flex, Button, useMantineTheme, Menu, Switch, TableTh, TableTfoot, Checkbox, Badge, Autocomplete, RangeSlider, Popover, Transition, Indicator, Radio, Alert, Stack, TableThead, useMantineColorScheme, Table, lighten, darken, Modal, LoadingOverlay, Progress, Group, Pagination, Paper } from '@mantine/core';
-import { sortingFns, createRow as createRow$1, filterFns, flexRender as flexRender$1, aggregationFns, getCoreRowModel, getExpandedRowModel, getFacetedMinMaxValues, getFacetedRowModel, getFacetedUniqueValues, getFilteredRowModel, getGroupedRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { useMemo, useCallback, useState, memo, useEffect, useRef, Fragment as Fragment$1, forwardRef, useReducer, createElement, useLayoutEffect } from 'react';
+import { Select, MultiSelect, TextInput, TableTr, TableTd, Collapse, CopyButton, Tooltip, UnstyledButton, Highlight, useDirection, Skeleton, Box, ActionIcon, Text, TableTbody, Flex, Button, useMantineTheme, Menu, Switch, TableTh, TableTfoot, Radio, Checkbox, Badge, Alert, Stack, Autocomplete, RangeSlider, Popover, Transition, Indicator, TableThead, Progress, Group, Pagination, Modal, useMantineColorScheme, Table, lighten, darken, LoadingOverlay, Paper } from '@mantine/core';
 import { compareItems, rankItem, rankings } from '@tanstack/match-sorter-utils';
+import { sortFns, constructRow, filterFns, Subscribe, flexRender as flexRender$1, aggregationFns, stockFeatures, createFilteredRowModel, createSortedRowModel, createPaginatedRowModel, createExpandedRowModel, createGroupedRowModel, createFacetedRowModel, createFacetedMinMaxValues, createFacetedUniqueValues, useTable } from '@tanstack/react-table';
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual';
 import { useDebouncedValue, useHover, useMediaQuery } from '@mantine/hooks';
 import { DateInput } from '@mantine/dates';
-import { IconArrowAutofitContent, IconArrowsSort, IconBaselineDensityLarge, IconBaselineDensityMedium, IconBaselineDensitySmall, IconBoxMultiple, IconChevronDown, IconChevronLeft, IconChevronLeftPipe, IconChevronRight, IconChevronRightPipe, IconChevronsDown, IconCircleX, IconClearAll, IconColumns, IconDeviceFloppy, IconDots, IconDotsVertical, IconEdit, IconEyeOff, IconFilter, IconFilterCog, IconFilterOff, IconGripHorizontal, IconMaximize, IconMinimize, IconPinned, IconPinnedOff, IconSearch, IconSearchOff, IconSortAscending, IconSortDescending, IconX } from '@tabler/icons-react';
+import { useCreateAtom, useSelector } from '@tanstack/react-store';
+import ArrowDownDoubleIcon from '@hugeicons/core-free-icons/ArrowDownDoubleIcon';
+import Cancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
+import CancelCircleIcon from '@hugeicons/core-free-icons/CancelCircleIcon';
+import ChevronDownIcon from '@hugeicons/core-free-icons/ChevronDownIcon';
+import ChevronLeftIcon from '@hugeicons/core-free-icons/ChevronLeftIcon';
+import ChevronRightIcon from '@hugeicons/core-free-icons/ChevronRightIcon';
+import CleanIcon from '@hugeicons/core-free-icons/CleanIcon';
+import Copy01Icon from '@hugeicons/core-free-icons/Copy01Icon';
+import Edit01Icon from '@hugeicons/core-free-icons/Edit01Icon';
+import EyeOffIcon from '@hugeicons/core-free-icons/EyeOffIcon';
+import FilterEditIcon from '@hugeicons/core-free-icons/FilterEditIcon';
+import FilterIcon from '@hugeicons/core-free-icons/FilterIcon';
+import FilterRemoveIcon from '@hugeicons/core-free-icons/FilterRemoveIcon';
+import FitToScreenIcon from '@hugeicons/core-free-icons/FitToScreenIcon';
+import GripHorizontalIcon from '@hugeicons/core-free-icons/GripHorizontalIcon';
+import LayoutThreeColumnIcon from '@hugeicons/core-free-icons/LayoutThreeColumnIcon';
+import Maximize01Icon from '@hugeicons/core-free-icons/Maximize01Icon';
+import Menu01Icon from '@hugeicons/core-free-icons/Menu01Icon';
+import Menu02Icon from '@hugeicons/core-free-icons/Menu02Icon';
+import Menu03Icon from '@hugeicons/core-free-icons/Menu03Icon';
+import Minimize01Icon from '@hugeicons/core-free-icons/Minimize01Icon';
+import MoreHorizontalIcon from '@hugeicons/core-free-icons/MoreHorizontalIcon';
+import MoreVerticalIcon from '@hugeicons/core-free-icons/MoreVerticalIcon';
+import NextIcon from '@hugeicons/core-free-icons/NextIcon';
+import PinIcon from '@hugeicons/core-free-icons/PinIcon';
+import PinOffIcon from '@hugeicons/core-free-icons/PinOffIcon';
+import PreviousIcon from '@hugeicons/core-free-icons/PreviousIcon';
+import SaveIcon from '@hugeicons/core-free-icons/SaveIcon';
+import SearchIcon from '@hugeicons/core-free-icons/Search01Icon';
+import SearchRemoveIcon from '@hugeicons/core-free-icons/SearchRemoveIcon';
+import SortByDown01Icon from '@hugeicons/core-free-icons/SortByDown01Icon';
+import SortByUp01Icon from '@hugeicons/core-free-icons/SortByUp01Icon';
+import Sorting01Icon from '@hugeicons/core-free-icons/Sorting01Icon';
+import { HugeiconsIcon } from '@hugeicons/react';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -43,30 +77,436 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
-var classes$C = {"root":"MRT_TableBody-module_root__kGhRy","root-grid":"MRT_TableBody-module_root-grid__WdOGg","root-no-rows":"MRT_TableBody-module_root-no-rows__iyi9K","root-virtualized":"MRT_TableBody-module_root-virtualized__TxPAi","empty-row-tr-grid":"MRT_TableBody-module_empty-row-tr-grid__LTgxw","empty-row-td-grid":"MRT_TableBody-module_empty-row-td-grid__pzlgG","empty-row-td-content":"MRT_TableBody-module_empty-row-td-content__Cc2XW","pinned":"MRT_TableBody-module_pinned__XHpcs"};
-
-var classes$B = {"root":"MRT_TableBodyRow-module_root__2c3D4","root-grid":"MRT_TableBodyRow-module_root-grid__AwXTe","root-virtualized":"MRT_TableBodyRow-module_root-virtualized__zYgxq"};
-
-var classes$A = {"root":"MRT_TableBodyCell-module_root__Wf-zi","root-grid":"MRT_TableBodyCell-module_root-grid__zIuC-","root-virtualized":"MRT_TableBodyCell-module_root-virtualized__jLl8R","root-data-col":"MRT_TableBodyCell-module_root-data-col__HHcxc","root-nowrap":"MRT_TableBodyCell-module_root-nowrap__-k1Jo","root-cursor-pointer":"MRT_TableBodyCell-module_root-cursor-pointer__4kw7J","root-editable-hover":"MRT_TableBodyCell-module_root-editable-hover__2DKSa","root-cell-hover-reveal":"MRT_TableBodyCell-module_root-cell-hover-reveal__T1fAH","cell-hover-reveal":"MRT_TableBodyCell-module_cell-hover-reveal__Q-1Xj","overflowing":"MRT_TableBodyCell-module_overflowing__QcXP4"};
-
-const assignRef = (ref, value) => {
-    if (typeof ref === 'function') {
-        ref(value);
+const fuzzy$1 = (rowA, rowB, columnId) => {
+    let dir = 0;
+    if (rowA.columnFiltersMeta[columnId]) {
+        dir = compareItems(rowA.columnFiltersMeta[columnId], rowB.columnFiltersMeta[columnId]);
     }
-    else if (ref) {
-        ref.current = value;
+    // Provide a fallback for when the item ranks are equal
+    return dir === 0
+        ? sortFns.alphanumeric(rowA, rowB, columnId)
+        : dir;
+};
+const MRT_SortFns = Object.assign(Object.assign({}, sortFns), { fuzzy: fuzzy$1 });
+const rankGlobalFuzzy = (rowA, rowB) => Math.max(...Object.values(rowB.columnFiltersMeta).map((v) => v.rank)) -
+    Math.max(...Object.values(rowA.columnFiltersMeta).map((v) => v.rank));
+
+const parseFromValuesOrFunc = (fn, arg) => (fn instanceof Function ? fn(arg) : fn);
+
+const getMRT_Rows = (table, all) => {
+    const { getCenterRows, getPrePaginatedRowModel, getRowModel, state, getTopRows, options: { createDisplayMode, enablePagination, enableRowPinning, manualPagination, positionCreatingRow, rowPinningDisplayMode, }, } = table;
+    const { creatingRow, pagination } = state;
+    const isRankingRows = getIsRankingRows(table);
+    let rows = [];
+    if (!isRankingRows) {
+        rows =
+            !enableRowPinning || (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))
+                ? all
+                    ? getPrePaginatedRowModel().rows
+                    : getRowModel().rows
+                : getCenterRows();
+    }
+    else {
+        // fuzzy ranking adjustments
+        rows = getPrePaginatedRowModel().rows.sort((a, b) => rankGlobalFuzzy(a, b));
+        if (enablePagination && !manualPagination && !all) {
+            const start = pagination.pageIndex * pagination.pageSize;
+            rows = rows.slice(start, start + pagination.pageSize);
+        }
+        if (enableRowPinning && !(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
+            // "re-center-ize" the rows (no top or bottom pinned rows unless sticky)
+            rows = rows.filter((row) => !row.getIsPinned());
+        }
+    }
+    // row pinning adjustments
+    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
+        const centerPinnedRowIds = rows
+            .filter((row) => row.getIsPinned())
+            .map((r) => r.id);
+        rows = [
+            ...getTopRows().filter((row) => !centerPinnedRowIds.includes(row.id)),
+            ...rows,
+        ];
+    }
+    // blank inserted creating row adjustments
+    if (positionCreatingRow !== undefined &&
+        creatingRow &&
+        createDisplayMode === 'row') {
+        const creatingRowIndex = !isNaN(+positionCreatingRow)
+            ? +positionCreatingRow
+            : positionCreatingRow === 'top'
+                ? 0
+                : rows.length;
+        rows = [
+            ...rows.slice(0, creatingRowIndex),
+            creatingRow,
+            ...rows.slice(creatingRowIndex),
+        ];
+    }
+    return rows;
+};
+const getCanRankRows = (table) => {
+    const { state, options: { enableGlobalFilterRankedResults, manualExpanding, manualFiltering, manualGrouping, manualSorting, }, } = table;
+    const { expanded, globalFilterFn } = state;
+    return (!manualExpanding &&
+        !manualFiltering &&
+        !manualGrouping &&
+        !manualSorting &&
+        enableGlobalFilterRankedResults &&
+        globalFilterFn === 'fuzzy' &&
+        expanded !== true &&
+        !Object.values(expanded).some(Boolean));
+};
+const getIsRankingRows = (table) => {
+    const { globalFilter, sorting } = table.state;
+    return (getCanRankRows(table) &&
+        globalFilter &&
+        !Object.values(sorting).some(Boolean));
+};
+const getIsRowSelected = ({ row, table, }) => {
+    const { options: { enableRowSelection }, } = table;
+    return (row.getIsSelected() ||
+        (parseFromValuesOrFunc(enableRowSelection, row) &&
+            row.getCanSelectSubRows() &&
+            row.getIsAllSubRowsSelected()));
+};
+const getMRT_RowSelectionHandler = ({ renderedRowIndex = 0, row, table, }) => (event, value) => {
+    var _a;
+    const { state, options: { enableBatchRowSelection, enableMultiRowSelection, enableRowPinning, manualPagination, rowPinningDisplayMode, }, refs: { lastSelectedRowId: lastSelectedRowId }, } = table;
+    const { pagination: { pageIndex, pageSize }, } = state;
+    const paginationOffset = manualPagination ? 0 : pageSize * pageIndex;
+    const wasCurrentRowChecked = getIsRowSelected({ row, table });
+    // toggle selection of this row
+    row.toggleSelected(value !== null && value !== void 0 ? value : !wasCurrentRowChecked);
+    const changedRowIds = new Set([row.id]);
+    // if shift key is pressed, select all rows between last selected and this one
+    if (enableBatchRowSelection &&
+        enableMultiRowSelection &&
+        event.nativeEvent.shiftKey &&
+        lastSelectedRowId.current !== null) {
+        const rows = getMRT_Rows(table, true);
+        const lastIndex = rows.findIndex((r) => r.id === lastSelectedRowId.current);
+        if (lastIndex !== -1) {
+            const isLastIndexChecked = getIsRowSelected({
+                row: rows === null || rows === void 0 ? void 0 : rows[lastIndex],
+                table,
+            });
+            const currentIndex = renderedRowIndex + paginationOffset;
+            const [start, end] = lastIndex < currentIndex
+                ? [lastIndex, currentIndex]
+                : [currentIndex, lastIndex];
+            // toggle selection of all rows between last selected and this one
+            // but only if the last selected row is not the same as the current one
+            if (wasCurrentRowChecked !== isLastIndexChecked) {
+                for (let i = start; i <= end; i++) {
+                    rows[i].toggleSelected(!wasCurrentRowChecked);
+                    changedRowIds.add(rows[i].id);
+                }
+            }
+        }
+    }
+    // record the last selected row id
+    lastSelectedRowId.current = row.id;
+    // if all sub rows were selected, unselect them
+    if (row.getCanSelectSubRows() && row.getIsAllSubRowsSelected()) {
+        (_a = row.subRows) === null || _a === void 0 ? void 0 : _a.forEach((r) => r.toggleSelected(false));
+    }
+    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
+        changedRowIds.forEach((rowId) => {
+            const rowToTogglePin = table.getRow(rowId);
+            rowToTogglePin.pin(!wasCurrentRowChecked // was not previously pinned or selected
+                ? (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('bottom'))
+                    ? 'bottom'
+                    : 'top'
+                : false);
+        });
     }
 };
-const parseFromValuesOrFunc = (fn, arg) => (fn instanceof Function ? fn(arg) : fn);
+const getMRT_SelectAllHandler = ({ table }) => (event, value, forceAll) => {
+    const { options: { enableRowPinning, rowPinningDisplayMode, selectAllMode }, refs: { lastSelectedRowId }, } = table;
+    if (selectAllMode === 'all' || forceAll) {
+        table.toggleAllRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
+    }
+    else {
+        table.toggleAllPageRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
+    }
+    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
+        table.setRowPinning({ bottom: [], top: [] });
+    }
+    lastSelectedRowId.current = null;
+};
+
+const useMRT_Rows = (table) => {
+    const { getRowModel, state, options: { data, enableGlobalFilterRankedResults, positionCreatingRow }, } = table;
+    const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting, } = state;
+    const rows = useMemo(() => getMRT_Rows(table), [
+        creatingRow,
+        data,
+        enableGlobalFilterRankedResults,
+        expanded,
+        getRowModel().rows,
+        globalFilter,
+        pagination.pageIndex,
+        pagination.pageSize,
+        positionCreatingRow,
+        rowPinning,
+        sorting,
+    ]);
+    return rows;
+};
+
+const extraIndexRangeExtractor = (range, draggingIndex) => {
+    const newIndexes = defaultRangeExtractor(range);
+    if (draggingIndex === undefined)
+        return newIndexes;
+    if (draggingIndex >= 0 &&
+        draggingIndex < Math.max(range.startIndex - range.overscan, 0)) {
+        newIndexes.unshift(draggingIndex);
+    }
+    if (draggingIndex >= 0 && draggingIndex > range.endIndex + range.overscan) {
+        newIndexes.push(draggingIndex);
+    }
+    return newIndexes;
+};
+
+const useMRT_RowVirtualizer = (table, rows) => {
+    var _a, _b;
+    const { getRowModel, state, options: { enableRowVirtualization, renderDetailPanel, rowVirtualizerInstanceRef, rowVirtualizerOptions, }, refs: { tableContainerRef }, } = table;
+    const { density, draggingRow, expanded } = state;
+    if (!enableRowVirtualization)
+        return undefined;
+    const rowVirtualizerProps = parseFromValuesOrFunc(rowVirtualizerOptions, {
+        table,
+    });
+    const rowCount = (_a = rows === null || rows === void 0 ? void 0 : rows.length) !== null && _a !== void 0 ? _a : getRowModel().rows.length;
+    const defaultRowHeightByDensity = {
+        lg: 62.7,
+        md: 54.7,
+        sm: 48.7,
+        xl: 70.7,
+        xs: 42.7,
+    };
+    const normalRowHeight = (_b = defaultRowHeightByDensity[density]) !== null && _b !== void 0 ? _b : defaultRowHeightByDensity['md'];
+    const rowVirtualizer = useVirtualizer(Object.assign({ count: renderDetailPanel ? rowCount * 2 : rowCount, estimateSize: (index) => renderDetailPanel && index % 2 === 1
+            ? expanded === true
+                ? 100
+                : 0
+            : normalRowHeight, getScrollElement: () => tableContainerRef.current, measureElement: typeof window !== 'undefined' &&
+            navigator.userAgent.indexOf('Firefox') === -1
+            ? (element) => element === null || element === void 0 ? void 0 : element.getBoundingClientRect().height
+            : undefined, overscan: 4, rangeExtractor: useCallback((range) => {
+            const current_index = getRowModel().rows.findIndex((row) => row.id === (draggingRow === null || draggingRow === void 0 ? void 0 : draggingRow.id));
+            return extraIndexRangeExtractor(range, current_index >= 0 ? current_index : 0);
+        }, [draggingRow]) }, rowVirtualizerProps));
+    rowVirtualizer.virtualRows = rowVirtualizer.getVirtualItems();
+    if (rowVirtualizerInstanceRef) {
+        // @ts-ignore
+        rowVirtualizerInstanceRef.current = rowVirtualizer;
+    }
+    return rowVirtualizer;
+};
+
+const MRT_EditCellTextInput = (_a) => {
+    var _b;
+    var { cell, table } = _a, rest = __rest(_a, ["cell", "table"]);
+    const { state, options: { createDisplayMode, editDisplayMode, mantineEditSelectProps, mantineEditTextInputProps, }, refs: { editInputRefs }, setCreatingRow, setEditingCell, setEditingRow, } = table;
+    const { column, row } = cell;
+    const { columnDef } = column;
+    const { creatingRow, editingRow } = state;
+    const isCreating = (creatingRow === null || creatingRow === void 0 ? void 0 : creatingRow.id) === row.id;
+    const isEditing = (editingRow === null || editingRow === void 0 ? void 0 : editingRow.id) === row.id;
+    const isSelectEdit = columnDef.editVariant === 'select';
+    const isMultiSelectEdit = columnDef.editVariant === 'multi-select';
+    const [value, setValue] = useState(() => cell.getValue());
+    const arg = { cell, column, row, table };
+    const textInputProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditTextInputProps, arg)), parseFromValuesOrFunc(columnDef.mantineEditTextInputProps, arg)), rest);
+    const selectProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditSelectProps, arg)), parseFromValuesOrFunc(columnDef.mantineEditSelectProps, arg)), rest);
+    const saveInputValueToRowCache = (newValue) => {
+        // @ts-ignore
+        row._valuesCache[column.id] = newValue;
+        if (isCreating) {
+            setCreatingRow(row);
+        }
+        else if (isEditing) {
+            setEditingRow(row);
+        }
+    };
+    const handleBlur = (event) => {
+        var _a;
+        (_a = textInputProps.onBlur) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
+        saveInputValueToRowCache(value);
+        setEditingCell(null);
+    };
+    const handleEnterKeyDown = (event) => {
+        var _a, _b;
+        (_a = textInputProps.onKeyDown) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
+        if (event.key === 'Enter') {
+            (_b = editInputRefs.current[cell.id]) === null || _b === void 0 ? void 0 : _b.blur();
+        }
+    };
+    if (columnDef.Edit) {
+        return (_b = columnDef.Edit) === null || _b === void 0 ? void 0 : _b.call(columnDef, { cell, column, row, table });
+    }
+    const commonProps = {
+        disabled: parseFromValuesOrFunc(columnDef.enableEditing, row) === false,
+        label: ['custom', 'modal'].includes((isCreating ? createDisplayMode : editDisplayMode))
+            ? column.columnDef.header
+            : undefined,
+        name: cell.id,
+        onClick: (e) => {
+            var _a;
+            e.stopPropagation();
+            (_a = textInputProps === null || textInputProps === void 0 ? void 0 : textInputProps.onClick) === null || _a === void 0 ? void 0 : _a.call(textInputProps, e);
+        },
+        placeholder: !['custom', 'modal'].includes((isCreating ? createDisplayMode : editDisplayMode))
+            ? columnDef.header
+            : undefined,
+        value,
+        variant: editDisplayMode === 'table' ? 'unstyled' : 'default',
+    };
+    if (isSelectEdit) {
+        return (jsx(Select, Object.assign({}, commonProps, { searchable: true, value: value }, selectProps, { onBlur: handleBlur, onChange: (value, option) => {
+                var _a, _b;
+                (_b = (_a = selectProps).onChange) === null || _b === void 0 ? void 0 : _b.call(_a, value, option);
+                setValue(value);
+            }, onClick: (e) => {
+                var _a;
+                e.stopPropagation();
+                (_a = selectProps === null || selectProps === void 0 ? void 0 : selectProps.onClick) === null || _a === void 0 ? void 0 : _a.call(selectProps, e);
+            }, ref: (node) => {
+                if (node) {
+                    editInputRefs.current[cell.id] = node;
+                    if (selectProps.ref && typeof selectProps.ref === 'object') {
+                        selectProps.ref.current = node;
+                    }
+                }
+            } })));
+    }
+    if (isMultiSelectEdit) {
+        return (jsx(MultiSelect, Object.assign({}, commonProps, { searchable: true, value: value }, selectProps, { onBlur: handleBlur, onChange: (newValue) => {
+                var _a, _b;
+                (_b = (_a = selectProps).onChange) === null || _b === void 0 ? void 0 : _b.call(_a, value);
+                setValue(newValue);
+                // Save if not in focus, otherwise it will be handled by onBlur
+                if (document.activeElement === editInputRefs.current[cell.id])
+                    return;
+                saveInputValueToRowCache(newValue);
+            }, onClick: (e) => {
+                var _a;
+                e.stopPropagation();
+                (_a = selectProps === null || selectProps === void 0 ? void 0 : selectProps.onClick) === null || _a === void 0 ? void 0 : _a.call(selectProps, e);
+            }, ref: (node) => {
+                if (node) {
+                    editInputRefs.current[cell.id] = node;
+                    if (selectProps.ref && typeof selectProps.ref === 'object') {
+                        selectProps.ref.current = node;
+                    }
+                }
+            } })));
+    }
+    return (jsx(TextInput, Object.assign({}, commonProps, { onKeyDown: handleEnterKeyDown, value: value !== null && value !== void 0 ? value : '' }, textInputProps, { onBlur: handleBlur, onChange: (event) => {
+            var _a;
+            (_a = textInputProps.onChange) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
+            setValue(event.target.value);
+        }, onClick: (event) => {
+            var _a;
+            event.stopPropagation();
+            (_a = textInputProps === null || textInputProps === void 0 ? void 0 : textInputProps.onClick) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
+        }, ref: (node) => {
+            if (node) {
+                editInputRefs.current[cell.id] = node;
+                if (textInputProps.ref) {
+                    textInputProps.ref.current = node;
+                }
+            }
+        } })));
+};
+
+var classes$C = {"root":"MRT_TableDetailPanel-module_root__vQAlM","root-grid":"MRT_TableDetailPanel-module_root-grid__7UMC6","root-virtual-row":"MRT_TableDetailPanel-module_root-virtual-row__r-X4Z","inner":"MRT_TableDetailPanel-module_inner__o-Fk-","inner-grid":"MRT_TableDetailPanel-module_inner-grid__WLZgF","inner-expanded":"MRT_TableDetailPanel-module_inner-expanded__6tg9T","inner-virtual":"MRT_TableDetailPanel-module_inner-virtual__TItRy"};
+
+const MRT_TableDetailPanel = (_a) => {
+    var _b, _c;
+    var { parentRowRef, renderedRowIndex = 0, row, rowVirtualizer, striped, table, virtualRow } = _a, rest = __rest(_a, ["parentRowRef", "renderedRowIndex", "row", "rowVirtualizer", "striped", "table", "virtualRow"]);
+    const { state, getVisibleLeafColumns, options: { layoutMode, mantineDetailPanelProps, mantineTableBodyRowProps, renderDetailPanel, }, } = table;
+    const { isLoading } = state;
+    const tableRowProps = parseFromValuesOrFunc(mantineTableBodyRowProps, {
+        isDetailPanel: true,
+        row,
+        table,
+    });
+    const tableCellProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineDetailPanelProps, {
+        row,
+        table,
+    })), rest);
+    const internalEditComponents = row
+        .getAllCells()
+        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
+        .map((cell) => (jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
+    const DetailPanel = !isLoading &&
+        row.getIsExpanded() &&
+        (renderDetailPanel === null || renderDetailPanel === void 0 ? void 0 : renderDetailPanel({ internalEditComponents, row, table }));
+    return (jsx(TableTr, Object.assign({ "data-index": renderDetailPanel ? renderedRowIndex * 2 + 1 : renderedRowIndex, "data-striped": striped, ref: (node) => {
+            var _a;
+            if (node) {
+                (_a = rowVirtualizer === null || rowVirtualizer === void 0 ? void 0 : rowVirtualizer.measureElement) === null || _a === void 0 ? void 0 : _a.call(rowVirtualizer, node);
+            }
+        } }, tableRowProps, { __vars: Object.assign({ '--mrt-parent-row-height': virtualRow
+                ? `${(_c = (_b = parentRowRef.current) === null || _b === void 0 ? void 0 : _b.getBoundingClientRect()) === null || _c === void 0 ? void 0 : _c.height}px`
+                : undefined, '--mrt-virtual-row-start': virtualRow
+                ? `${virtualRow.start}px`
+                : undefined }, tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.__vars), className: clsx('mantine-Table-tr-detail-panel', classes$C.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], virtualRow && classes$C['root-virtual-row'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: jsx(TableTd, Object.assign({ colSpan: getVisibleLeafColumns().length, component: "td" }, tableCellProps, { __vars: {
+                '--mrt-inner-width': `${table.getTotalSize()}px`,
+            }, className: clsx('mantine-Table-td-detail-panel', classes$C.inner, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['inner-grid'], row.getIsExpanded() && classes$C['inner-expanded'], virtualRow && classes$C['inner-virtual']), p: row.getIsExpanded() && DetailPanel ? 'md' : 0, children: rowVirtualizer ? (row.getIsExpanded() && DetailPanel) : (jsx(Collapse, { expanded: row.getIsExpanded(), children: DetailPanel })) })) })));
+};
+
+const parseCSSVarId = (id) => id.replace(/[^a-zA-Z0-9]/g, '_');
+const getPrimaryShade = (theme) => {
+    var _a, _b;
+    return typeof theme.primaryShade === 'number'
+        ? theme.primaryShade
+        : ((_b = (_a = theme.primaryShade) === null || _a === void 0 ? void 0 : _a.dark) !== null && _b !== void 0 ? _b : 7);
+};
+const getPrimaryColor = (theme, shade) => theme.colors[theme.primaryColor][shade !== null && shade !== void 0 ? shade : getPrimaryShade(theme)];
+function dataVariable(name, value) {
+    const key = `data-${name}`;
+    switch (typeof value) {
+        case 'boolean':
+            return value ? { [key]: '' } : null;
+        case 'number':
+            return { [key]: `${value}` };
+        case 'string':
+            return { [key]: value };
+        default:
+            return null;
+    }
+}
+
+var classes$B = {"root":"MRT_CopyButton-module_root__mkXy4"};
+
+const MRT_CopyButton = (_a) => {
+    var { cell, children, table } = _a, rest = __rest(_a, ["cell", "children", "table"]);
+    const { options: { localization: { clickToCopy, copiedToClipboard }, mantineCopyButtonProps, }, } = table;
+    const { column, row } = cell;
+    const { columnDef } = column;
+    const arg = { cell, column, row, table };
+    const buttonProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineCopyButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineCopyButtonProps, arg)), rest);
+    return (jsx(CopyButton, { value: cell.getValue(), children: ({ copied, copy }) => {
+            var _a;
+            return (jsx(Tooltip, { color: copied ? 'green' : undefined, label: (_a = buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.title) !== null && _a !== void 0 ? _a : (copied ? copiedToClipboard : clickToCopy), openDelay: 1000, withinPortal: true, children: jsx(UnstyledButton, Object.assign({}, buttonProps, { className: clsx('mrt-copy-button', classes$B.root, buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.className), onClick: (e) => {
+                        e.stopPropagation();
+                        copy();
+                    }, role: "presentation", title: undefined, children: children })) }));
+        } }));
+};
 
 const allowedTypes = ['string', 'number'];
 const allowedFilterVariants = ['text', 'autocomplete'];
 const MRT_TableBodyCellValue = ({ cell, renderedColumnIndex = 0, renderedRowIndex = 0, table, }) => {
     var _a, _b;
-    const { getState, options: { enableFilterMatchHighlighting, mantineHighlightProps = { size: 'sm' }, }, } = table;
+    const { state, options: { enableFilterMatchHighlighting, mantineHighlightProps = { size: 'sm' }, }, } = table;
     const { column, row } = cell;
     const { columnDef } = column;
-    const { globalFilter, globalFilterFn } = getState();
+    const { globalFilter, globalFilterFn } = state;
     const filterValue = column.getFilterValue();
     const highlightProps = parseFromValuesOrFunc(mantineHighlightProps, {
         cell,
@@ -125,162 +565,14 @@ const MRT_TableBodyCellValue = ({ cell, renderedColumnIndex = 0, renderedRowInde
     return renderedCellValue;
 };
 
-const parseCSSVarId = (id) => id.replace(/[^a-zA-Z0-9]/g, '_');
-const getPrimaryShade = (theme) => {
-    var _a, _b;
-    return typeof theme.primaryShade === 'number'
-        ? theme.primaryShade
-        : ((_b = (_a = theme.primaryShade) === null || _a === void 0 ? void 0 : _a.dark) !== null && _b !== void 0 ? _b : 7);
-};
-const getPrimaryColor = (theme, shade) => theme.colors[theme.primaryColor][shade !== null && shade !== void 0 ? shade : getPrimaryShade(theme)];
-function dataVariable(name, value) {
-    const key = `data-${name}`;
-    switch (typeof value) {
-        case 'boolean':
-            return value ? { [key]: '' } : null;
-        case 'number':
-            return { [key]: `${value}` };
-        case 'string':
-            return { [key]: value };
-        default:
-            return null;
-    }
-}
-
-var classes$z = {"root":"MRT_CopyButton-module_root__mkXy4"};
-
-const MRT_CopyButton = (_a) => {
-    var { cell, children, table } = _a, rest = __rest(_a, ["cell", "children", "table"]);
-    const { options: { localization: { clickToCopy, copiedToClipboard }, mantineCopyButtonProps, }, } = table;
-    const { column, row } = cell;
-    const { columnDef } = column;
-    const arg = { cell, column, row, table };
-    const buttonProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineCopyButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineCopyButtonProps, arg)), rest);
-    return (jsx(CopyButton, { value: cell.getValue(), children: ({ copied, copy }) => {
-            var _a;
-            return (jsx(Tooltip, { color: copied ? 'green' : undefined, label: (_a = buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.title) !== null && _a !== void 0 ? _a : (copied ? copiedToClipboard : clickToCopy), openDelay: 1000, withinPortal: true, children: jsx(UnstyledButton, Object.assign({}, buttonProps, { className: clsx('mrt-copy-button', classes$z.root, buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.className), onClick: (e) => {
-                        e.stopPropagation();
-                        copy();
-                    }, role: "presentation", title: undefined, children: children })) }));
-        } }));
-};
-
-const MRT_EditCellTextInput = (_a) => {
-    var _b;
-    var { cell, table } = _a, rest = __rest(_a, ["cell", "table"]);
-    const { getState, options: { createDisplayMode, editDisplayMode, mantineEditSelectProps, mantineEditTextInputProps, }, refs: { editInputRefs }, setCreatingRow, setEditingCell, setEditingRow, } = table;
-    const { column, row } = cell;
-    const { columnDef } = column;
-    const { creatingRow, editingRow } = getState();
-    const isCreating = (creatingRow === null || creatingRow === void 0 ? void 0 : creatingRow.id) === row.id;
-    const isEditing = (editingRow === null || editingRow === void 0 ? void 0 : editingRow.id) === row.id;
-    const isSelectEdit = columnDef.editVariant === 'select';
-    const isMultiSelectEdit = columnDef.editVariant === 'multi-select';
-    const [value, setValue] = useState(() => cell.getValue());
-    const arg = { cell, column, row, table };
-    const textInputProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditTextInputProps, arg)), parseFromValuesOrFunc(columnDef.mantineEditTextInputProps, arg)), rest);
-    const selectProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditSelectProps, arg)), parseFromValuesOrFunc(columnDef.mantineEditSelectProps, arg)), rest);
-    const saveInputValueToRowCache = (newValue) => {
-        //@ts-ignore
-        row._valuesCache[column.id] = newValue;
-        if (isCreating) {
-            setCreatingRow(row);
-        }
-        else if (isEditing) {
-            setEditingRow(row);
-        }
-    };
-    const handleBlur = (event) => {
-        var _a;
-        (_a = textInputProps.onBlur) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
-        saveInputValueToRowCache(value);
-        setEditingCell(null);
-    };
-    const handleEnterKeyDown = (event) => {
-        var _a, _b;
-        (_a = textInputProps.onKeyDown) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
-        if (event.key === 'Enter') {
-            (_b = editInputRefs.current[cell.id]) === null || _b === void 0 ? void 0 : _b.blur();
-        }
-    };
-    if (columnDef.Edit) {
-        return (_b = columnDef.Edit) === null || _b === void 0 ? void 0 : _b.call(columnDef, { cell, column, row, table });
-    }
-    const commonProps = {
-        disabled: parseFromValuesOrFunc(columnDef.enableEditing, row) === false,
-        label: ['custom', 'modal'].includes((isCreating ? createDisplayMode : editDisplayMode))
-            ? column.columnDef.header
-            : undefined,
-        name: cell.id,
-        onClick: (e) => {
-            var _a;
-            e.stopPropagation();
-            (_a = textInputProps === null || textInputProps === void 0 ? void 0 : textInputProps.onClick) === null || _a === void 0 ? void 0 : _a.call(textInputProps, e);
-        },
-        placeholder: !['custom', 'modal'].includes((isCreating ? createDisplayMode : editDisplayMode))
-            ? columnDef.header
-            : undefined,
-        value,
-        variant: editDisplayMode === 'table' ? 'unstyled' : 'default',
-    };
-    if (isSelectEdit) {
-        return (jsx(Select, Object.assign({}, commonProps, { searchable: true, value: value }, selectProps, { onBlur: handleBlur, onChange: (value, option) => {
-                var _a, _b;
-                (_b = (_a = selectProps).onChange) === null || _b === void 0 ? void 0 : _b.call(_a, value, option);
-                setValue(value);
-            }, onClick: (e) => {
-                var _a;
-                e.stopPropagation();
-                (_a = selectProps === null || selectProps === void 0 ? void 0 : selectProps.onClick) === null || _a === void 0 ? void 0 : _a.call(selectProps, e);
-            }, ref: (node) => {
-                if (node) {
-                    editInputRefs.current[cell.id] = node;
-                    assignRef(selectProps.ref, node);
-                }
-            } })));
-    }
-    if (isMultiSelectEdit) {
-        return (jsx(MultiSelect, Object.assign({}, commonProps, { searchable: true, value: value }, selectProps, { onBlur: handleBlur, onChange: (newValue) => {
-                var _a, _b;
-                (_b = (_a = selectProps).onChange) === null || _b === void 0 ? void 0 : _b.call(_a, value);
-                setValue(newValue);
-                // Save if not in focus, otherwise it will be handled by onBlur
-                if (document.activeElement === editInputRefs.current[cell.id])
-                    return;
-                saveInputValueToRowCache(newValue);
-            }, onClick: (e) => {
-                var _a;
-                e.stopPropagation();
-                (_a = selectProps === null || selectProps === void 0 ? void 0 : selectProps.onClick) === null || _a === void 0 ? void 0 : _a.call(selectProps, e);
-            }, ref: (node) => {
-                if (node) {
-                    editInputRefs.current[cell.id] = node;
-                    assignRef(selectProps.ref, node);
-                }
-            } })));
-    }
-    return (jsx(TextInput, Object.assign({}, commonProps, { onKeyDown: handleEnterKeyDown, value: value !== null && value !== void 0 ? value : '' }, textInputProps, { onBlur: handleBlur, onChange: (event) => {
-            var _a;
-            (_a = textInputProps.onChange) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
-            setValue(event.target.value);
-        }, onClick: (event) => {
-            var _a;
-            event.stopPropagation();
-            (_a = textInputProps === null || textInputProps === void 0 ? void 0 : textInputProps.onClick) === null || _a === void 0 ? void 0 : _a.call(textInputProps, event);
-        }, ref: (node) => {
-            if (node) {
-                editInputRefs.current[cell.id] = node;
-                assignRef(textInputProps.ref, node);
-            }
-        } })));
-};
+var classes$A = {"root":"MRT_TableBodyCell-module_root__Wf-zi","root-grid":"MRT_TableBodyCell-module_root-grid__zIuC-","root-virtualized":"MRT_TableBodyCell-module_root-virtualized__jLl8R","root-data-col":"MRT_TableBodyCell-module_root-data-col__HHcxc","root-nowrap":"MRT_TableBodyCell-module_root-nowrap__-k1Jo","root-cursor-pointer":"MRT_TableBodyCell-module_root-cursor-pointer__4kw7J","root-editable-hover":"MRT_TableBodyCell-module_root-editable-hover__2DKSa","root-cell-hover-reveal":"MRT_TableBodyCell-module_root-cell-hover-reveal__T1fAH","cell-hover-reveal":"MRT_TableBodyCell-module_cell-hover-reveal__Q-1Xj","overflowing":"MRT_TableBodyCell-module_overflowing__QcXP4"};
 
 const MRT_TableBodyCell = (_a) => {
     var _b, _c, _d, _e, _f;
     var { cell, numRows = 1, renderedColumnIndex = 0, renderedRowIndex = 0, rowRef, table, virtualCell } = _a, rest = __rest(_a, ["cell", "numRows", "renderedColumnIndex", "renderedRowIndex", "rowRef", "table", "virtualCell"]);
     const direction = useDirection();
-    const { getState, options: { columnResizeDirection, columnResizeMode, createDisplayMode, editDisplayMode, enableClickToCopy, enableColumnOrdering, enableColumnPinning, enableEditing, enableGrouping, layoutMode, mantineSkeletonProps, mantineTableBodyCellProps, }, refs: { editInputRefs }, setEditingCell, setHoveredColumn, } = table;
-    const { columnSizingInfo, creatingRow, density, draggingColumn, editingCell, editingRow, hoveredColumn, isLoading, showSkeletons, } = getState();
+    const { state, options: { columnResizeDirection, columnResizeMode, createDisplayMode, editDisplayMode, enableClickToCopy, enableColumnOrdering, enableColumnPinning, enableEditing, enableGrouping, layoutMode, mantineSkeletonProps, mantineTableBodyCellProps, }, refs: { editInputRefs }, setEditingCell, setHoveredColumn, } = table;
+    const { columnResizing, creatingRow, density, draggingColumn, editingCell, editingRow, hoveredColumn, isLoading, showSkeletons, } = state;
     const { column, row } = cell;
     const { columnDef } = column;
     const { columnDefType } = columnDef;
@@ -402,15 +694,15 @@ const MRT_TableBodyCell = (_a) => {
         }
         return jsx(MRT_TableBodyCellValue, Object.assign({}, cellValueProps));
     };
-    return (jsx(TableTd, Object.assign({ "data-column-pinned": isColumnPinned || undefined, "data-dragging-column": isDraggingColumn || undefined, "data-first-right-pinned": (isColumnPinned === 'right' &&
-            column.getIsFirstColumn(isColumnPinned)) ||
-            undefined, "data-hovered-column-target": isHoveredColumn || undefined, "data-index": renderedColumnIndex, "data-last-left-pinned": (isColumnPinned === 'left' && column.getIsLastColumn(isColumnPinned)) ||
+    return (jsx(TableTd, Object.assign({ "data-column-pinned": isColumnPinned || undefined, "data-dragging-column": isDraggingColumn || undefined, "data-first-end-pinned": (isColumnPinned === 'end' && column.getIsFirstColumn(isColumnPinned)) ||
+            undefined, "data-hovered-column-target": isHoveredColumn || undefined, "data-index": renderedColumnIndex, "data-last-start-pinned": (isColumnPinned === 'start' &&
+            column.getIsLastColumn(isColumnPinned)) ||
             undefined, "data-last-row": renderedRowIndex === numRows - 1 || undefined, "data-resizing": (columnResizeMode === 'onChange' &&
-            (columnSizingInfo === null || columnSizingInfo === void 0 ? void 0 : columnSizingInfo.isResizingColumn) === column.id &&
+            (columnResizing === null || columnResizing === void 0 ? void 0 : columnResizing.isResizingColumn) === column.id &&
             columnResizeDirection) ||
-            undefined }, tableCellProps, { __vars: Object.assign({ '--mrt-cell-align': (_c = tableCellProps.align) !== null && _c !== void 0 ? _c : (direction.dir === 'rtl' ? 'right' : 'left'), '--mrt-table-cell-left': isColumnPinned === 'left'
+            undefined }, tableCellProps, { __vars: Object.assign({ '--mrt-cell-align': (_c = tableCellProps.align) !== null && _c !== void 0 ? _c : (direction.dir === 'rtl' ? 'right' : 'left'), '--mrt-table-cell-start': isColumnPinned === 'start'
                 ? `${column.getStart(isColumnPinned)}`
-                : undefined, '--mrt-table-cell-right': isColumnPinned === 'right'
+                : undefined, '--mrt-table-cell-end': isColumnPinned === 'end'
                 ? `${column.getAfter(isColumnPinned)}`
                 : undefined }, tableCellProps.__vars), className: clsx(classes$A.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$A['root-grid'], virtualCell && classes$A['root-virtualized'], isEditable &&
             editDisplayMode === 'cell' &&
@@ -423,205 +715,13 @@ const MRT_TableBodyCell = (_a) => {
 };
 const Memo_MRT_TableBodyCell = memo(MRT_TableBodyCell, (prev, next) => next.cell === prev.cell);
 
-var classes$y = {"root":"MRT_TableDetailPanel-module_root__vQAlM","root-grid":"MRT_TableDetailPanel-module_root-grid__7UMC6","root-virtual-row":"MRT_TableDetailPanel-module_root-virtual-row__r-X4Z","inner":"MRT_TableDetailPanel-module_inner__o-Fk-","inner-grid":"MRT_TableDetailPanel-module_inner-grid__WLZgF","inner-expanded":"MRT_TableDetailPanel-module_inner-expanded__6tg9T","inner-virtual":"MRT_TableDetailPanel-module_inner-virtual__TItRy"};
-
-const MRT_TableDetailPanel = (_a) => {
-    var _b, _c;
-    var { parentRowRef, renderedRowIndex = 0, row, rowVirtualizer, striped, table, virtualRow } = _a, rest = __rest(_a, ["parentRowRef", "renderedRowIndex", "row", "rowVirtualizer", "striped", "table", "virtualRow"]);
-    const { getState, getVisibleLeafColumns, options: { layoutMode, mantineDetailPanelProps, mantineTableBodyRowProps, renderDetailPanel, }, } = table;
-    const { isLoading } = getState();
-    const tableRowProps = parseFromValuesOrFunc(mantineTableBodyRowProps, {
-        isDetailPanel: true,
-        row,
-        table,
-    });
-    const tableCellProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineDetailPanelProps, {
-        row,
-        table,
-    })), rest);
-    const internalEditComponents = row
-        .getAllCells()
-        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
-        .map((cell) => (jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
-    const DetailPanel = !isLoading &&
-        row.getIsExpanded() &&
-        (renderDetailPanel === null || renderDetailPanel === void 0 ? void 0 : renderDetailPanel({ internalEditComponents, row, table }));
-    return (jsx(TableTr, Object.assign({ "data-index": renderDetailPanel ? renderedRowIndex * 2 + 1 : renderedRowIndex, "data-striped": striped, ref: (node) => {
-            var _a;
-            if (node) {
-                (_a = rowVirtualizer === null || rowVirtualizer === void 0 ? void 0 : rowVirtualizer.measureElement) === null || _a === void 0 ? void 0 : _a.call(rowVirtualizer, node);
-            }
-        } }, tableRowProps, { __vars: Object.assign({ '--mrt-parent-row-height': virtualRow
-                ? `${(_c = (_b = parentRowRef.current) === null || _b === void 0 ? void 0 : _b.getBoundingClientRect()) === null || _c === void 0 ? void 0 : _c.height}px`
-                : undefined, '--mrt-virtual-row-start': virtualRow
-                ? `${virtualRow.start}px`
-                : undefined }, tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.__vars), className: clsx('mantine-Table-tr-detail-panel', classes$y.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$y['root-grid'], virtualRow && classes$y['root-virtual-row'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: jsx(TableTd, Object.assign({ colSpan: getVisibleLeafColumns().length, component: "td" }, tableCellProps, { __vars: {
-                '--mrt-inner-width': `${table.getTotalSize()}px`,
-            }, className: clsx('mantine-Table-td-detail-panel', classes$y.inner, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$y['inner-grid'], row.getIsExpanded() && classes$y['inner-expanded'], virtualRow && classes$y['inner-virtual']), p: row.getIsExpanded() && DetailPanel ? 'md' : 0, children: rowVirtualizer ? (row.getIsExpanded() && DetailPanel) : (jsx(Collapse, { expanded: row.getIsExpanded(), children: DetailPanel })) })) })));
-};
-
-const fuzzy$1 = (rowA, rowB, columnId) => {
-    let dir = 0;
-    if (rowA.columnFiltersMeta[columnId]) {
-        dir = compareItems(rowA.columnFiltersMeta[columnId], rowB.columnFiltersMeta[columnId]);
-    }
-    // Provide a fallback for when the item ranks are equal
-    return dir === 0
-        ? sortingFns.alphanumeric(rowA, rowB, columnId)
-        : dir;
-};
-const MRT_SortingFns = Object.assign(Object.assign({}, sortingFns), { fuzzy: fuzzy$1 });
-const rankGlobalFuzzy = (rowA, rowB) => Math.max(...Object.values(rowB.columnFiltersMeta).map((v) => v.rank)) -
-    Math.max(...Object.values(rowA.columnFiltersMeta).map((v) => v.rank));
-
-const getMRT_Rows = (table, all) => {
-    const { getCenterRows, getPrePaginationRowModel, getRowModel, getState, getTopRows, options: { createDisplayMode, enablePagination, enableRowPinning, manualPagination, positionCreatingRow, rowPinningDisplayMode, }, } = table;
-    const { creatingRow, pagination } = getState();
-    const isRankingRows = getIsRankingRows(table);
-    let rows = [];
-    if (!isRankingRows) {
-        rows =
-            !enableRowPinning || (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))
-                ? all
-                    ? getPrePaginationRowModel().rows
-                    : getRowModel().rows
-                : getCenterRows();
-    }
-    else {
-        // fuzzy ranking adjustments
-        rows = getPrePaginationRowModel().rows.sort((a, b) => rankGlobalFuzzy(a, b));
-        if (enablePagination && !manualPagination && !all) {
-            const start = pagination.pageIndex * pagination.pageSize;
-            rows = rows.slice(start, start + pagination.pageSize);
-        }
-        if (enableRowPinning && !(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
-            // "re-center-ize" the rows (no top or bottom pinned rows unless sticky)
-            rows = rows.filter((row) => !row.getIsPinned());
-        }
-    }
-    // row pinning adjustments
-    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
-        const centerPinnedRowIds = rows
-            .filter((row) => row.getIsPinned())
-            .map((r) => r.id);
-        rows = [
-            ...getTopRows().filter((row) => !centerPinnedRowIds.includes(row.id)),
-            ...rows,
-        ];
-    }
-    // blank inserted creating row adjustments
-    if (positionCreatingRow !== undefined &&
-        creatingRow &&
-        createDisplayMode === 'row') {
-        const creatingRowIndex = !isNaN(+positionCreatingRow)
-            ? +positionCreatingRow
-            : positionCreatingRow === 'top'
-                ? 0
-                : rows.length;
-        rows = [
-            ...rows.slice(0, creatingRowIndex),
-            creatingRow,
-            ...rows.slice(creatingRowIndex),
-        ];
-    }
-    return rows;
-};
-const getCanRankRows = (table) => {
-    const { getState, options: { enableGlobalFilterRankedResults, manualExpanding, manualFiltering, manualGrouping, manualSorting, }, } = table;
-    const { expanded, globalFilterFn } = getState();
-    return (!manualExpanding &&
-        !manualFiltering &&
-        !manualGrouping &&
-        !manualSorting &&
-        enableGlobalFilterRankedResults &&
-        globalFilterFn === 'fuzzy' &&
-        expanded !== true &&
-        !Object.values(expanded).some(Boolean));
-};
-const getIsRankingRows = (table) => {
-    const { globalFilter, sorting } = table.getState();
-    return (getCanRankRows(table) &&
-        globalFilter &&
-        !Object.values(sorting).some(Boolean));
-};
-const getIsRowSelected = ({ row, table, }) => {
-    const { options: { enableRowSelection }, } = table;
-    return (row.getIsSelected() ||
-        (parseFromValuesOrFunc(enableRowSelection, row) &&
-            row.getCanSelectSubRows() &&
-            row.getIsAllSubRowsSelected()));
-};
-const getMRT_RowSelectionHandler = ({ renderedRowIndex = 0, row, table, }) => (event, value) => {
-    var _a;
-    const { getState, options: { enableBatchRowSelection, enableMultiRowSelection, enableRowPinning, manualPagination, rowPinningDisplayMode, }, refs: { lastSelectedRowId: lastSelectedRowId }, } = table;
-    const { pagination: { pageIndex, pageSize }, } = getState();
-    const paginationOffset = manualPagination ? 0 : pageSize * pageIndex;
-    const wasCurrentRowChecked = getIsRowSelected({ row, table });
-    // toggle selection of this row
-    row.toggleSelected(value !== null && value !== void 0 ? value : !wasCurrentRowChecked);
-    const changedRowIds = new Set([row.id]);
-    // if shift key is pressed, select all rows between last selected and this one
-    if (enableBatchRowSelection &&
-        enableMultiRowSelection &&
-        event.nativeEvent.shiftKey &&
-        lastSelectedRowId.current !== null) {
-        const rows = getMRT_Rows(table, true);
-        const lastIndex = rows.findIndex((r) => r.id === lastSelectedRowId.current);
-        if (lastIndex !== -1) {
-            const isLastIndexChecked = getIsRowSelected({
-                row: rows === null || rows === void 0 ? void 0 : rows[lastIndex],
-                table,
-            });
-            const currentIndex = renderedRowIndex + paginationOffset;
-            const [start, end] = lastIndex < currentIndex
-                ? [lastIndex, currentIndex]
-                : [currentIndex, lastIndex];
-            // toggle selection of all rows between last selected and this one
-            // but only if the last selected row is not the same as the current one
-            if (wasCurrentRowChecked !== isLastIndexChecked) {
-                for (let i = start; i <= end; i++) {
-                    rows[i].toggleSelected(!wasCurrentRowChecked);
-                    changedRowIds.add(rows[i].id);
-                }
-            }
-        }
-    }
-    // record the last selected row id
-    lastSelectedRowId.current = row.id;
-    // if all sub rows were selected, unselect them
-    if (row.getCanSelectSubRows() && row.getIsAllSubRowsSelected()) {
-        (_a = row.subRows) === null || _a === void 0 ? void 0 : _a.forEach((r) => r.toggleSelected(false));
-    }
-    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
-        changedRowIds.forEach((rowId) => {
-            const rowToTogglePin = table.getRow(rowId);
-            rowToTogglePin.pin(!wasCurrentRowChecked //was not previously pinned or selected
-                ? (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('bottom'))
-                    ? 'bottom'
-                    : 'top'
-                : false);
-        });
-    }
-};
-const getMRT_SelectAllHandler = ({ table }) => (event, value, forceAll) => {
-    const { options: { enableRowPinning, rowPinningDisplayMode, selectAllMode }, refs: { lastSelectedRowId }, } = table;
-    if (selectAllMode === 'all' || forceAll) {
-        table.toggleAllRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
-    }
-    else {
-        table.toggleAllPageRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
-    }
-    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
-        table.setRowPinning({ bottom: [], top: [] });
-    }
-    lastSelectedRowId.current = null;
-};
+var classes$z = {"root":"MRT_TableBodyRow-module_root__2c3D4","root-grid":"MRT_TableBodyRow-module_root-grid__AwXTe","root-virtualized":"MRT_TableBodyRow-module_root-virtualized__zYgxq"};
 
 const MRT_TableBodyRow = (_a) => {
     var _b, _c, _d, _f;
     var { children, columnVirtualizer, numRows, pinnedRowIds, renderedRowIndex = 0, row, rowVirtualizer, table, tableProps, virtualRow } = _a, rest = __rest(_a, ["children", "columnVirtualizer", "numRows", "pinnedRowIds", "renderedRowIndex", "row", "rowVirtualizer", "table", "tableProps", "virtualRow"]);
-    const { getState, options: { enableRowOrdering, enableRowPinning, enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyRowProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, setHoveredRow, } = table;
-    const { density, draggingColumn, draggingRow, editingCell, editingRow, hoveredRow, isFullScreen, rowPinning, } = getState();
+    const { state, options: { enableRowOrdering, enableRowPinning, enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyRowProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, setHoveredRow, } = table;
+    const { density, draggingColumn, draggingRow, editingCell, editingRow, hoveredRow, isFullScreen, rowPinning, } = state;
     const visibleCells = row.getVisibleCells();
     const { virtualColumns, virtualPaddingLeft, virtualPaddingRight } = columnVirtualizer !== null && columnVirtualizer !== void 0 ? columnVirtualizer : {};
     const isRowSelected = getIsRowSelected({ row, table });
@@ -693,7 +793,7 @@ const MRT_TableBodyRow = (_a) => {
                                 (enableStickyHeader || isFullScreen ? tableHeadHeight - 1 : 0)}`
                             : undefined, '--mrt-virtual-row-start': virtualRow
                         ? `${virtualRow.start}`
-                        : undefined }), className: clsx(classes$B.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$B['root-grid'], virtualRow && classes$B['root-virtualized'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsx(Box, { component: "td", display: "flex", w: virtualPaddingLeft })) : null, children
+                        : undefined }), className: clsx(classes$z.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$z['root-grid'], virtualRow && classes$z['root-virtualized'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsx(Box, { component: "td", display: "flex", w: virtualPaddingLeft })) : null, children
                         ? children
                         : (virtualColumns !== null && virtualColumns !== void 0 ? virtualColumns : row.getVisibleCells()).map((cellOrVirtualCell, renderedColumnIndex) => {
                             let cell = cellOrVirtualCell;
@@ -723,7 +823,7 @@ const MRT_TableBodyRow = (_a) => {
 };
 const Memo_MRT_TableBodyRow = memo(MRT_TableBodyRow, (prev, next) => prev.row === next.row);
 
-var classes$x = {"root":"MRT_ExpandButton-module_root__IFYio","root-ltr":"MRT_ExpandButton-module_root-ltr__FHNnp","chevron":"MRT_ExpandButton-module_chevron__XzC5P","right":"MRT_ExpandButton-module_right__-pC-A","up":"MRT_ExpandButton-module_up__TZGBo","root-rtl":"MRT_ExpandButton-module_root-rtl__zoudS"};
+var classes$y = {"root":"MRT_ExpandButton-module_root__IFYio","root-ltr":"MRT_ExpandButton-module_root-ltr__FHNnp","chevron":"MRT_ExpandButton-module_chevron__XzC5P","right":"MRT_ExpandButton-module_right__-pC-A","up":"MRT_ExpandButton-module_up__TZGBo","root-rtl":"MRT_ExpandButton-module_root-rtl__zoudS"};
 
 const MRT_ExpandButton = (_a) => {
     var _b, _c;
@@ -754,102 +854,34 @@ const MRT_ExpandButton = (_a) => {
     const rtl = direction.dir === 'rtl' || positionExpandColumn === 'last';
     return (jsx(Tooltip, { disabled: !canExpand && !DetailPanel, label: (_b = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.title) !== null && _b !== void 0 ? _b : (isExpanded ? localization.collapse : localization.expand), openDelay: 1000, withinPortal: true, children: jsx(ActionIcon, Object.assign({ "aria-label": localization.expand, color: "gray", disabled: !canExpand && !DetailPanel, variant: "subtle" }, actionIconProps, { __vars: {
                 '--mrt-row-depth': `${row.depth}`,
-            }, className: clsx('mrt-expand-button', classes$x.root, classes$x[`root-${rtl ? 'rtl' : 'ltr'}`], actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.className), onClick: handleToggleExpand, title: undefined, children: (_c = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.children) !== null && _c !== void 0 ? _c : (jsx(IconChevronDown, { className: clsx('mrt-expand-button-chevron', classes$x.chevron, !canExpand && !renderDetailPanel
-                    ? classes$x.right
+            }, className: clsx('mrt-expand-button', classes$y.root, classes$y[`root-${rtl ? 'rtl' : 'ltr'}`], actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.className), onClick: handleToggleExpand, title: undefined, children: (_c = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.children) !== null && _c !== void 0 ? _c : (jsx(IconChevronDown, { className: clsx('mrt-expand-button-chevron', classes$y.chevron, !canExpand && !renderDetailPanel
+                    ? classes$y.right
                     : isExpanded
-                        ? classes$x.up
+                        ? classes$y.up
                         : undefined) })) })) }));
 };
+
+var classes$x = {"root":"MRT_TableBody-module_root__kGhRy","root-grid":"MRT_TableBody-module_root-grid__WdOGg","root-no-rows":"MRT_TableBody-module_root-no-rows__iyi9K","root-virtualized":"MRT_TableBody-module_root-virtualized__TxPAi","empty-row-tr-grid":"MRT_TableBody-module_empty-row-tr-grid__LTgxw","empty-row-td-grid":"MRT_TableBody-module_empty-row-td-grid__pzlgG","empty-row-td-content":"MRT_TableBody-module_empty-row-td-content__Cc2XW","pinned":"MRT_TableBody-module_pinned__XHpcs"};
 
 const MRT_TableBodyEmptyRow = (_a) => {
     var _b, _c;
     var { table, tableProps } = _a, commonRowProps = __rest(_a, ["table", "tableProps"]);
-    const { getState, options: { layoutMode, localization, renderDetailPanel, renderEmptyRowsFallback, }, refs: { tablePaperRef }, } = table;
-    const { columnFilters, globalFilter } = getState();
-    const emptyRow = useMemo(() => createRow$1(table, 'mrt-row-empty', {}, 0, 0), []);
+    const { state, options: { layoutMode, localization, renderDetailPanel, renderEmptyRowsFallback, }, refs: { tablePaperRef }, } = table;
+    const { columnFilters, globalFilter } = state;
+    const emptyRow = useMemo(() => constructRow(table, 'mrt-row-empty', {}, 0, 0), []);
     const emptyRowProps = Object.assign(Object.assign({}, commonRowProps), { renderedRowIndex: 0, row: emptyRow, virtualRow: undefined });
-    return (jsxs(MRT_TableBodyRow, Object.assign({ className: clsx('mrt-table-body-row', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['empty-row-tr-grid']), table: table, tableProps: tableProps }, emptyRowProps, { children: [renderDetailPanel && (jsx(TableTd, { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['empty-row-td-grid']), colSpan: 1, children: jsx(MRT_ExpandButton, { row: emptyRow, table: table }) })), jsx("td", { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['empty-row-td-grid']), colSpan: table.getVisibleLeafColumns().length, children: (_b = renderEmptyRowsFallback === null || renderEmptyRowsFallback === void 0 ? void 0 : renderEmptyRowsFallback({ table })) !== null && _b !== void 0 ? _b : (jsx(Text, { __vars: {
+    return (jsxs(MRT_TableBodyRow, Object.assign({ className: clsx('mrt-table-body-row', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['empty-row-tr-grid']), table: table, tableProps: tableProps }, emptyRowProps, { children: [renderDetailPanel && (jsx(TableTd, { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['empty-row-td-grid']), colSpan: 1, children: jsx(MRT_ExpandButton, { row: emptyRow, table: table }) })), jsx("td", { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['empty-row-td-grid']), colSpan: table.getVisibleLeafColumns().length, children: (_b = renderEmptyRowsFallback === null || renderEmptyRowsFallback === void 0 ? void 0 : renderEmptyRowsFallback({ table })) !== null && _b !== void 0 ? _b : (jsx(Text, { __vars: {
                         '--mrt-paper-width': `${(_c = tablePaperRef.current) === null || _c === void 0 ? void 0 : _c.clientWidth}`,
-                    }, className: clsx(classes$C['empty-row-td-content']), children: globalFilter || columnFilters.length
+                    }, className: clsx(classes$x['empty-row-td-content']), children: globalFilter || columnFilters.length
                         ? localization.noResultsFound
                         : localization.noRecordsToDisplay })) })] })));
-};
-
-const useMRT_Rows = (table) => {
-    const { getRowModel, getState, options: { data, enableGlobalFilterRankedResults, positionCreatingRow }, } = table;
-    const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting, } = getState();
-    const rows = useMemo(() => getMRT_Rows(table), [
-        creatingRow,
-        data,
-        enableGlobalFilterRankedResults,
-        expanded,
-        getRowModel().rows,
-        globalFilter,
-        pagination.pageIndex,
-        pagination.pageSize,
-        positionCreatingRow,
-        rowPinning,
-        sorting,
-    ]);
-    return rows;
-};
-
-const extraIndexRangeExtractor = (range, draggingIndex) => {
-    const newIndexes = defaultRangeExtractor(range);
-    if (draggingIndex === undefined)
-        return newIndexes;
-    if (draggingIndex >= 0 &&
-        draggingIndex < Math.max(range.startIndex - range.overscan, 0)) {
-        newIndexes.unshift(draggingIndex);
-    }
-    if (draggingIndex >= 0 && draggingIndex > range.endIndex + range.overscan) {
-        newIndexes.push(draggingIndex);
-    }
-    return newIndexes;
-};
-
-const useMRT_RowVirtualizer = (table, rows) => {
-    var _a, _b;
-    const { getRowModel, getState, options: { enableRowVirtualization, renderDetailPanel, rowVirtualizerInstanceRef, rowVirtualizerOptions, }, refs: { tableContainerRef }, } = table;
-    const { density, draggingRow, expanded } = getState();
-    if (!enableRowVirtualization)
-        return undefined;
-    const rowVirtualizerProps = parseFromValuesOrFunc(rowVirtualizerOptions, {
-        table,
-    });
-    const rowCount = (_a = rows === null || rows === void 0 ? void 0 : rows.length) !== null && _a !== void 0 ? _a : getRowModel().rows.length;
-    const defaultRowHeightByDensity = {
-        lg: 62.7,
-        md: 54.7,
-        sm: 48.7,
-        xl: 70.7,
-        xs: 42.7,
-    };
-    const normalRowHeight = (_b = defaultRowHeightByDensity[density]) !== null && _b !== void 0 ? _b : defaultRowHeightByDensity['md'];
-    const rowVirtualizer = useVirtualizer(Object.assign({ count: renderDetailPanel ? rowCount * 2 : rowCount, estimateSize: (index) => renderDetailPanel && index % 2 === 1
-            ? expanded === true
-                ? 100
-                : 0
-            : normalRowHeight, getScrollElement: () => tableContainerRef.current, measureElement: typeof window !== 'undefined' &&
-            navigator.userAgent.indexOf('Firefox') === -1
-            ? (element) => element === null || element === void 0 ? void 0 : element.getBoundingClientRect().height
-            : undefined, overscan: 4, rangeExtractor: useCallback((range) => {
-            const current_index = getRowModel().rows.findIndex((row) => row.id === (draggingRow === null || draggingRow === void 0 ? void 0 : draggingRow.id));
-            return extraIndexRangeExtractor(range, current_index >= 0 ? current_index : 0);
-        }, [draggingRow]) }, rowVirtualizerProps));
-    rowVirtualizer.virtualRows = rowVirtualizer.getVirtualItems();
-    if (rowVirtualizerInstanceRef) {
-        //@ts-ignore
-        rowVirtualizerInstanceRef.current = rowVirtualizer;
-    }
-    return rowVirtualizer;
 };
 
 const MRT_TableBody = (_a) => {
     var _b, _c, _d;
     var { columnVirtualizer, table, tableProps } = _a, rest = __rest(_a, ["columnVirtualizer", "table", "tableProps"]);
-    const { getBottomRows, getIsSomeRowsPinned, getRowModel, getState, getTopRows, options: { enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, } = table;
-    const { isFullScreen, rowPinning } = getState();
+    const { getBottomRows, getIsSomeRowsPinned, getRowModel, state, getTopRows, options: { enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, } = table;
+    const { isFullScreen, rowPinning } = state;
     const tableBodyProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableBodyProps, { table })), rest);
     const tableHeadHeight = ((enableStickyHeader || isFullScreen) &&
         ((_b = tableHeadRef.current) === null || _b === void 0 ? void 0 : _b.clientHeight)) ||
@@ -873,13 +905,13 @@ const MRT_TableBody = (_a) => {
         tableProps,
     };
     return (jsxs(Fragment, { children: [!(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky')) &&
-                getIsSomeRowsPinned('top') && (jsx(TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-head-height': `${tableHeadHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$C.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getTopRows().map((row, renderedRowIndex) => {
+                getIsSomeRowsPinned('top') && (jsx(TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-head-height': `${tableHeadHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$x.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getTopRows().map((row, renderedRowIndex) => {
                     const rowProps = Object.assign(Object.assign({}, commonRowProps), { renderedRowIndex,
                         row });
                     return memoMode === 'rows' ? (jsx(Memo_MRT_TableBodyRow, Object.assign({}, rowProps), row.id)) : (jsx(MRT_TableBodyRow, Object.assign({}, rowProps), row.id));
                 }) }))), jsx(TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-body-height': rowVirtualizer
                         ? `${rowVirtualizer.getTotalSize()}px`
-                        : undefined }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$C.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], !rows.length && classes$C['root-no-rows'], rowVirtualizer && classes$C['root-virtualized'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: (_d = tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.children) !== null && _d !== void 0 ? _d : (!rows.length ? (jsx(MRT_TableBodyEmptyRow, Object.assign({}, commonRowProps))) : (jsx(Fragment, { children: (virtualRows !== null && virtualRows !== void 0 ? virtualRows : rows).map((rowOrVirtualRow, renderedRowIndex) => {
+                        : undefined }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$x.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['root-grid'], !rows.length && classes$x['root-no-rows'], rowVirtualizer && classes$x['root-virtualized'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: (_d = tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.children) !== null && _d !== void 0 ? _d : (!rows.length ? (jsx(MRT_TableBodyEmptyRow, Object.assign({}, commonRowProps))) : (jsx(Fragment, { children: (virtualRows !== null && virtualRows !== void 0 ? virtualRows : rows).map((rowOrVirtualRow, renderedRowIndex) => {
                         if (rowVirtualizer) {
                             if (renderDetailPanel) {
                                 if (rowOrVirtualRow.index % 2 === 1) {
@@ -905,7 +937,7 @@ const MRT_TableBody = (_a) => {
                         const key = `${row.id}-${row.index}`;
                         return memoMode === 'rows' ? (jsx(Memo_MRT_TableBodyRow, Object.assign({}, props), key)) : (jsx(MRT_TableBodyRow, Object.assign({}, props), key));
                     }) }))) })), !(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky')) &&
-                getIsSomeRowsPinned('bottom') && (jsx(TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-footer-height': `${tableFooterHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$C.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getBottomRows().map((row, renderedRowIndex) => {
+                getIsSomeRowsPinned('bottom') && (jsx(TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-footer-height': `${tableFooterHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$x.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getBottomRows().map((row, renderedRowIndex) => {
                     const props = Object.assign(Object.assign({}, commonRowProps), { renderedRowIndex,
                         row });
                     return memoMode === 'rows' ? (jsx(Memo_MRT_TableBodyRow, Object.assign({}, props), row.id)) : (jsx(MRT_TableBodyRow, Object.assign({}, props), row.id));
@@ -970,8 +1002,8 @@ const MRT_RowPinButton = (_a) => {
 
 const MRT_TableBodyRowPinButton = (_a) => {
     var { row, table } = _a, rest = __rest(_a, ["row", "table"]);
-    const { getState, options: { enableRowPinning, rowPinningDisplayMode }, } = table;
-    const { density } = getState();
+    const { state, options: { enableRowPinning, rowPinningDisplayMode }, } = table;
+    const { density } = state;
     const canPin = parseFromValuesOrFunc(enableRowPinning, row);
     if (!canPin)
         return null;
@@ -990,15 +1022,15 @@ var classes$v = {"root":"MRT_ColumnPinningButtons-module_root__scTtW","left":"MR
 
 const MRT_ColumnPinningButtons = ({ column, table, }) => {
     const { options: { icons: { IconPinned, IconPinnedOff }, localization, }, } = table;
-    return (jsx(Flex, { className: clsx('mrt-column-pinning-buttons', classes$v.root), children: column.getIsPinned() ? (jsx(Tooltip, { label: localization.unpin, withinPortal: true, children: jsx(ActionIcon, { color: "gray", onClick: () => column.pin(false), size: "md", variant: "subtle", children: jsx(IconPinnedOff, {}) }) })) : (jsxs(Fragment, { children: [jsx(Tooltip, { label: localization.pinToLeft, withinPortal: true, children: jsx(ActionIcon, { color: "gray", onClick: () => column.pin('left'), size: "md", variant: "subtle", children: jsx(IconPinned, { className: classes$v.left }) }) }), jsx(Tooltip, { label: localization.pinToRight, withinPortal: true, children: jsx(ActionIcon, { color: "gray", onClick: () => column.pin('right'), size: "md", variant: "subtle", children: jsx(IconPinned, { className: classes$v.right }) }) })] })) }));
+    return (jsx(Flex, { className: clsx('mrt-column-pinning-buttons', classes$v.root), children: column.getIsPinned() ? (jsx(Tooltip, { label: localization.unpin, withinPortal: true, children: jsx(ActionIcon, { color: "gray", onClick: () => column.pin(false), size: "md", variant: "subtle", children: jsx(IconPinnedOff, {}) }) })) : (jsxs(Fragment, { children: [jsx(Tooltip, { label: localization.pinToLeft, withinPortal: true, children: jsx(ActionIcon, { color: "gray", onClick: () => column.pin('start'), size: "md", variant: "subtle", children: jsx(IconPinned, { className: classes$v.left }) }) }), jsx(Tooltip, { label: localization.pinToRight, withinPortal: true, children: jsx(ActionIcon, { color: "gray", onClick: () => column.pin('end'), size: "md", variant: "subtle", children: jsx(IconPinned, { className: classes$v.right }) }) })] })) }));
 };
 
 var classes$u = {"root":"MRT_EditActionButtons-module_root__BfxVZ"};
 
 const MRT_EditActionButtons = (_a) => {
     var { row, table, variant = 'icon' } = _a, rest = __rest(_a, ["row", "table", "variant"]);
-    const { getState, options: { icons: { IconCircleX, IconDeviceFloppy }, localization, onCreatingRowCancel, onCreatingRowSave, onEditingRowCancel, onEditingRowSave, }, refs: { editInputRefs }, setCreatingRow, setEditingRow, } = table;
-    const { creatingRow, editingRow, isSaving } = getState();
+    const { state, options: { icons: { IconCircleX, IconDeviceFloppy }, localization, onCreatingRowCancel, onCreatingRowSave, onEditingRowCancel, onEditingRowSave, }, refs: { editInputRefs }, setCreatingRow, setEditingRow, } = table;
+    const { creatingRow, editingRow, isSaving } = state;
     const isCreating = (creatingRow === null || creatingRow === void 0 ? void 0 : creatingRow.id) === row.id;
     const isEditing = (editingRow === null || editingRow === void 0 ? void 0 : editingRow.id) === row.id;
     const handleCancel = () => {
@@ -1010,11 +1042,11 @@ const MRT_EditActionButtons = (_a) => {
             onEditingRowCancel === null || onEditingRowCancel === void 0 ? void 0 : onEditingRowCancel({ row, table });
             setEditingRow(null);
         }
-        row._valuesCache = {}; //reset values cache
+        row._valuesCache = {}; // reset values cache
     };
     const handleSubmitRow = () => {
         var _a;
-        //look for auto-filled input values
+        // look for auto-filled input values
         (_a = Object.values(editInputRefs === null || editInputRefs === void 0 ? void 0 : editInputRefs.current)
             .filter((inputRef) => { var _a, _b; return row.id === ((_b = (_a = inputRef === null || inputRef === void 0 ? void 0 : inputRef.name) === null || _a === void 0 ? void 0 : _a.split('_')) === null || _b === void 0 ? void 0 : _b[0]); })) === null || _a === void 0 ? void 0 : _a.forEach((input) => {
             if (input.value !== undefined &&
@@ -1047,8 +1079,8 @@ var classes$t = {"root":"MRT_ExpandAllButton-module_root__gkBZD","chevron":"MRT_
 const MRT_ExpandAllButton = (_a) => {
     var _b, _c;
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getCanSomeRowsExpand, getIsAllRowsExpanded, getIsSomeRowsExpanded, getState, options: { icons: { IconChevronsDown }, localization, mantineExpandAllButtonProps, renderDetailPanel, }, toggleAllRowsExpanded, } = table;
-    const { density, isLoading } = getState();
+    const { getCanSomeRowsExpand, getIsAllRowsExpanded, getIsSomeRowsExpanded, state, options: { icons: { IconChevronsDown }, localization, mantineExpandAllButtonProps, renderDetailPanel, }, toggleAllRowsExpanded, } = table;
+    const { density, isLoading } = state;
     const actionIconProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineExpandAllButtonProps, {
         table,
     })), rest);
@@ -1061,10 +1093,6 @@ const MRT_ExpandAllButton = (_a) => {
                         ? classes$t.right
                         : undefined) })) })) }));
 };
-
-var classes$s = {"root":"MRT_ShowHideColumnsMenu-module_root__2UWak","content":"MRT_ShowHideColumnsMenu-module_content__ehkWQ"};
-
-var classes$r = {"root":"MRT_ShowHideColumnsMenuItems-module_root__wYgv-","menu":"MRT_ShowHideColumnsMenuItems-module_menu__CeATR","grab":"MRT_ShowHideColumnsMenuItems-module_grab__a-d-y","pin":"MRT_ShowHideColumnsMenuItems-module_pin__P437b","switch":"MRT_ShowHideColumnsMenuItems-module_switch__tMsdt","header":"MRT_ShowHideColumnsMenuItems-module_header__xVkKb"};
 
 const getColumnId = (columnDef) => { var _a, _b, _c, _d; return (_d = (_a = columnDef.id) !== null && _a !== void 0 ? _a : (_c = (_b = columnDef.accessorKey) === null || _b === void 0 ? void 0 : _b.toString) === null || _c === void 0 ? void 0 : _c.call(_b)) !== null && _d !== void 0 ? _d : columnDef.header; };
 const getAllLeafColumnDefs = (columns) => {
@@ -1083,40 +1111,34 @@ const getAllLeafColumnDefs = (columns) => {
     return allLeafColumnDefs;
 };
 const prepareColumns = ({ columnDefs, tableOptions, }) => {
-    const { aggregationFns = {}, defaultDisplayColumn, filterFns = {}, sortingFns = {}, state: { columnFilterFns = {} } = {}, } = tableOptions;
+    const { defaultDisplayColumn, filterFns = {}, sortFns = {}, state: { columnFilterFns = {} } = {}, } = tableOptions;
     return columnDefs.map((columnDef) => {
         var _a, _b;
-        //assign columnId
+        // assign columnId
         if (!columnDef.id)
             columnDef.id = getColumnId(columnDef);
-        //assign columnDefType
+        // assign columnDefType
         if (!columnDef.columnDefType)
             columnDef.columnDefType = 'data';
         if ((_a = columnDef.columns) === null || _a === void 0 ? void 0 : _a.length) {
             columnDef.columnDefType = 'group';
-            //recursively prepare columns if this is a group column
+            // recursively prepare columns if this is a group column
             columnDef.columns = prepareColumns({
                 columnDefs: columnDef.columns,
                 tableOptions,
             });
         }
         else if (columnDef.columnDefType === 'data') {
-            //assign aggregationFns if multiple aggregationFns are provided
-            if (Array.isArray(columnDef.aggregationFn)) {
-                const aggFns = columnDef.aggregationFn;
-                columnDef.aggregationFn = (columnId, leafRows, childRows) => aggFns.map((fn) => { var _a; return (_a = aggregationFns[fn]) === null || _a === void 0 ? void 0 : _a.call(aggregationFns, columnId, leafRows, childRows); });
-            }
-            //assign filterFns
+            // assign filterFns
             if (Object.keys(filterFns).includes(columnFilterFns[columnDef.id])) {
                 columnDef.filterFn =
                     (_b = filterFns[columnFilterFns[columnDef.id]]) !== null && _b !== void 0 ? _b : filterFns.fuzzy;
                 columnDef._filterFn =
                     columnFilterFns[columnDef.id];
             }
-            //assign sortingFns
-            if (Object.keys(sortingFns).includes(columnDef.sortingFn)) {
-                // @ts-ignore
-                columnDef.sortingFn = sortingFns[columnDef.sortingFn];
+            // assign sortFns
+            if (Object.keys(sortFns).includes(columnDef.sortFn)) {
+                columnDef.sortFn = sortFns[columnDef.sortFn];
             }
         }
         else if (columnDef.columnDefType === 'display') {
@@ -1142,58 +1164,6 @@ const getDefaultColumnFilterFn = (columnDef) => {
     if (['checkbox', 'date', 'select'].includes(filterVariant || ''))
         return 'equals';
     return 'fuzzy';
-};
-
-const MRT_ShowHideColumnsMenuItems = ({ allColumns, column, hoveredColumn, setHoveredColumn, table, }) => {
-    var _a;
-    const theme = useMantineTheme();
-    const { getState, options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, setColumnOrder, } = table;
-    const { columnOrder } = getState();
-    const { columnDef } = column;
-    const { columnDefType } = columnDef;
-    const switchChecked = (columnDefType !== 'group' && column.getIsVisible()) ||
-        (columnDefType === 'group' &&
-            column.getLeafColumns().some((col) => col.getIsVisible()));
-    const handleToggleColumnHidden = (column) => {
-        var _a, _b;
-        if (columnDefType === 'group') {
-            (_b = (_a = column === null || column === void 0 ? void 0 : column.columns) === null || _a === void 0 ? void 0 : _a.forEach) === null || _b === void 0 ? void 0 : _b.call(_a, (childColumn) => {
-                childColumn.toggleVisibility(!switchChecked);
-            });
-        }
-        else {
-            column.toggleVisibility();
-        }
-    };
-    const menuItemRef = useRef(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const handleDragStart = (e) => {
-        setIsDragging(true);
-        e.dataTransfer.setDragImage(menuItemRef.current, 0, 0);
-    };
-    const handleDragEnd = (_e) => {
-        setIsDragging(false);
-        setHoveredColumn(null);
-        if (hoveredColumn) {
-            setColumnOrder(reorderColumn(column, hoveredColumn, columnOrder));
-        }
-    };
-    const handleDragEnter = (_e) => {
-        if (!isDragging && columnDef.enableColumnOrdering !== false) {
-            setHoveredColumn(column);
-        }
-    };
-    if (!columnDef.header || columnDef.visibleInShowHideMenu === false) {
-        return null;
-    }
-    return (jsxs(Fragment, { children: [jsx(Menu.Item, Object.assign({ className: classes$r.root, component: "span", onDragEnter: handleDragEnter, ref: menuItemRef, style: {
-                    '--_column-depth': `${(column.depth + 0.5) * 2}rem`,
-                    '--_hover-color': getPrimaryColor(theme),
-                } }, dataVariable('dragging', isDragging), dataVariable('order-hovered', (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === column.id), { children: jsxs(Box, { className: classes$r.menu, children: [columnDefType !== 'group' &&
-                            enableColumnOrdering &&
-                            !allColumns.some((col) => col.columnDef.columnDefType === 'group') &&
-                            (columnDef.enableColumnOrdering !== false ? (jsx(MRT_GrabHandleButton, { onDragEnd: handleDragEnd, onDragStart: handleDragStart, table: table })) : (jsx(Box, { className: classes$r.grab }))), enableColumnPinning &&
-                            (column.getCanPin() ? (jsx(MRT_ColumnPinningButtons, { column: column, table: table })) : (jsx(Box, { className: classes$r.pin }))), enableHiding ? (jsx(Tooltip, { label: localization.toggleVisibility, openDelay: 1000, withinPortal: true, children: jsx(Switch, { checked: switchChecked, className: classes$r.switch, disabled: !column.getCanHide(), label: columnDef.header, onChange: () => handleToggleColumnHidden(column) }) })) : (jsx(Text, { className: classes$r.header, children: columnDef.header }))] }) })), (_a = column.columns) === null || _a === void 0 ? void 0 : _a.map((c, i) => (jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: c, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${i}-${c.id}`)))] }));
 };
 
 function defaultDisplayColumnProps({ header, id, size, tableOptions, }) {
@@ -1261,9 +1231,65 @@ const getDefaultColumnOrderIds = (tableOptions, reset = false) => {
     ];
 };
 
+var classes$s = {"root":"MRT_ShowHideColumnsMenuItems-module_root__wYgv-","menu":"MRT_ShowHideColumnsMenuItems-module_menu__CeATR","grab":"MRT_ShowHideColumnsMenuItems-module_grab__a-d-y","pin":"MRT_ShowHideColumnsMenuItems-module_pin__P437b","switch":"MRT_ShowHideColumnsMenuItems-module_switch__tMsdt","header":"MRT_ShowHideColumnsMenuItems-module_header__xVkKb"};
+
+const MRT_ShowHideColumnsMenuItems = ({ allColumns, column, hoveredColumn, setHoveredColumn, table, }) => {
+    var _a;
+    const theme = useMantineTheme();
+    const { state, options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, setColumnOrder, } = table;
+    const { columnOrder } = state;
+    const { columnDef } = column;
+    const { columnDefType } = columnDef;
+    const switchChecked = (columnDefType !== 'group' && column.getIsVisible()) ||
+        (columnDefType === 'group' &&
+            column.getLeafColumns().some((col) => col.getIsVisible()));
+    const handleToggleColumnHidden = (column) => {
+        var _a, _b;
+        if (columnDefType === 'group') {
+            (_b = (_a = column === null || column === void 0 ? void 0 : column.columns) === null || _a === void 0 ? void 0 : _a.forEach) === null || _b === void 0 ? void 0 : _b.call(_a, (childColumn) => {
+                childColumn.toggleVisibility(!switchChecked);
+            });
+        }
+        else {
+            column.toggleVisibility();
+        }
+    };
+    const menuItemRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const handleDragStart = (e) => {
+        setIsDragging(true);
+        e.dataTransfer.setDragImage(menuItemRef.current, 0, 0);
+    };
+    const handleDragEnd = (_e) => {
+        setIsDragging(false);
+        setHoveredColumn(null);
+        if (hoveredColumn) {
+            setColumnOrder(reorderColumn(column, hoveredColumn, columnOrder));
+        }
+    };
+    const handleDragEnter = (_e) => {
+        if (!isDragging && columnDef.enableColumnOrdering !== false) {
+            setHoveredColumn(column);
+        }
+    };
+    if (!columnDef.header || columnDef.visibleInShowHideMenu === false) {
+        return null;
+    }
+    return (jsxs(Fragment, { children: [jsx(Menu.Item, Object.assign({ className: classes$s.root, component: "span", onDragEnter: handleDragEnter, ref: menuItemRef, style: {
+                    '--_column-depth': `${(column.depth + 0.5) * 2}rem`,
+                    '--_hover-color': getPrimaryColor(theme),
+                } }, dataVariable('dragging', isDragging), dataVariable('order-hovered', (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === column.id), { children: jsxs(Box, { className: classes$s.menu, children: [columnDefType !== 'group' &&
+                            enableColumnOrdering &&
+                            !allColumns.some((col) => col.columnDef.columnDefType === 'group') &&
+                            (columnDef.enableColumnOrdering !== false ? (jsx(MRT_GrabHandleButton, { onDragEnd: handleDragEnd, onDragStart: handleDragStart, table: table })) : (jsx(Box, { className: classes$s.grab }))), enableColumnPinning &&
+                            (column.getCanPin() ? (jsx(MRT_ColumnPinningButtons, { column: column, table: table })) : (jsx(Box, { className: classes$s.pin }))), enableHiding ? (jsx(Tooltip, { label: localization.toggleVisibility, openDelay: 1000, withinPortal: true, children: jsx(Switch, { checked: switchChecked, className: classes$s.switch, disabled: !column.getCanHide(), label: columnDef.header, onChange: () => handleToggleColumnHidden(column) }) })) : (jsx(Text, { className: classes$s.header, children: columnDef.header }))] }) })), (_a = column.columns) === null || _a === void 0 ? void 0 : _a.map((c, i) => (jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: c, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${i}-${c.id}`)))] }));
+};
+
+var classes$r = {"root":"MRT_ShowHideColumnsMenu-module_root__2UWak","content":"MRT_ShowHideColumnsMenu-module_content__ehkWQ"};
+
 const MRT_ShowHideColumnsMenu = ({ table, }) => {
-    const { getAllColumns, getAllLeafColumns, getCenterLeafColumns, getIsAllColumnsVisible, getIsSomeColumnsPinned, getIsSomeColumnsVisible, getLeftLeafColumns, getRightLeafColumns, getState, options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, } = table;
-    const { columnOrder, columnPinning } = getState();
+    const { getAllColumns, getAllLeafColumns, getCenterLeafColumns, getIsAllColumnsVisible, getIsSomeColumnsPinned, getIsSomeColumnsVisible, getStartLeafColumns, getEndLeafColumns, state, options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, } = table;
+    const { columnOrder, columnPinning } = state;
     const handleToggleAllColumns = (value) => {
         getAllLeafColumns()
             .filter((col) => col.columnDef.enableHiding !== false)
@@ -1274,9 +1300,9 @@ const MRT_ShowHideColumnsMenu = ({ table, }) => {
         if (columnOrder.length > 0 &&
             !columns.some((col) => col.columnDef.columnDefType === 'group')) {
             return [
-                ...getLeftLeafColumns(),
+                ...getStartLeafColumns(),
                 ...Array.from(new Set(columnOrder)).map((colId) => getCenterLeafColumns().find((col) => (col === null || col === void 0 ? void 0 : col.id) === colId)),
-                ...getRightLeafColumns(),
+                ...getEndLeafColumns(),
             ].filter(Boolean);
         }
         return columns;
@@ -1285,11 +1311,11 @@ const MRT_ShowHideColumnsMenu = ({ table, }) => {
         columnPinning,
         getAllColumns(),
         getCenterLeafColumns(),
-        getLeftLeafColumns(),
-        getRightLeafColumns(),
+        getStartLeafColumns(),
+        getEndLeafColumns(),
     ]);
     const [hoveredColumn, setHoveredColumn] = useState(null);
-    return (jsxs(Menu.Dropdown, { className: clsx('mrt-show-hide-columns-menu', classes$s.root), children: [jsxs(Flex, { className: classes$s.content, children: [enableHiding && (jsx(Button, { disabled: !getIsSomeColumnsVisible(), onClick: () => handleToggleAllColumns(false), variant: "subtle", children: localization.hideAll })), enableColumnOrdering && (jsx(Button, { onClick: () => table.setColumnOrder(getDefaultColumnOrderIds(table.options, true)), variant: "subtle", children: localization.resetOrder })), enableColumnPinning && (jsx(Button, { disabled: !getIsSomeColumnsPinned(), onClick: () => table.resetColumnPinning(true), variant: "subtle", children: localization.unpinAll })), enableHiding && (jsx(Button, { disabled: getIsAllColumnsVisible(), onClick: () => handleToggleAllColumns(true), variant: "subtle", children: localization.showAll }))] }), jsx(Menu.Divider, {}), allColumns.map((column, index) => (jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: column, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${index}-${column.id}`)))] }));
+    return (jsxs(Menu.Dropdown, { className: clsx('mrt-show-hide-columns-menu', classes$r.root), children: [jsxs(Flex, { className: classes$r.content, children: [enableHiding && (jsx(Button, { disabled: !getIsSomeColumnsVisible(), onClick: () => handleToggleAllColumns(false), variant: "subtle", children: localization.hideAll })), enableColumnOrdering && (jsx(Button, { onClick: () => table.setColumnOrder(getDefaultColumnOrderIds(Object.assign(Object.assign({}, table.options), { state }), true)), variant: "subtle", children: localization.resetOrder })), enableColumnPinning && (jsx(Button, { disabled: !getIsSomeColumnsPinned(), onClick: () => table.resetColumnPinning(true), variant: "subtle", children: localization.unpinAll })), enableHiding && (jsx(Button, { disabled: getIsAllColumnsVisible(), onClick: () => handleToggleAllColumns(true), variant: "subtle", children: localization.showAll }))] }), jsx(Menu.Divider, {}), allColumns.map((column, index) => (jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: column, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${index}-${column.id}`)))] }));
 };
 
 const MRT_ShowHideColumnsButton = (_a) => {
@@ -1304,20 +1330,20 @@ const next = {
     xs: 'xl',
 };
 const MRT_ToggleDensePaddingButton = (_a) => {
-    var { table: { getState, options: { icons: { IconBaselineDensityLarge, IconBaselineDensityMedium, IconBaselineDensitySmall, }, localization: { toggleDensity }, }, setDensity, }, title } = _a, rest = __rest(_a, ["table", "title"]);
-    const { density } = getState();
+    var { table: { state, options: { icons: { IconBaselineDensityLarge, IconBaselineDensityMedium, IconBaselineDensitySmall, }, localization: { toggleDensity }, }, setDensity, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    const { density } = state;
     return (jsx(Tooltip, { label: title !== null && title !== void 0 ? title : toggleDensity, withinPortal: true, children: jsx(ActionIcon, Object.assign({ "aria-label": title !== null && title !== void 0 ? title : toggleDensity, color: "gray", onClick: () => setDensity((current) => next[current]), size: "lg", variant: "subtle" }, rest, { children: density === 'xs' ? (jsx(IconBaselineDensitySmall, {})) : density === 'md' ? (jsx(IconBaselineDensityMedium, {})) : (jsx(IconBaselineDensityLarge, {})) })) }));
 };
 
 const MRT_ToggleFiltersButton = (_a) => {
-    var { table: { getState, options: { icons: { IconFilter, IconFilterOff }, localization: { showHideFilters }, }, setShowColumnFilters, }, title } = _a, rest = __rest(_a, ["table", "title"]);
-    const { showColumnFilters } = getState();
+    var { table: { state, options: { icons: { IconFilter, IconFilterOff }, localization: { showHideFilters }, }, setShowColumnFilters, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    const { showColumnFilters } = state;
     return (jsx(Tooltip, { label: title !== null && title !== void 0 ? title : showHideFilters, withinPortal: true, children: jsx(ActionIcon, Object.assign({ "aria-label": title !== null && title !== void 0 ? title : showHideFilters, color: "gray", onClick: () => setShowColumnFilters((current) => !current), size: "lg", variant: "subtle" }, rest, { children: showColumnFilters ? jsx(IconFilterOff, {}) : jsx(IconFilter, {}) })) }));
 };
 
 const MRT_ToggleFullScreenButton = (_a) => {
-    var { table: { getState, options: { icons: { IconMaximize, IconMinimize }, localization: { toggleFullScreen }, }, setIsFullScreen, }, title } = _a, rest = __rest(_a, ["table", "title"]);
-    const { isFullScreen } = getState();
+    var { table: { state, options: { icons: { IconMaximize, IconMinimize }, localization: { toggleFullScreen }, }, setIsFullScreen, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    const { isFullScreen } = state;
     const [tooltipOpened, setTooltipOpened] = useState(false);
     const handleToggleFullScreen = () => {
         setTooltipOpened(false);
@@ -1327,8 +1353,8 @@ const MRT_ToggleFullScreenButton = (_a) => {
 };
 
 const MRT_ToggleGlobalFilterButton = (_a) => {
-    var { table: { getState, options: { icons: { IconSearch, IconSearchOff }, localization: { showHideSearch }, }, refs: { searchInputRef }, setShowGlobalFilter, }, title } = _a, rest = __rest(_a, ["table", "title"]);
-    const { globalFilter, showGlobalFilter } = getState();
+    var { table: { state, options: { icons: { IconSearch, IconSearchOff }, localization: { showHideSearch }, }, refs: { searchInputRef }, setShowGlobalFilter, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    const { globalFilter, showGlobalFilter } = state;
     const handleToggleSearch = () => {
         setShowGlobalFilter(!showGlobalFilter);
         setTimeout(() => { var _a; return (_a = searchInputRef.current) === null || _a === void 0 ? void 0 : _a.focus(); }, 100);
@@ -1350,13 +1376,13 @@ const MRT_RowActionMenu = (_a) => {
 };
 
 const MRT_ToggleRowActionMenuButton = ({ cell, row, table, }) => {
-    const { getState, options: { createDisplayMode, editDisplayMode, enableEditing, icons: { IconEdit }, localization: { edit }, renderRowActionMenuItems, renderRowActions, }, setEditingRow, } = table;
-    const { creatingRow, editingRow } = getState();
+    const { state, options: { createDisplayMode, editDisplayMode, enableEditing, icons: { IconEdit }, localization: { edit }, renderRowActionMenuItems, renderRowActions, }, setEditingRow, } = table;
+    const { creatingRow, editingRow } = state;
     const isCreating = (creatingRow === null || creatingRow === void 0 ? void 0 : creatingRow.id) === row.id;
     const isEditing = (editingRow === null || editingRow === void 0 ? void 0 : editingRow.id) === row.id;
     const handleStartEditMode = (event) => {
         event.stopPropagation();
-        setEditingRow(Object.assign({}, row));
+        setEditingRow(row);
     };
     const showEditActionButtons = (isCreating && createDisplayMode === 'row') ||
         (isEditing && editDisplayMode === 'row');
@@ -1364,11 +1390,7 @@ const MRT_ToggleRowActionMenuButton = ({ cell, row, table, }) => {
             parseFromValuesOrFunc(enableEditing, row) ? (jsx(Tooltip, { label: edit, openDelay: 1000, position: "right", withinPortal: true, children: jsx(ActionIcon, { "aria-label": edit, color: "gray", disabled: !!editingRow && editingRow.id !== row.id, onClick: handleStartEditMode, size: "md", variant: "subtle", children: jsx(IconEdit, {}) }) })) : renderRowActionMenuItems ? (jsx(MRT_RowActionMenu, { handleEdit: handleStartEditMode, row: row, table: table })) : null }));
 };
 
-var classes$q = {"root":"MRT_TableFooter-module_root__-JXpw","grid":"MRT_TableFooter-module_grid__J3Ga-","sticky":"MRT_TableFooter-module_sticky__GcoK6"};
-
-var classes$p = {"root":"MRT_TableFooterRow-module_root__EuoPr","layout-mode-grid":"MRT_TableFooterRow-module_layout-mode-grid__dUEMF"};
-
-var classes$o = {"root":"MRT_TableFooterCell-module_root__d8Scs","grid":"MRT_TableFooterCell-module_grid__H9jLk","group":"MRT_TableFooterCell-module_group__l3-p-"};
+var classes$q = {"root":"MRT_TableFooterCell-module_root__d8Scs","grid":"MRT_TableFooterCell-module_grid__H9jLk","group":"MRT_TableFooterCell-module_group__l3-p-"};
 
 const MRT_TableFooterCell = (_a) => {
     var _b, _c, _d, _e, _f;
@@ -1395,18 +1417,18 @@ const MRT_TableFooterCell = (_a) => {
     else if (layoutMode === 'grid-no-grow') {
         widthStyles.flex = `${+(columnDef.grow || 0)} 0 auto`;
     }
-    return (jsx(TableTh, Object.assign({ colSpan: footer.colSpan, "data-column-pinned": isColumnPinned || undefined, "data-first-right-pinned": (isColumnPinned === 'right' &&
-            column.getIsFirstColumn(isColumnPinned)) ||
-            undefined, "data-index": renderedColumnIndex, "data-last-left-pinned": (isColumnPinned === 'left' && column.getIsLastColumn(isColumnPinned)) ||
+    return (jsx(TableTh, Object.assign({ colSpan: footer.colSpan, "data-column-pinned": isColumnPinned || undefined, "data-first-end-pinned": (isColumnPinned === 'end' && column.getIsFirstColumn(isColumnPinned)) ||
+            undefined, "data-index": renderedColumnIndex, "data-last-start-pinned": (isColumnPinned === 'start' &&
+            column.getIsLastColumn(isColumnPinned)) ||
             undefined }, tableCellProps, { __vars: Object.assign({ '--mrt-cell-align': (_c = tableCellProps.align) !== null && _c !== void 0 ? _c : (columnDefType === 'group'
                 ? 'center'
                 : direction.dir === 'rtl'
                     ? 'right'
-                    : 'left'), '--mrt-table-cell-left': isColumnPinned === 'left'
+                    : 'left'), '--mrt-table-cell-start': isColumnPinned === 'start'
                 ? `${column.getStart(isColumnPinned)}`
-                : undefined, '--mrt-table-cell-right': isColumnPinned === 'right'
+                : undefined, '--mrt-table-cell-end': isColumnPinned === 'end'
                 ? `${column.getAfter(isColumnPinned)}`
-                : undefined }, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.__vars), className: clsx(classes$o.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$o.grid, columnDefType === 'group' && classes$o.group, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), style: (theme) => (Object.assign(Object.assign({}, widthStyles), parseFromValuesOrFunc(tableCellProps.style, theme))), children: (_d = tableCellProps.children) !== null && _d !== void 0 ? _d : (footer.isPlaceholder
+                : undefined }, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.__vars), className: clsx(classes$q.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$q.grid, columnDefType === 'group' && classes$q.group, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), style: (theme) => (Object.assign(Object.assign({}, widthStyles), parseFromValuesOrFunc(tableCellProps.style, theme))), children: (_d = tableCellProps.children) !== null && _d !== void 0 ? _d : (footer.isPlaceholder
             ? null
             : ((_f = (_e = parseFromValuesOrFunc(columnDef.Footer, {
                 column,
@@ -1414,6 +1436,8 @@ const MRT_TableFooterCell = (_a) => {
                 table,
             })) !== null && _e !== void 0 ? _e : columnDef.footer) !== null && _f !== void 0 ? _f : null)) })));
 };
+
+var classes$p = {"root":"MRT_TableFooterRow-module_root__EuoPr","layout-mode-grid":"MRT_TableFooterRow-module_layout-mode-grid__dUEMF"};
 
 const MRT_TableFooterRow = (_a) => {
     var _b;
@@ -1441,27 +1465,165 @@ const MRT_TableFooterRow = (_a) => {
             }), virtualPaddingRight ? (jsx(Box, { component: "th", display: "flex", w: virtualPaddingRight })) : null] })));
 };
 
+var classes$o = {"root":"MRT_TableFooter-module_root__-JXpw","grid":"MRT_TableFooter-module_grid__J3Ga-","sticky":"MRT_TableFooter-module_sticky__GcoK6"};
+
 const MRT_TableFooter = (_a) => {
     var { columnVirtualizer, table } = _a, rest = __rest(_a, ["columnVirtualizer", "table"]);
-    const { getFooterGroups, getState, options: { enableStickyFooter, layoutMode, mantineTableFooterProps }, refs: { tableFooterRef }, } = table;
-    const { isFullScreen } = getState();
+    const { getFooterGroups, state, options: { enableStickyFooter, layoutMode, mantineTableFooterProps }, refs: { tableFooterRef }, } = table;
+    const { isFullScreen } = state;
     const tableFooterProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableFooterProps, {
         table,
     })), rest);
     const stickFooter = (isFullScreen || enableStickyFooter) && enableStickyFooter !== false;
-    return (jsx(TableTfoot, Object.assign({}, tableFooterProps, { className: clsx(classes$q.root, tableFooterProps === null || tableFooterProps === void 0 ? void 0 : tableFooterProps.className, stickFooter && classes$q.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$q.grid), ref: (ref) => {
+    return (jsx(TableTfoot, Object.assign({}, tableFooterProps, { className: clsx(classes$o.root, tableFooterProps === null || tableFooterProps === void 0 ? void 0 : tableFooterProps.className, stickFooter && classes$o.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$o.grid), ref: (ref) => {
             tableFooterRef.current = ref;
-            assignRef(tableFooterProps === null || tableFooterProps === void 0 ? void 0 : tableFooterProps.ref, ref);
+            if (tableFooterProps === null || tableFooterProps === void 0 ? void 0 : tableFooterProps.ref) {
+                // @ts-ignore
+                tableFooterProps.ref.current = ref;
+            }
         }, children: getFooterGroups().map((footerGroup) => (jsx(MRT_TableFooterRow, { columnVirtualizer: columnVirtualizer, footerGroup: footerGroup, table: table }, footerGroup.id))) })));
 };
 
-var classes$n = {"root":"MRT_TableHead-module_root__j9NkO","root-grid":"MRT_TableHead-module_root-grid__c3aGl","root-table-row-group":"MRT_TableHead-module_root-table-row-group__d9FO4","root-sticky":"MRT_TableHead-module_root-sticky__0kuDE","banner-tr":"MRT_TableHead-module_banner-tr__EhT-x","banner-th":"MRT_TableHead-module_banner-th__KwM5a","grid":"MRT_TableHead-module_grid__OJ-td"};
+const MRT_SelectCheckbox = (_a) => {
+    var _b;
+    var { renderedRowIndex = 0, row, table } = _a, rest = __rest(_a, ["renderedRowIndex", "row", "table"]);
+    const { state, options: { enableMultiRowSelection, localization, mantineSelectAllCheckboxProps, mantineSelectCheckboxProps, selectAllMode, selectDisplayMode, }, } = table;
+    const { density, isLoading } = state;
+    const selectAll = !row;
+    const allRowsSelected = selectAll
+        ? selectAllMode === 'page'
+            ? table.getIsAllPageRowsSelected()
+            : table.getIsAllRowsSelected()
+        : undefined;
+    const isChecked = selectAll
+        ? allRowsSelected
+        : getIsRowSelected({ row, table });
+    const checkboxProps = Object.assign(Object.assign({}, (selectAll
+        ? parseFromValuesOrFunc(mantineSelectAllCheckboxProps, { table })
+        : parseFromValuesOrFunc(mantineSelectCheckboxProps, {
+            row,
+            table,
+        }))), rest);
+    const onSelectionChange = row
+        ? getMRT_RowSelectionHandler({
+            renderedRowIndex,
+            row,
+            table,
+        })
+        : undefined;
+    const onSelectAllChange = getMRT_SelectAllHandler({ table });
+    const commonProps = Object.assign(Object.assign({ 'aria-label': selectAll
+            ? localization.toggleSelectAll
+            : localization.toggleSelectRow, checked: isChecked, disabled: isLoading || (row && !row.getCanSelect()) || (row === null || row === void 0 ? void 0 : row.id) === 'mrt-row-create', onChange: (event) => {
+            event.stopPropagation();
+            if (selectAll) {
+                onSelectAllChange(event);
+            }
+            else {
+                onSelectionChange(event);
+            }
+        }, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps), { onClick: (e) => {
+            var _a;
+            e.stopPropagation();
+            (_a = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.onClick) === null || _a === void 0 ? void 0 : _a.call(checkboxProps, e);
+        }, title: undefined });
+    return (jsx(Tooltip, { label: (_b = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _b !== void 0 ? _b : (selectAll
+            ? localization.toggleSelectAll
+            : localization.toggleSelectRow), openDelay: 1000, withinPortal: true, children: jsx("span", { children: selectDisplayMode === 'switch' ? (jsx(Switch, Object.assign({}, commonProps))) : selectDisplayMode === 'radio' ||
+                enableMultiRowSelection === false ? (jsx(Radio, Object.assign({}, commonProps))) : (jsx(Checkbox, Object.assign({ indeterminate: !isChecked && selectAll
+                    ? table.getIsSomeRowsSelected()
+                    : (row === null || row === void 0 ? void 0 : row.getIsSomeSelected()) && row.getCanSelectSubRows() }, commonProps))) }) }));
+};
 
-var classes$m = {"root":"MRT_TableHeadRow-module_root__hUKv4","layout-mode-grid":"MRT_TableHeadRow-module_layout-mode-grid__4ZGri","sticky":"MRT_TableHeadRow-module_sticky__Ej7Ax"};
+var classes$n = {"alert":"MRT_ToolbarAlertBanner-module_alert__PAhUK","alert-stacked":"MRT_ToolbarAlertBanner-module_alert-stacked__HR7Nq","alert-bottom":"MRT_ToolbarAlertBanner-module_alert-bottom__u9L-S","alert-badge":"MRT_ToolbarAlertBanner-module_alert-badge__GwDmX","toolbar-alert":"MRT_ToolbarAlertBanner-module_toolbar-alert__3sJGU","head-overlay":"MRT_ToolbarAlertBanner-module_head-overlay__Hw7jK"};
 
-var classes$l = {"root":"MRT_TableHeadCell-module_root__6y50a","root-grid":"MRT_TableHeadCell-module_root-grid__bAf1d","root-virtualized":"MRT_TableHeadCell-module_root-virtualized__CWLit","root-no-select":"MRT_TableHeadCell-module_root-no-select__BEOVU","content":"MRT_TableHeadCell-module_content__-pzSK","content-spaced":"MRT_TableHeadCell-module_content-spaced__S85Aa","content-center":"MRT_TableHeadCell-module_content-center__c-17L","content-right":"MRT_TableHeadCell-module_content-right__NSRZU","content-wrapper":"MRT_TableHeadCell-module_content-wrapper__py6aJ","content-wrapper-hidden-overflow":"MRT_TableHeadCell-module_content-wrapper-hidden-overflow__QY40r","content-wrapper-nowrap":"MRT_TableHeadCell-module_content-wrapper-nowrap__-4aIg","labels":"MRT_TableHeadCell-module_labels__oiMSr","labels-right":"MRT_TableHeadCell-module_labels-right__6ZJp-","labels-center":"MRT_TableHeadCell-module_labels-center__MM9q8","labels-sortable":"MRT_TableHeadCell-module_labels-sortable__tyuLr","labels-data":"MRT_TableHeadCell-module_labels-data__PvFGO","content-actions":"MRT_TableHeadCell-module_content-actions__utxbm"};
+const MRT_ToolbarAlertBanner = (_a) => {
+    var _b, _c, _d;
+    var { stackAlertBanner, table } = _a, rest = __rest(_a, ["stackAlertBanner", "table"]);
+    const { getFilteredSelectedRowModel, getPrePaginatedRowModel, state, options: { enableRowSelection, enableSelectAll, icons: { IconX }, localization, mantineToolbarAlertBannerBadgeProps, mantineToolbarAlertBannerProps, manualPagination, positionToolbarAlertBanner, renderToolbarAlertBannerContent, rowCount, }, } = table;
+    const { density, grouping, rowSelection, showAlertBanner } = state;
+    const alertProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineToolbarAlertBannerProps, {
+        table,
+    })), rest);
+    const badgeProps = parseFromValuesOrFunc(mantineToolbarAlertBannerBadgeProps, { table });
+    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().flatRows.length;
+    const selectedRowCount = useMemo(() => manualPagination
+        ? Object.values(rowSelection).filter(Boolean).length
+        : getFilteredSelectedRowModel().rows.length, [rowSelection, totalRowCount, manualPagination]);
+    const selectedAlert = selectedRowCount ? (jsxs(Flex, { align: "center", gap: "sm", children: [(_c = (_b = localization.selectedCountOfRowCountRowsSelected) === null || _b === void 0 ? void 0 : _b.replace('{selectedCount}', selectedRowCount.toString())) === null || _c === void 0 ? void 0 : _c.replace('{rowCount}', totalRowCount.toString()), jsx(Button, { onClick: (event) => getMRT_SelectAllHandler({ table })(event, false, true), size: "compact-xs", variant: "subtle", children: localization.clearSelection })] })) : null;
+    const groupedAlert = grouping.length > 0 ? (jsxs(Flex, { children: [localization.groupedBy, ' ', grouping.map((columnId, index) => (jsxs(Fragment$1, { children: [index > 0 ? localization.thenBy : '', jsxs(Badge, Object.assign({ className: classes$n['alert-badge'], rightSection: jsx(ActionIcon, { color: "white", onClick: () => table.getColumn(columnId).toggleGrouping(), size: "xs", variant: "subtle", children: jsx(IconX, { style: { transform: 'scale(0.8)' } }) }), variant: "filled" }, badgeProps, { children: [table.getColumn(columnId).columnDef.header, ' '] }))] }, `${index}-${columnId}`)))] })) : null;
+    return (jsx(Collapse, { expanded: showAlertBanner || !!selectedAlert || !!groupedAlert, transitionDuration: stackAlertBanner ? 200 : 0, children: jsx(Alert, Object.assign({ color: "blue", icon: false }, alertProps, { className: clsx(classes$n.alert, stackAlertBanner &&
+                !positionToolbarAlertBanner &&
+                classes$n['alert-stacked'], !stackAlertBanner &&
+                positionToolbarAlertBanner === 'bottom' &&
+                classes$n['alert-bottom'], alertProps === null || alertProps === void 0 ? void 0 : alertProps.className), children: (_d = renderToolbarAlertBannerContent === null || renderToolbarAlertBannerContent === void 0 ? void 0 : renderToolbarAlertBannerContent({
+                groupedAlert,
+                selectedAlert,
+                table,
+            })) !== null && _d !== void 0 ? _d : (jsxs(Flex, { className: clsx(classes$n['toolbar-alert'], positionToolbarAlertBanner === 'head-overlay' &&
+                    classes$n['head-overlay'], density), children: [enableRowSelection &&
+                        enableSelectAll &&
+                        positionToolbarAlertBanner === 'head-overlay' && (jsx(MRT_SelectCheckbox, { table: table })), jsxs(Stack, { children: [alertProps === null || alertProps === void 0 ? void 0 : alertProps.children, selectedAlert, groupedAlert] })] })) })) }));
+};
 
-var classes$k = {"filter-mode-label":"MRT_TableHeadCellFilterContainer-module_filter-mode-label__8reK-"};
+var classes$m = {"left":"MRT_ColumnActionMenu-module_left__cfNmY","right":"MRT_ColumnActionMenu-module_right__-nK56"};
+
+const MRT_ColumnActionMenu = (_a) => {
+    var _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
+    const { state, options: { columnFilterDisplayMode, enableColumnFilters, enableColumnPinning, enableColumnResizing, enableGrouping, enableHiding, enableSorting, enableSortingRemoval, icons: { IconArrowAutofitContent, IconBoxMultiple, IconClearAll, IconColumns, IconDotsVertical, IconEyeOff, IconFilter, IconFilterOff, IconPinned, IconPinnedOff, IconSortAscending, IconSortDescending, }, localization, mantineColumnActionsButtonProps, renderColumnActionsMenuItems, }, refs: { filterInputRefs }, setColumnOrder, setColumnResizing, setShowColumnFilters, toggleAllColumnsVisible, } = table;
+    const { column } = header;
+    const { columnDef } = column;
+    const { columnSizing, columnVisibility } = state;
+    const arg = { column, table };
+    const actionIconProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineColumnActionsButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineColumnActionsButtonProps, arg));
+    const handleClearSort = () => {
+        column.clearSorting();
+    };
+    const handleSortAsc = () => {
+        column.toggleSorting(false);
+    };
+    const handleSortDesc = () => {
+        column.toggleSorting(true);
+    };
+    const handleResetColumnSize = () => {
+        setColumnResizing((old) => (Object.assign(Object.assign({}, old), { isResizingColumn: false })));
+        column.resetSize();
+    };
+    const handleHideColumn = () => {
+        column.toggleVisibility(false);
+    };
+    const handlePinColumn = (pinDirection) => {
+        column.pin(pinDirection);
+    };
+    const handleGroupByColumn = () => {
+        column.toggleGrouping();
+        setColumnOrder((old) => ['mrt-row-expand', ...old]);
+    };
+    const handleClearFilter = () => {
+        column.setFilterValue('');
+    };
+    const handleFilterByColumn = () => {
+        setShowColumnFilters(true);
+        setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100);
+    };
+    const handleShowAllColumns = () => {
+        toggleAllColumnsVisible(true);
+    };
+    const internalColumnMenuItems = (jsxs(Fragment, { children: [enableSorting && column.getCanSort() && (jsxs(Fragment, { children: [enableSortingRemoval !== false && (jsx(Menu.Item, { disabled: !column.getIsSorted(), leftSection: jsx(IconClearAll, {}), onClick: handleClearSort, children: localization.clearSort })), jsx(Menu.Item, { disabled: column.getIsSorted() === 'asc', leftSection: jsx(IconSortAscending, {}), onClick: handleSortAsc, children: (_b = localization.sortByColumnAsc) === null || _b === void 0 ? void 0 : _b.replace('{column}', String(columnDef.header)) }), jsx(Menu.Item, { disabled: column.getIsSorted() === 'desc', leftSection: jsx(IconSortDescending, {}), onClick: handleSortDesc, children: (_c = localization.sortByColumnDesc) === null || _c === void 0 ? void 0 : _c.replace('{column}', String(columnDef.header)) }), (enableColumnFilters || enableGrouping || enableHiding) && (jsx(Menu.Divider, {}, 3))] })), enableColumnFilters &&
+                columnFilterDisplayMode !== 'popover' &&
+                column.getCanFilter() && (jsxs(Fragment, { children: [jsx(Menu.Item, { disabled: !column.getFilterValue(), leftSection: jsx(IconFilterOff, {}), onClick: handleClearFilter, children: localization.clearFilter }), jsx(Menu.Item, { leftSection: jsx(IconFilter, {}), onClick: handleFilterByColumn, children: (_d = localization.filterByColumn) === null || _d === void 0 ? void 0 : _d.replace('{column}', String(columnDef.header)) }), (enableGrouping || enableHiding) && jsx(Menu.Divider, {}, 2)] })), enableGrouping && column.getCanGroup() && (jsxs(Fragment, { children: [jsx(Menu.Item, { leftSection: jsx(IconBoxMultiple, {}), onClick: handleGroupByColumn, children: (_e = localization[column.getIsGrouped() ? 'ungroupByColumn' : 'groupByColumn']) === null || _e === void 0 ? void 0 : _e.replace('{column}', String(columnDef.header)) }), enableColumnPinning && jsx(Menu.Divider, {})] })), enableColumnPinning && column.getCanPin() && (jsxs(Fragment, { children: [jsx(Menu.Item, { disabled: column.getIsPinned() === 'start' || !column.getCanPin(), leftSection: jsx(IconPinned, { className: classes$m.left }), onClick: () => handlePinColumn('start'), children: localization.pinToLeft }), jsx(Menu.Item, { disabled: column.getIsPinned() === 'end' || !column.getCanPin(), leftSection: jsx(IconPinned, { className: classes$m.right }), onClick: () => handlePinColumn('end'), children: localization.pinToRight }), jsx(Menu.Item, { disabled: !column.getIsPinned(), leftSection: jsx(IconPinnedOff, {}), onClick: () => handlePinColumn(false), children: localization.unpin }), enableHiding && jsx(Menu.Divider, {})] })), enableColumnResizing && column.getCanResize() && (jsx(Menu.Item, { disabled: !columnSizing[column.id], leftSection: jsx(IconArrowAutofitContent, {}), onClick: handleResetColumnSize, children: localization.resetColumnSize }, 0)), enableHiding && (jsxs(Fragment, { children: [jsx(Menu.Item, { disabled: !column.getCanHide(), leftSection: jsx(IconEyeOff, {}), onClick: handleHideColumn, children: (_f = localization.hideColumn) === null || _f === void 0 ? void 0 : _f.replace('{column}', String(columnDef.header)) }, 0), jsx(Menu.Item, { disabled: !Object.values(columnVisibility).filter((visible) => !visible)
+                            .length, leftSection: jsx(IconColumns, {}), onClick: handleShowAllColumns, children: (_g = localization.showAllColumns) === null || _g === void 0 ? void 0 : _g.replace('{column}', String(columnDef.header)) }, 1)] }))] }));
+    return (jsxs(Menu, Object.assign({ closeOnItemClick: true, position: "bottom-start", withinPortal: true }, rest, { children: [jsx(Tooltip, { label: (_h = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.title) !== null && _h !== void 0 ? _h : localization.columnActions, openDelay: 1000, withinPortal: true, children: jsx(Menu.Target, { children: jsx(ActionIcon, Object.assign({ "aria-label": localization.columnActions, color: "gray", size: "sm", variant: "subtle" }, actionIconProps, { children: jsx(IconDotsVertical, { size: "100%" }) })) }) }), jsx(Menu.Dropdown, { children: (_l = (_k = (_j = columnDef.renderColumnActionsMenuItems) === null || _j === void 0 ? void 0 : _j.call(columnDef, {
+                    column,
+                    internalColumnMenuItems,
+                    table,
+                })) !== null && _k !== void 0 ? _k : renderColumnActionsMenuItems === null || renderColumnActionsMenuItems === void 0 ? void 0 : renderColumnActionsMenuItems({
+                    column,
+                    internalColumnMenuItems,
+                    table,
+                })) !== null && _l !== void 0 ? _l : internalColumnMenuItems })] })));
+};
 
 const fuzzy = (row, columnId, filterValue, addMeta) => {
     const itemRank = rankItem(row.getValue(columnId), filterValue, {
@@ -1564,19 +1726,19 @@ function localizedFilterOption(localization, option) {
     return (_a = localization[key]) !== null && _a !== void 0 ? _a : '';
 }
 
-var classes$j = {"root":"MRT_FilterCheckBox-module_root__59h9r"};
+var classes$l = {"root":"MRT_FilterCheckBox-module_root__59h9r"};
 
 const MRT_FilterCheckbox = (_a) => {
     var _b, _c, _d;
     var { column, table } = _a, rest = __rest(_a, ["column", "table"]);
-    const { getState, options: { localization, mantineFilterCheckboxProps }, } = table;
-    const { density } = getState();
+    const { state, options: { localization, mantineFilterCheckboxProps }, } = table;
+    const { density } = state;
     const { columnDef } = column;
     const arg = { column, table };
     const checkboxProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineFilterCheckboxProps, arg)), parseFromValuesOrFunc(columnDef.mantineFilterCheckboxProps, arg)), rest);
     const filterLabel = (_b = localization.filterByColumn) === null || _b === void 0 ? void 0 : _b.replace('{column}', columnDef.header);
     const value = column.getFilterValue();
-    return (jsx(Tooltip, { label: (_c = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _c !== void 0 ? _c : filterLabel, openDelay: 1000, withinPortal: true, children: jsx(Checkbox, Object.assign({ checked: value === 'true', className: clsx('mrt-filter-checkbox', classes$j.root), indeterminate: value === undefined, label: (_d = checkboxProps.title) !== null && _d !== void 0 ? _d : filterLabel, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps, { onChange: (e) => {
+    return (jsx(Tooltip, { label: (_c = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _c !== void 0 ? _c : filterLabel, openDelay: 1000, withinPortal: true, children: jsx(Checkbox, Object.assign({ checked: value === 'true', className: clsx('mrt-filter-checkbox', classes$l.root), indeterminate: value === undefined, label: (_d = checkboxProps.title) !== null && _d !== void 0 ? _d : filterLabel, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps, { onChange: (e) => {
                 var _a;
                 column.setFilterValue(column.getFilterValue() === undefined
                     ? 'true'
@@ -1591,9 +1753,9 @@ const MRT_FilterCheckbox = (_a) => {
             }, title: undefined })) }));
 };
 
-var classes$i = {"root":"MRT_FilterRangeFields-module_root__KfCcg"};
+var classes$k = {"root":"MRT_FilterRangeFields-module_root__KfCcg"};
 
-var classes$h = {"root":"MRT_FilterTextInput-module_root__Ss8Ql","date-filter":"MRT_FilterTextInput-module_date-filter__jOBLB","range-filter":"MRT_FilterTextInput-module_range-filter__JQHAL","not-filter-chip":"MRT_FilterTextInput-module_not-filter-chip__u8b1y","filter-chip-badge":"MRT_FilterTextInput-module_filter-chip-badge__Sel2k"};
+var classes$j = {"root":"MRT_FilterTextInput-module_root__Ss8Ql","date-filter":"MRT_FilterTextInput-module_date-filter__jOBLB","range-filter":"MRT_FilterTextInput-module_range-filter__JQHAL","not-filter-chip":"MRT_FilterTextInput-module_not-filter-chip__u8b1y","filter-chip-badge":"MRT_FilterTextInput-module_filter-chip-badge__Sel2k"};
 
 const MRT_FilterTextInput = (_a) => {
     var _b, _c, _d, _e, _f, _g, _h, _j;
@@ -1638,7 +1800,7 @@ const MRT_FilterTextInput = (_a) => {
                 .filter((key) => key !== null)
                 .sort((a, b) => a.localeCompare(b))
             : []))
-            //@ts-ignore
+            // @ts-ignore
             .filter((o) => o !== undefined && o !== null);
     }, [
         autoCompleteProps === null || autoCompleteProps === void 0 ? void 0 : autoCompleteProps.data,
@@ -1659,7 +1821,7 @@ const MRT_FilterTextInput = (_a) => {
                 : ((_b = column.getFilterValue()) !== null && _b !== void 0 ? _b : '');
     });
     const [debouncedFilterValue] = useDebouncedValue(filterValue, manualFiltering ? 400 : 200);
-    //send debounced filterValue to table instance
+    // send debounced filterValue to table instance
     useEffect(() => {
         if (!isMounted.current)
             return;
@@ -1675,7 +1837,7 @@ const MRT_FilterTextInput = (_a) => {
             column.setFilterValue(debouncedFilterValue !== null && debouncedFilterValue !== void 0 ? debouncedFilterValue : undefined);
         }
     }, [debouncedFilterValue]);
-    //receive table filter value and set it to local state
+    // receive table filter value and set it to local state
     useEffect(() => {
         if (!isMounted.current) {
             isMounted.current = true;
@@ -1732,11 +1894,11 @@ const MRT_FilterTextInput = (_a) => {
     };
     const _k = {
         'aria-label': filterPlaceholder,
-        className: clsx('mrt-filter-text-input', classes$h.root, isDateFilter
-            ? classes$h['date-filter']
+        className: clsx('mrt-filter-text-input', classes$j.root, isDateFilter
+            ? classes$j['date-filter']
             : isRangeFilter
-                ? classes$h['range-filter']
-                : !filterChipLabel && classes$h['not-filter-chip']),
+                ? classes$j['range-filter']
+                : !filterChipLabel && classes$j['not-filter-chip']),
         disabled: !!filterChipLabel,
         onChange: setFilterValue,
         onClick: (event) => event.stopPropagation(),
@@ -1757,14 +1919,16 @@ const MRT_FilterTextInput = (_a) => {
         return (jsx(Fragment, { children: (_f = columnDef.Filter) === null || _f === void 0 ? void 0 : _f.call(columnDef, { column, header, rangeFilterIndex, table }) }));
     }
     if (filterChipLabel) {
-        return (jsx(Box, { style: commonProps.style, children: jsx(Badge, { className: classes$h['filter-chip-badge'], onClick: handleClearEmptyFilterChip, rightSection: ClearButton, size: "lg", children: filterChipLabel }) }));
+        return (jsx(Box, { style: commonProps.style, children: jsx(Badge, { className: classes$j['filter-chip-badge'], onClick: handleClearEmptyFilterChip, rightSection: ClearButton, size: "lg", children: filterChipLabel }) }));
     }
     if (isMultiSelectFilter) {
         return (jsx(MultiSelect, Object.assign({}, commonProps, { searchable: true }, multiSelectProps, { className: clsx(className, multiSelectProps.className), data: filterSelectOptions, onChange: (value) => setFilterValue(value), ref: (node) => {
                 if (node) {
                     filterInputRefs.current[`${column.id}-${rangeFilterIndex !== null && rangeFilterIndex !== void 0 ? rangeFilterIndex : 0}`] =
                         node;
-                    assignRef(multiSelectProps.ref, node);
+                    if (multiSelectProps.ref) {
+                        multiSelectProps.ref.current = node;
+                    }
                 }
             }, rightSection: ((_g = filterValue === null || filterValue === void 0 ? void 0 : filterValue.toString()) === null || _g === void 0 ? void 0 : _g.length) && (multiSelectProps === null || multiSelectProps === void 0 ? void 0 : multiSelectProps.clearable)
                 ? ClearButton
@@ -1777,7 +1941,9 @@ const MRT_FilterTextInput = (_a) => {
                 if (node) {
                     filterInputRefs.current[`${column.id}-${rangeFilterIndex !== null && rangeFilterIndex !== void 0 ? rangeFilterIndex : 0}`] =
                         node;
-                    assignRef(selectProps.ref, node);
+                    if (selectProps.ref) {
+                        selectProps.ref.current = node;
+                    }
                 }
             }, style: commonProps.style })));
     }
@@ -1786,7 +1952,9 @@ const MRT_FilterTextInput = (_a) => {
                 if (node) {
                     filterInputRefs.current[`${column.id}-${rangeFilterIndex !== null && rangeFilterIndex !== void 0 ? rangeFilterIndex : 0}`] =
                         node;
-                    assignRef(dateInputProps.ref, node);
+                    if (dateInputProps.ref) {
+                        dateInputProps.ref.current = node;
+                    }
                 }
             }, style: commonProps.style })));
     }
@@ -1795,7 +1963,9 @@ const MRT_FilterTextInput = (_a) => {
                 if (node) {
                     filterInputRefs.current[`${column.id}-${rangeFilterIndex !== null && rangeFilterIndex !== void 0 ? rangeFilterIndex : 0}`] =
                         node;
-                    assignRef(autoCompleteProps.ref, node);
+                    if (autoCompleteProps.ref) {
+                        autoCompleteProps.ref.current = node;
+                    }
                 }
             }, style: commonProps.style })));
     }
@@ -1803,17 +1973,19 @@ const MRT_FilterTextInput = (_a) => {
             if (node) {
                 filterInputRefs.current[`${column.id}-${rangeFilterIndex !== null && rangeFilterIndex !== void 0 ? rangeFilterIndex : 0}`] =
                     node;
-                assignRef(textInputProps.ref, node);
+                if (textInputProps.ref && typeof textInputProps.ref === 'object') {
+                    textInputProps.ref.current = node;
+                }
             }
         }, style: commonProps.style })));
 };
 
 const MRT_FilterRangeFields = (_a) => {
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    return (jsxs(Box, Object.assign({}, rest, { className: clsx('mrt-filter-range-fields', classes$i.root, rest.className), children: [jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 0, table: table }), jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 1, table: table })] })));
+    return (jsxs(Box, Object.assign({}, rest, { className: clsx('mrt-filter-range-fields', classes$k.root, rest.className), children: [jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 0, table: table }), jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 1, table: table })] })));
 };
 
-var classes$g = {"root":"MRT_FilterRangeSlider-module_root__uwYEk"};
+var classes$i = {"root":"MRT_FilterRangeSlider-module_root__uwYEk"};
 
 const MRT_FilterRangeSlider = (_a) => {
     var _b;
@@ -1826,7 +1998,7 @@ const MRT_FilterRangeSlider = (_a) => {
     let [min, max] = rangeSliderProps.min !== undefined && rangeSliderProps.max !== undefined
         ? [rangeSliderProps.min, rangeSliderProps.max]
         : ((_b = column.getFacetedMinMaxValues()) !== null && _b !== void 0 ? _b : [0, 1]);
-    //fix potential TanStack Table bugs where min or max is an array
+    // fix potential TanStack Table bugs where min or max is an array
     if (Array.isArray(min))
         min = min[0];
     if (Array.isArray(max))
@@ -1835,10 +2007,7 @@ const MRT_FilterRangeSlider = (_a) => {
         min = 0;
     if (max === null)
         max = 1;
-    const [filterValues, setFilterValues] = useState([
-        min,
-        max,
-    ]);
+    const [filterValues, setFilterValues] = useState([min, max]);
     const columnFilterValue = column.getFilterValue();
     const isMounted = useRef(false);
     useEffect(() => {
@@ -1852,12 +2021,12 @@ const MRT_FilterRangeSlider = (_a) => {
         }
         isMounted.current = true;
     }, [columnFilterValue, min, max]);
-    return (jsx(RangeSlider, Object.assign({ className: clsx('mrt-filter-range-slider', classes$g.root), max: max, min: min, onChange: (values) => {
+    return (jsx(RangeSlider, Object.assign({ className: clsx('mrt-filter-range-slider', classes$i.root), max: max, min: min, onChange: (values) => {
             setFilterValues(values);
         }, onChangeEnd: (values) => {
             if (Array.isArray(values)) {
                 if (values[0] <= min && values[1] >= max) {
-                    //if the user has selected the entire range, remove the filter
+                    // if the user has selected the entire range, remove the filter
                     column.setFilterValue(undefined);
                 }
                 else {
@@ -1866,18 +2035,18 @@ const MRT_FilterRangeSlider = (_a) => {
             }
         }, value: filterValues }, rangeSliderProps, { ref: (node) => {
             if (node) {
-                //@ts-ignore
+                // @ts-ignore
                 filterInputRefs.current[`${column.id}-0`] = node;
                 // @ts-ignore
                 if (rangeSliderProps === null || rangeSliderProps === void 0 ? void 0 : rangeSliderProps.ref) {
-                    //@ts-ignore
+                    // @ts-ignore
                     rangeSliderProps.ref = node;
                 }
             }
         } })));
 };
 
-var classes$f = {"symbol":"MRT_FilterOptionMenu-module_symbol__a1Bsy"};
+var classes$h = {"symbol":"MRT_FilterOptionMenu-module_symbol__a1Bsy"};
 
 const mrtFilterOptions = (localization) => [
     {
@@ -1971,8 +2140,8 @@ const arrModes = ['arrIncludesSome', 'arrIncludesAll', 'arrIncludes'];
 const rangeVariants = ['range-slider', 'date-range', 'range'];
 const MRT_FilterOptionMenu = ({ header, onSelect, table, }) => {
     var _a, _b, _c, _d;
-    const { getState, options: { columnFilterModeOptions, globalFilterModeOptions, localization, renderColumnFilterModeMenuItems, renderGlobalFilterModeMenuItems, }, setColumnFilterFns, setGlobalFilterFn, } = table;
-    const { globalFilterFn } = getState();
+    const { state, options: { columnFilterModeOptions, globalFilterModeOptions, localization, renderColumnFilterModeMenuItems, renderGlobalFilterModeMenuItems, }, setColumnFilterFns, setGlobalFilterFn, } = table;
+    const { globalFilterFn } = state;
     const { column } = header !== null && header !== void 0 ? header : {};
     const { columnDef } = column !== null && column !== void 0 ? column : {};
     const currentFilterValue = column === null || column === void 0 ? void 0 : column.getFilterValue();
@@ -1990,7 +2159,7 @@ const MRT_FilterOptionMenu = ({ header, onSelect, table, }) => {
             : (!globalFilterModeOptions ||
                 globalFilterModeOptions.includes(filterOption.option)) &&
                 ['contains', 'fuzzy', 'startsWith'].includes(filterOption.option));
-        if (filterOptions.length && filterOptions[filterOptions.length - 1].divider) {
+        if (filterOptions[filterOptions.length - 1].divider) {
             filterOptions[filterOptions.length - 1].divider = false;
         }
         return filterOptions;
@@ -2072,14 +2241,16 @@ const MRT_FilterOptionMenu = ({ header, onSelect, table, }) => {
                 internalFilterOptions,
                 onSelectFilterMode: handleSelectFilterMode,
                 table,
-            }))) !== null && _d !== void 0 ? _d : internalFilterOptions.map(({ divider, label, option, symbol }, index) => (jsxs(Fragment$1, { children: [jsx(Menu.Item, { color: option === filterOption ? 'blue' : undefined, leftSection: jsx("span", { className: classes$f.symbol, children: symbol }), onClick: () => handleSelectFilterMode(option), value: option, children: label }), divider && jsx(Menu.Divider, {})] }, index))) }));
+            }))) !== null && _d !== void 0 ? _d : internalFilterOptions.map(({ divider, label, option, symbol }, index) => (jsxs(Fragment$1, { children: [jsx(Menu.Item, { color: option === filterOption ? 'blue' : undefined, leftSection: jsx("span", { className: classes$h.symbol, children: symbol }), onClick: () => handleSelectFilterMode(option), value: option, children: label }), divider && jsx(Menu.Divider, {})] }, index))) }));
 };
+
+var classes$g = {"filter-mode-label":"MRT_TableHeadCellFilterContainer-module_filter-mode-label__8reK-"};
 
 const MRT_TableHeadCellFilterContainer = (_a) => {
     var _b, _c;
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    const { getState, options: { columnFilterDisplayMode, columnFilterModeOptions, enableColumnFilterModes, icons: { IconFilterCog }, localization, }, refs: { filterInputRefs }, } = table;
-    const { showColumnFilters } = getState();
+    const { state, options: { columnFilterDisplayMode, columnFilterModeOptions, enableColumnFilterModes, icons: { IconFilterCog }, localization, }, refs: { filterInputRefs }, } = table;
+    const { showColumnFilters } = state;
     const { column } = header;
     const { columnDef } = column;
     const currentFilterOption = columnDef._filterFn;
@@ -2089,10 +2260,10 @@ const MRT_TableHeadCellFilterContainer = (_a) => {
         (allowedColumnFilterOptions === undefined ||
             !!(allowedColumnFilterOptions === null || allowedColumnFilterOptions === void 0 ? void 0 : allowedColumnFilterOptions.length));
     return (jsx(Collapse, { expanded: showColumnFilters || columnFilterDisplayMode === 'popover', children: jsxs(Flex, Object.assign({ direction: "column" }, rest, { children: [jsxs(Flex, { align: "flex-end", children: [columnDef.filterVariant === 'checkbox' ? (jsx(MRT_FilterCheckbox, { column: column, table: table })) : columnDef.filterVariant === 'range-slider' ? (jsx(MRT_FilterRangeSlider, { header: header, table: table })) : ['date-range', 'range'].includes((_c = columnDef.filterVariant) !== null && _c !== void 0 ? _c : '') ||
-                            ['between', 'betweenInclusive', 'inNumberRange'].includes(columnDef._filterFn) ? (jsx(MRT_FilterRangeFields, { header: header, table: table })) : (jsx(MRT_FilterTextInput, { header: header, table: table })), showChangeModeButton && (jsxs(Menu, { withinPortal: columnFilterDisplayMode !== 'popover', children: [jsx(Tooltip, { label: localization.changeFilterMode, position: "bottom-start", withinPortal: true, children: jsx(Menu.Target, { children: jsx(ActionIcon, { "aria-label": localization.changeFilterMode, color: "gray", size: "md", variant: "subtle", children: jsx(IconFilterCog, {}) }) }) }), jsx(MRT_FilterOptionMenu, { header: header, onSelect: () => setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100), table: table })] }))] }), showChangeModeButton ? (jsx(Text, { c: "dimmed", className: classes$k['filter-mode-label'], component: "label", children: localization.filterMode.replace('{filterType}', localizedFilterOption(localization, currentFilterOption)) })) : null] })) }));
+                            ['between', 'betweenInclusive', 'inNumberRange'].includes(columnDef._filterFn) ? (jsx(MRT_FilterRangeFields, { header: header, table: table })) : (jsx(MRT_FilterTextInput, { header: header, table: table })), showChangeModeButton && (jsxs(Menu, { withinPortal: columnFilterDisplayMode !== 'popover', children: [jsx(Tooltip, { label: localization.changeFilterMode, position: "bottom-start", withinPortal: true, children: jsx(Menu.Target, { children: jsx(ActionIcon, { "aria-label": localization.changeFilterMode, color: "gray", size: "md", variant: "subtle", children: jsx(IconFilterCog, {}) }) }) }), jsx(MRT_FilterOptionMenu, { header: header, onSelect: () => setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100), table: table })] }))] }), showChangeModeButton ? (jsx(Text, { c: "dimmed", className: classes$g['filter-mode-label'], component: "label", children: localization.filterMode.replace('{filterType}', localizedFilterOption(localization, currentFilterOption)) })) : null] })) }));
 };
 
-var classes$e = {"root":"MRT_TableHeadCellFilterLabel-module_root__Rur2R"};
+var classes$f = {"root":"MRT_TableHeadCellFilterLabel-module_root__Rur2R"};
 
 const MRT_TableHeadCellFilterLabel = (_a) => {
     var _b, _c, _d;
@@ -2124,7 +2295,7 @@ const MRT_TableHeadCellFilterLabel = (_a) => {
                         (!!column.getFilterValue() && !isRangeFilter) ||
                         (isRangeFilter &&
                             (!!((_c = column.getFilterValue()) === null || _c === void 0 ? void 0 : _c[0]) ||
-                                !!((_d = column.getFilterValue()) === null || _d === void 0 ? void 0 : _d[1]))), transition: "scale", children: () => (jsx(Popover.Target, { children: jsx(Tooltip, { disabled: popoverOpened, label: filterTooltip, multiline: true, w: filterTooltip.length > 40 ? 300 : undefined, withinPortal: true, children: jsx(ActionIcon, Object.assign({ "aria-label": filterTooltip, className: clsx('mrt-table-head-cell-filter-label-icon', classes$e.root), size: 18 }, dataVariable('active', isFilterActive), { onClick: (event) => {
+                                !!((_d = column.getFilterValue()) === null || _d === void 0 ? void 0 : _d[1]))), transition: "scale", children: () => (jsx(Popover.Target, { children: jsx(Tooltip, { disabled: popoverOpened, label: filterTooltip, multiline: true, w: filterTooltip.length > 40 ? 300 : undefined, withinPortal: true, children: jsx(ActionIcon, Object.assign({ "aria-label": filterTooltip, className: clsx('mrt-table-head-cell-filter-label-icon', classes$f.root), size: 18 }, dataVariable('active', isFilterActive), { onClick: (event) => {
                                     event.stopPropagation();
                                     if (columnFilterDisplayMode === 'popover') {
                                         setPopoverOpened((opened) => !opened);
@@ -2142,9 +2313,9 @@ const MRT_TableHeadCellFilterLabel = (_a) => {
 
 const MRT_TableHeadCellGrabHandle = (_a) => {
     var { column, table, tableHeadCellRef } = _a, rest = __rest(_a, ["column", "table", "tableHeadCellRef"]);
-    const { getState, options: { enableColumnOrdering, mantineColumnDragHandleProps }, setColumnOrder, setDraggingColumn, setHoveredColumn, } = table;
+    const { state, options: { enableColumnOrdering, mantineColumnDragHandleProps }, setColumnOrder, setDraggingColumn, setHoveredColumn, } = table;
     const { columnDef } = column;
-    const { columnOrder, draggingColumn, hoveredColumn } = getState();
+    const { columnOrder, draggingColumn, hoveredColumn } = state;
     const arg = { column, table };
     const actionIconProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineColumnDragHandleProps, arg)), parseFromValuesOrFunc(columnDef.mantineColumnDragHandleProps, arg)), rest);
     const handleDragStart = (event) => {
@@ -2170,115 +2341,59 @@ const MRT_TableHeadCellGrabHandle = (_a) => {
     return (jsx(MRT_GrabHandleButton, { actionIconProps: actionIconProps, onDragEnd: handleDragEnd, onDragStart: handleDragStart, table: table }));
 };
 
-var classes$d = {"root":"MRT_TableHeadCellResizeHandle-module_root__paufe","root-ltr":"MRT_TableHeadCellResizeHandle-module_root-ltr__652AZ","root-rtl":"MRT_TableHeadCellResizeHandle-module_root-rtl__5VlSo","root-hide":"MRT_TableHeadCellResizeHandle-module_root-hide__-ILlD"};
+var classes$e = {"root":"MRT_TableHeadCellResizeHandle-module_root__paufe","root-ltr":"MRT_TableHeadCellResizeHandle-module_root-ltr__652AZ","root-rtl":"MRT_TableHeadCellResizeHandle-module_root-rtl__5VlSo","root-hide":"MRT_TableHeadCellResizeHandle-module_root-hide__-ILlD"};
 
 const MRT_TableHeadCellResizeHandle = (_a) => {
     var _b;
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    const { getState, options: { columnResizeDirection, columnResizeMode }, setColumnSizingInfo, } = table;
-    const { density } = getState();
+    const { state, options: { columnResizeDirection, columnResizeMode }, setColumnResizing, } = table;
+    const { density } = state;
     const { column } = header;
     const handler = header.getResizeHandler();
     const offset = column.getIsResizing() && columnResizeMode === 'onEnd'
         ? `translateX(${(columnResizeDirection === 'rtl' ? -1 : 1) *
-            ((_b = getState().columnSizingInfo.deltaOffset) !== null && _b !== void 0 ? _b : 0)}px)`
+            ((_b = state.columnResizing.deltaOffset) !== null && _b !== void 0 ? _b : 0)}px)`
         : undefined;
     return (jsx(Box, Object.assign({ onDoubleClick: () => {
-            setColumnSizingInfo((old) => (Object.assign(Object.assign({}, old), { isResizingColumn: false })));
+            setColumnResizing((old) => (Object.assign(Object.assign({}, old), { isResizingColumn: false })));
             column.resetSize();
-        }, onMouseDown: handler, onTouchStart: handler, role: "separator" }, rest, { __vars: Object.assign({ '--mrt-transform': offset }, rest.__vars), className: clsx('mrt-table-head-cell-resize-handle', classes$d.root, classes$d[`root-${columnResizeDirection}`], !header.subHeaders.length &&
+        }, onMouseDown: handler, onTouchStart: handler, role: "separator" }, rest, { __vars: Object.assign({ '--mrt-transform': offset }, rest.__vars), className: clsx('mrt-table-head-cell-resize-handle', classes$e.root, classes$e[`root-${columnResizeDirection}`], !header.subHeaders.length &&
             columnResizeMode === 'onChange' &&
-            classes$d['root-hide'], density, rest.className) })));
+            classes$e['root-hide'], density, rest.className) })));
 };
 
-var classes$c = {"sort-icon":"MRT_TableHeadCellSortLabel-module_sort-icon__zs1xA","multi-sort-indicator":"MRT_TableHeadCellSortLabel-module_multi-sort-indicator__MGBj2"};
+var classes$d = {"sort-icon":"MRT_TableHeadCellSortLabel-module_sort-icon__zs1xA","multi-sort-indicator":"MRT_TableHeadCellSortLabel-module_multi-sort-indicator__MGBj2"};
 
 const MRT_TableHeadCellSortLabel = (_a) => {
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    const { getState, options: { icons: { IconArrowsSort, IconSortAscending, IconSortDescending }, localization, }, } = table;
+    const { options: { icons: { IconArrowsSort, IconSortAscending, IconSortDescending }, localization, }, } = table;
     const column = header.column;
     const { columnDef } = column;
-    const { sorting } = getState();
-    const sorted = column.getIsSorted();
-    const sortIndex = column.getSortIndex();
-    const sortTooltip = sorted
-        ? sorted === 'desc'
-            ? localization.sortedByColumnDesc.replace('{column}', columnDef.header)
-            : localization.sortedByColumnAsc.replace('{column}', columnDef.header)
-        : column.getNextSortingOrder() === 'desc'
-            ? localization.sortByColumnDesc.replace('{column}', columnDef.header)
-            : localization.sortByColumnAsc.replace('{column}', columnDef.header);
-    const SortActionButton = (jsx(ActionIcon, Object.assign({ "aria-label": sortTooltip }, dataVariable('sorted', sorted), rest, { className: clsx('mrt-table-head-sort-button', classes$c['sort-icon'], rest.className), children: sorted === 'desc' ? (jsx(IconSortDescending, { size: "100%" })) : sorted === 'asc' ? (jsx(IconSortAscending, { size: "100%" })) : (jsx(IconArrowsSort, { size: "100%" })) })));
-    return (jsx(Tooltip, { label: sortTooltip, openDelay: 1000, withinPortal: true, children: sorting.length < 2 || sortIndex === -1 ? (SortActionButton) : (jsx(Indicator, { classNames: {
-                root: clsx('mrt-table-head-multi-sort-indicator', classes$c['multi-sort-indicator']),
-            }, inline: true, label: sortIndex + 1, offset: 4, children: SortActionButton })) }));
+    return (jsx(Subscribe, { source: table.atoms.sorting, children: (sorting) => {
+            const sorted = column.getIsSorted();
+            const sortIndex = column.getSortIndex();
+            const sortTooltip = sorted
+                ? sorted === 'desc'
+                    ? localization.sortedByColumnDesc.replace('{column}', columnDef.header)
+                    : localization.sortedByColumnAsc.replace('{column}', columnDef.header)
+                : column.getNextSortingOrder() === 'desc'
+                    ? localization.sortByColumnDesc.replace('{column}', columnDef.header)
+                    : localization.sortByColumnAsc.replace('{column}', columnDef.header);
+            const SortActionButton = (jsx(ActionIcon, Object.assign({ "aria-label": sortTooltip }, dataVariable('sorted', sorted), rest, { className: clsx('mrt-table-head-sort-button', classes$d['sort-icon'], rest.className), children: sorted === 'desc' ? (jsx(IconSortDescending, { size: "100%" })) : sorted === 'asc' ? (jsx(IconSortAscending, { size: "100%" })) : (jsx(IconArrowsSort, { size: "100%" })) })));
+            return (jsx(Tooltip, { label: sortTooltip, openDelay: 1000, withinPortal: true, children: sorting.length < 2 || sortIndex === -1 ? (SortActionButton) : (jsx(Indicator, { classNames: {
+                        root: clsx('mrt-table-head-multi-sort-indicator', classes$d['multi-sort-indicator']),
+                    }, inline: true, label: sortIndex + 1, offset: 4, children: SortActionButton })) }));
+        } }));
 };
 
-var classes$b = {"left":"MRT_ColumnActionMenu-module_left__cfNmY","right":"MRT_ColumnActionMenu-module_right__-nK56"};
-
-const MRT_ColumnActionMenu = (_a) => {
-    var _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-    var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    const { getState, options: { columnFilterDisplayMode, enableColumnFilters, enableColumnPinning, enableColumnResizing, enableGrouping, enableHiding, enableSorting, enableSortingRemoval, icons: { IconArrowAutofitContent, IconBoxMultiple, IconClearAll, IconColumns, IconDotsVertical, IconEyeOff, IconFilter, IconFilterOff, IconPinned, IconPinnedOff, IconSortAscending, IconSortDescending, }, localization, mantineColumnActionsButtonProps, renderColumnActionsMenuItems, }, refs: { filterInputRefs }, setColumnOrder, setColumnSizingInfo, setShowColumnFilters, toggleAllColumnsVisible, } = table;
-    const { column } = header;
-    const { columnDef } = column;
-    const { columnSizing, columnVisibility } = getState();
-    const arg = { column, table };
-    const actionIconProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineColumnActionsButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineColumnActionsButtonProps, arg));
-    const handleClearSort = () => {
-        column.clearSorting();
-    };
-    const handleSortAsc = () => {
-        column.toggleSorting(false);
-    };
-    const handleSortDesc = () => {
-        column.toggleSorting(true);
-    };
-    const handleResetColumnSize = () => {
-        setColumnSizingInfo((old) => (Object.assign(Object.assign({}, old), { isResizingColumn: false })));
-        column.resetSize();
-    };
-    const handleHideColumn = () => {
-        column.toggleVisibility(false);
-    };
-    const handlePinColumn = (pinDirection) => {
-        column.pin(pinDirection);
-    };
-    const handleGroupByColumn = () => {
-        column.toggleGrouping();
-        setColumnOrder((old) => ['mrt-row-expand', ...old]);
-    };
-    const handleClearFilter = () => {
-        column.setFilterValue('');
-    };
-    const handleFilterByColumn = () => {
-        setShowColumnFilters(true);
-        setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100);
-    };
-    const handleShowAllColumns = () => {
-        toggleAllColumnsVisible(true);
-    };
-    const internalColumnMenuItems = (jsxs(Fragment, { children: [enableSorting && column.getCanSort() && (jsxs(Fragment, { children: [enableSortingRemoval !== false && (jsx(Menu.Item, { disabled: !column.getIsSorted(), leftSection: jsx(IconClearAll, {}), onClick: handleClearSort, children: localization.clearSort })), jsx(Menu.Item, { disabled: column.getIsSorted() === 'asc', leftSection: jsx(IconSortAscending, {}), onClick: handleSortAsc, children: (_b = localization.sortByColumnAsc) === null || _b === void 0 ? void 0 : _b.replace('{column}', String(columnDef.header)) }), jsx(Menu.Item, { disabled: column.getIsSorted() === 'desc', leftSection: jsx(IconSortDescending, {}), onClick: handleSortDesc, children: (_c = localization.sortByColumnDesc) === null || _c === void 0 ? void 0 : _c.replace('{column}', String(columnDef.header)) }), (enableColumnFilters || enableGrouping || enableHiding) && (jsx(Menu.Divider, {}, 3))] })), enableColumnFilters &&
-                columnFilterDisplayMode !== 'popover' &&
-                column.getCanFilter() && (jsxs(Fragment, { children: [jsx(Menu.Item, { disabled: !column.getFilterValue(), leftSection: jsx(IconFilterOff, {}), onClick: handleClearFilter, children: localization.clearFilter }), jsx(Menu.Item, { leftSection: jsx(IconFilter, {}), onClick: handleFilterByColumn, children: (_d = localization.filterByColumn) === null || _d === void 0 ? void 0 : _d.replace('{column}', String(columnDef.header)) }), (enableGrouping || enableHiding) && jsx(Menu.Divider, {}, 2)] })), enableGrouping && column.getCanGroup() && (jsxs(Fragment, { children: [jsx(Menu.Item, { leftSection: jsx(IconBoxMultiple, {}), onClick: handleGroupByColumn, children: (_e = localization[column.getIsGrouped() ? 'ungroupByColumn' : 'groupByColumn']) === null || _e === void 0 ? void 0 : _e.replace('{column}', String(columnDef.header)) }), enableColumnPinning && jsx(Menu.Divider, {})] })), enableColumnPinning && column.getCanPin() && (jsxs(Fragment, { children: [jsx(Menu.Item, { disabled: column.getIsPinned() === 'left' || !column.getCanPin(), leftSection: jsx(IconPinned, { className: classes$b.left }), onClick: () => handlePinColumn('left'), children: localization.pinToLeft }), jsx(Menu.Item, { disabled: column.getIsPinned() === 'right' || !column.getCanPin(), leftSection: jsx(IconPinned, { className: classes$b.right }), onClick: () => handlePinColumn('right'), children: localization.pinToRight }), jsx(Menu.Item, { disabled: !column.getIsPinned(), leftSection: jsx(IconPinnedOff, {}), onClick: () => handlePinColumn(false), children: localization.unpin }), enableHiding && jsx(Menu.Divider, {})] })), enableColumnResizing && column.getCanResize() && (jsx(Menu.Item, { disabled: !columnSizing[column.id], leftSection: jsx(IconArrowAutofitContent, {}), onClick: handleResetColumnSize, children: localization.resetColumnSize }, 0)), enableHiding && (jsxs(Fragment, { children: [jsx(Menu.Item, { disabled: !column.getCanHide(), leftSection: jsx(IconEyeOff, {}), onClick: handleHideColumn, children: (_f = localization.hideColumn) === null || _f === void 0 ? void 0 : _f.replace('{column}', String(columnDef.header)) }, 0), jsx(Menu.Item, { disabled: !Object.values(columnVisibility).filter((visible) => !visible)
-                            .length, leftSection: jsx(IconColumns, {}), onClick: handleShowAllColumns, children: (_g = localization.showAllColumns) === null || _g === void 0 ? void 0 : _g.replace('{column}', String(columnDef.header)) }, 1)] }))] }));
-    return (jsxs(Menu, Object.assign({ closeOnItemClick: true, position: "bottom-start", withinPortal: true }, rest, { children: [jsx(Tooltip, { label: (_h = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.title) !== null && _h !== void 0 ? _h : localization.columnActions, openDelay: 1000, withinPortal: true, children: jsx(Menu.Target, { children: jsx(ActionIcon, Object.assign({ "aria-label": localization.columnActions, color: "gray", size: "sm", variant: "subtle" }, actionIconProps, { children: jsx(IconDotsVertical, { size: "100%" }) })) }) }), jsx(Menu.Dropdown, { children: (_l = (_k = (_j = columnDef.renderColumnActionsMenuItems) === null || _j === void 0 ? void 0 : _j.call(columnDef, {
-                    column,
-                    internalColumnMenuItems,
-                    table,
-                })) !== null && _k !== void 0 ? _k : renderColumnActionsMenuItems === null || renderColumnActionsMenuItems === void 0 ? void 0 : renderColumnActionsMenuItems({
-                    column,
-                    internalColumnMenuItems,
-                    table,
-                })) !== null && _l !== void 0 ? _l : internalColumnMenuItems })] })));
-};
+var classes$c = {"root":"MRT_TableHeadCell-module_root__6y50a","root-grid":"MRT_TableHeadCell-module_root-grid__bAf1d","root-virtualized":"MRT_TableHeadCell-module_root-virtualized__CWLit","root-no-select":"MRT_TableHeadCell-module_root-no-select__BEOVU","content":"MRT_TableHeadCell-module_content__-pzSK","content-spaced":"MRT_TableHeadCell-module_content-spaced__S85Aa","content-center":"MRT_TableHeadCell-module_content-center__c-17L","content-right":"MRT_TableHeadCell-module_content-right__NSRZU","content-wrapper":"MRT_TableHeadCell-module_content-wrapper__py6aJ","content-wrapper-hidden-overflow":"MRT_TableHeadCell-module_content-wrapper-hidden-overflow__QY40r","content-wrapper-nowrap":"MRT_TableHeadCell-module_content-wrapper-nowrap__-4aIg","labels":"MRT_TableHeadCell-module_labels__oiMSr","labels-right":"MRT_TableHeadCell-module_labels-right__6ZJp-","labels-center":"MRT_TableHeadCell-module_labels-center__MM9q8","labels-sortable":"MRT_TableHeadCell-module_labels-sortable__tyuLr","labels-data":"MRT_TableHeadCell-module_labels-data__PvFGO","content-actions":"MRT_TableHeadCell-module_content-actions__utxbm"};
 
 const MRT_TableHeadCell = (_a) => {
     var _b, _c, _d, _f, _g, _h;
     var { columnVirtualizer, header, renderedHeaderIndex = 0, table } = _a, rest = __rest(_a, ["columnVirtualizer", "header", "renderedHeaderIndex", "table"]);
     const direction = useDirection();
-    const { getState, options: { columnFilterDisplayMode, columnResizeDirection, columnResizeMode, enableColumnActions, enableColumnDragging, enableColumnOrdering, enableColumnPinning, enableGrouping, enableHeaderActionsHoverReveal, enableMultiSort, layoutMode, mantineTableHeadCellProps, }, refs: { tableHeadCellRefs }, setHoveredColumn, } = table;
-    const { columnSizingInfo, draggingColumn, grouping, hoveredColumn } = getState();
+    const { state, options: { columnFilterDisplayMode, columnResizeDirection, columnResizeMode, enableColumnActions, enableColumnDragging, enableColumnOrdering, enableColumnPinning, enableGrouping, enableHeaderActionsHoverReveal, enableMultiSort, layoutMode, mantineTableHeadCellProps, }, refs: { tableHeadCellRefs }, setHoveredColumn, } = table;
+    const { columnResizing, draggingColumn, grouping, hoveredColumn } = state;
     const { column } = header;
     const { columnDef } = column;
     const { columnDefType } = columnDef;
@@ -2343,62 +2458,64 @@ const MRT_TableHeadCell = (_a) => {
             table,
         })
         : ((_d = columnDef === null || columnDef === void 0 ? void 0 : columnDef.Header) !== null && _d !== void 0 ? _d : columnDef.header);
-    return (jsxs(TableTh, Object.assign({ colSpan: header.colSpan, "data-column-pinned": isColumnPinned || undefined, "data-dragging-column": isDraggingColumn || undefined, "data-first-right-pinned": (isColumnPinned === 'right' &&
-            column.getIsFirstColumn(isColumnPinned)) ||
-            undefined, "data-hovered-column-target": isHoveredColumn || undefined, "data-index": renderedHeaderIndex, "data-last-left-pinned": (isColumnPinned === 'left' && column.getIsLastColumn(isColumnPinned)) ||
+    return (jsxs(TableTh, Object.assign({ colSpan: header.colSpan, "data-column-pinned": isColumnPinned || undefined, "data-dragging-column": isDraggingColumn || undefined, "data-first-end-pinned": (isColumnPinned === 'end' && column.getIsFirstColumn(isColumnPinned)) ||
+            undefined, "data-hovered-column-target": isHoveredColumn || undefined, "data-index": renderedHeaderIndex, "data-last-start-pinned": (isColumnPinned === 'start' &&
+            column.getIsLastColumn(isColumnPinned)) ||
             undefined, "data-resizing": (columnResizeMode === 'onChange' &&
-            (columnSizingInfo === null || columnSizingInfo === void 0 ? void 0 : columnSizingInfo.isResizingColumn) === column.id &&
+            (columnResizing === null || columnResizing === void 0 ? void 0 : columnResizing.isResizingColumn) === column.id &&
             columnResizeDirection) ||
             undefined }, tableCellProps, { __vars: {
-            '--mrt-table-cell-left': isColumnPinned === 'left'
+            '--mrt-table-cell-start': isColumnPinned === 'start'
                 ? `${column.getStart(isColumnPinned)}`
                 : undefined,
-            '--mrt-table-cell-right': isColumnPinned === 'right'
+            '--mrt-table-cell-end': isColumnPinned === 'end'
                 ? `${column.getAfter(isColumnPinned)}`
                 : undefined,
         }, align: columnDefType === 'group'
             ? 'center'
             : direction.dir === 'rtl'
                 ? 'right'
-                : 'left', className: clsx(classes$l.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$l['root-grid'], enableMultiSort && column.getCanSort() && classes$l['root-no-select'], columnVirtualizer && classes$l['root-virtualized'], tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), onDragEnter: handleDragEnter, ref: (node) => {
+                : 'left', className: clsx(classes$c.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$c['root-grid'], enableMultiSort && column.getCanSort() && classes$c['root-no-select'], columnVirtualizer && classes$c['root-virtualized'], tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), onDragEnter: handleDragEnter, ref: (node) => {
             var _a;
             if (node) {
                 tableHeadCellRefs.current[column.id] = node;
-                isHoveredHeadCellRef(node);
+                isHoveredHeadCellRef.current = node;
                 if (columnDefType !== 'group') {
                     (_a = columnVirtualizer === null || columnVirtualizer === void 0 ? void 0 : columnVirtualizer.measureElement) === null || _a === void 0 ? void 0 : _a.call(columnVirtualizer, node);
                 }
             }
         }, style: (theme) => (Object.assign(Object.assign({}, widthStyles), parseFromValuesOrFunc(tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.style, theme))), children: [header.isPlaceholder
                 ? null
-                : ((_f = tableCellProps.children) !== null && _f !== void 0 ? _f : (jsxs(Flex, { className: clsx('mrt-table-head-cell-content', classes$l.content, (columnDefType === 'group' ||
+                : ((_f = tableCellProps.children) !== null && _f !== void 0 ? _f : (jsxs(Flex, { className: clsx('mrt-table-head-cell-content', classes$c.content, (columnDefType === 'group' ||
                         (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'center') &&
-                        classes$l['content-center'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right' && classes$l['content-right'], column.getCanResize() && classes$l['content-spaced']), children: [jsxs(Flex, { __vars: {
+                        classes$c['content-center'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right' && classes$c['content-right'], column.getCanResize() && classes$c['content-spaced']), children: [jsxs(Flex, { __vars: {
                                 '--mrt-table-head-cell-labels-padding-left': `${headerPL}`,
-                            }, className: clsx('mrt-table-head-cell-labels', classes$l.labels, column.getCanSort() &&
+                            }, className: clsx('mrt-table-head-cell-labels', classes$c.labels, column.getCanSort() &&
                                 columnDefType !== 'group' &&
-                                classes$l['labels-sortable'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right'
-                                ? classes$l['labels-right']
+                                classes$c['labels-sortable'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right'
+                                ? classes$c['labels-right']
                                 : (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'center' &&
-                                    classes$l['labels-center'], columnDefType === 'data' && classes$l['labels-data']), onClick: column.getToggleSortingHandler(), children: [jsx(Flex, { className: clsx('mrt-table-head-cell-content-wrapper', classes$l['content-wrapper'], columnDefType === 'data' &&
-                                        classes$l['content-wrapper-hidden-overflow'], ((_h = (_g = columnDef.header) === null || _g === void 0 ? void 0 : _g.length) !== null && _h !== void 0 ? _h : 0) < 20 &&
-                                        classes$l['content-wrapper-nowrap']), children: headerElement }), column.getCanFilter() &&
+                                    classes$c['labels-center'], columnDefType === 'data' && classes$c['labels-data']), onClick: column.getToggleSortingHandler(), children: [jsx(Flex, { className: clsx('mrt-table-head-cell-content-wrapper', classes$c['content-wrapper'], columnDefType === 'data' &&
+                                        classes$c['content-wrapper-hidden-overflow'], ((_h = (_g = columnDef.header) === null || _g === void 0 ? void 0 : _g.length) !== null && _h !== void 0 ? _h : 0) < 20 &&
+                                        classes$c['content-wrapper-nowrap']), children: headerElement }), column.getCanFilter() &&
                                     (column.getIsFiltered() || showColumnButtons) && (jsx(MRT_TableHeadCellFilterLabel, { header: header, table: table })), column.getCanSort() &&
-                                    (column.getIsSorted() || showColumnButtons) && (jsx(MRT_TableHeadCellSortLabel, { header: header, table: table }))] }), columnDefType !== 'group' && (jsxs(Flex, { className: clsx('mrt-table-head-cell-content-actions', classes$l['content-actions']), children: [showDragHandle && (jsx(MRT_TableHeadCellGrabHandle, { column: column, table: table, tableHeadCellRef: {
+                                    (column.getIsSorted() || showColumnButtons) && (jsx(MRT_TableHeadCellSortLabel, { header: header, table: table }))] }), columnDefType !== 'group' && (jsxs(Flex, { className: clsx('mrt-table-head-cell-content-actions', classes$c['content-actions']), children: [showDragHandle && (jsx(MRT_TableHeadCellGrabHandle, { column: column, table: table, tableHeadCellRef: {
                                         current: tableHeadCellRefs.current[column.id],
                                     } })), columnActionsEnabled && showColumnButtons && (jsx(MRT_ColumnActionMenu, { header: header, onChange: setIsOpenedColumnActions, opened: isOpenedColumnActions, table: table }))] })), column.getCanResize() && (jsx(MRT_TableHeadCellResizeHandle, { header: header, table: table }))] }))), columnFilterDisplayMode === 'subheader' && column.getCanFilter() && (jsx(MRT_TableHeadCellFilterContainer, { header: header, table: table }))] })));
 };
 
+var classes$b = {"root":"MRT_TableHeadRow-module_root__hUKv4","layout-mode-grid":"MRT_TableHeadRow-module_layout-mode-grid__4ZGri","sticky":"MRT_TableHeadRow-module_sticky__Ej7Ax"};
+
 const MRT_TableHeadRow = (_a) => {
     var { columnVirtualizer, headerGroup, table } = _a, rest = __rest(_a, ["columnVirtualizer", "headerGroup", "table"]);
-    const { getState, options: { enableStickyHeader, layoutMode, mantineTableHeadRowProps }, } = table;
-    const { isFullScreen } = getState();
+    const { state, options: { enableStickyHeader, layoutMode, mantineTableHeadRowProps }, } = table;
+    const { isFullScreen } = state;
     const { virtualColumns, virtualPaddingLeft, virtualPaddingRight } = columnVirtualizer !== null && columnVirtualizer !== void 0 ? columnVirtualizer : {};
     const tableRowProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableHeadRowProps, {
         headerGroup,
         table,
     })), rest);
-    return (jsxs(TableTr, Object.assign({}, tableRowProps, { className: clsx(classes$m.root, (enableStickyHeader || isFullScreen) && classes$m.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$m['layout-mode-grid'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsx(Box, { component: "th", display: "flex", w: virtualPaddingLeft })) : null, (virtualColumns !== null && virtualColumns !== void 0 ? virtualColumns : headerGroup.headers).map((headerOrVirtualHeader, renderedHeaderIndex) => {
+    return (jsxs(TableTr, Object.assign({}, tableRowProps, { className: clsx(classes$b.root, (enableStickyHeader || isFullScreen) && classes$b.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$b['layout-mode-grid'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsx(Box, { component: "th", display: "flex", w: virtualPaddingLeft })) : null, (virtualColumns !== null && virtualColumns !== void 0 ? virtualColumns : headerGroup.headers).map((headerOrVirtualHeader, renderedHeaderIndex) => {
                 let header = headerOrVirtualHeader;
                 if (columnVirtualizer) {
                     renderedHeaderIndex = headerOrVirtualHeader
@@ -2409,111 +2526,34 @@ const MRT_TableHeadRow = (_a) => {
             }), virtualPaddingRight ? (jsx(Box, { component: "th", display: "flex", w: virtualPaddingRight })) : null] })));
 };
 
-var classes$a = {"alert":"MRT_ToolbarAlertBanner-module_alert__PAhUK","alert-stacked":"MRT_ToolbarAlertBanner-module_alert-stacked__HR7Nq","alert-bottom":"MRT_ToolbarAlertBanner-module_alert-bottom__u9L-S","alert-badge":"MRT_ToolbarAlertBanner-module_alert-badge__GwDmX","toolbar-alert":"MRT_ToolbarAlertBanner-module_toolbar-alert__3sJGU","head-overlay":"MRT_ToolbarAlertBanner-module_head-overlay__Hw7jK"};
-
-const MRT_SelectCheckbox = (_a) => {
-    var _b;
-    var { renderedRowIndex = 0, row, table } = _a, rest = __rest(_a, ["renderedRowIndex", "row", "table"]);
-    const { getState, options: { enableMultiRowSelection, localization, mantineSelectAllCheckboxProps, mantineSelectCheckboxProps, selectAllMode, selectDisplayMode, }, } = table;
-    const { density, isLoading } = getState();
-    const selectAll = !row;
-    const allRowsSelected = selectAll
-        ? selectAllMode === 'page'
-            ? table.getIsAllPageRowsSelected()
-            : table.getIsAllRowsSelected()
-        : undefined;
-    const isChecked = selectAll
-        ? allRowsSelected
-        : getIsRowSelected({ row, table });
-    const checkboxProps = Object.assign(Object.assign({}, (selectAll
-        ? parseFromValuesOrFunc(mantineSelectAllCheckboxProps, { table })
-        : parseFromValuesOrFunc(mantineSelectCheckboxProps, {
-            row,
-            table,
-        }))), rest);
-    const onSelectionChange = row
-        ? getMRT_RowSelectionHandler({
-            renderedRowIndex,
-            row,
-            table,
-        })
-        : undefined;
-    const onSelectAllChange = getMRT_SelectAllHandler({ table });
-    const commonProps = Object.assign(Object.assign({ 'aria-label': selectAll
-            ? localization.toggleSelectAll
-            : localization.toggleSelectRow, checked: isChecked, disabled: isLoading || (row && !row.getCanSelect()) || (row === null || row === void 0 ? void 0 : row.id) === 'mrt-row-create', onChange: (event) => {
-            event.stopPropagation();
-            if (selectAll) {
-                onSelectAllChange(event);
-            }
-            else {
-                onSelectionChange(event);
-            }
-        }, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps), { onClick: (e) => {
-            var _a;
-            e.stopPropagation();
-            (_a = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.onClick) === null || _a === void 0 ? void 0 : _a.call(checkboxProps, e);
-        }, title: undefined });
-    return (jsx(Tooltip, { label: (_b = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _b !== void 0 ? _b : (selectAll
-            ? localization.toggleSelectAll
-            : localization.toggleSelectRow), openDelay: 1000, withinPortal: true, children: jsx("span", { children: selectDisplayMode === 'switch' ? (jsx(Switch, Object.assign({}, commonProps))) : selectDisplayMode === 'radio' ||
-                enableMultiRowSelection === false ? (jsx(Radio, Object.assign({}, commonProps))) : (jsx(Checkbox, Object.assign({ indeterminate: !isChecked && selectAll
-                    ? table.getIsSomeRowsSelected()
-                    : (row === null || row === void 0 ? void 0 : row.getIsSomeSelected()) && row.getCanSelectSubRows() }, commonProps))) }) }));
-};
-
-const MRT_ToolbarAlertBanner = (_a) => {
-    var _b, _c, _d;
-    var { stackAlertBanner, table } = _a, rest = __rest(_a, ["stackAlertBanner", "table"]);
-    const { getFilteredSelectedRowModel, getPrePaginationRowModel, getState, options: { enableRowSelection, enableSelectAll, icons: { IconX }, localization, mantineToolbarAlertBannerBadgeProps, mantineToolbarAlertBannerProps, manualPagination, positionToolbarAlertBanner, renderToolbarAlertBannerContent, rowCount, }, } = table;
-    const { density, grouping, rowSelection, showAlertBanner } = getState();
-    const alertProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineToolbarAlertBannerProps, {
-        table,
-    })), rest);
-    const badgeProps = parseFromValuesOrFunc(mantineToolbarAlertBannerBadgeProps, { table });
-    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginationRowModel().flatRows.length;
-    const selectedRowCount = useMemo(() => manualPagination
-        ? Object.values(rowSelection).filter(Boolean).length
-        : getFilteredSelectedRowModel().rows.length, [rowSelection, totalRowCount, manualPagination]);
-    const selectedAlert = selectedRowCount ? (jsxs(Flex, { align: "center", gap: "sm", children: [(_c = (_b = localization.selectedCountOfRowCountRowsSelected) === null || _b === void 0 ? void 0 : _b.replace('{selectedCount}', selectedRowCount.toString())) === null || _c === void 0 ? void 0 : _c.replace('{rowCount}', totalRowCount.toString()), jsx(Button, { onClick: (event) => getMRT_SelectAllHandler({ table })(event, false, true), size: "compact-xs", variant: "subtle", children: localization.clearSelection })] })) : null;
-    const groupedAlert = grouping.length > 0 ? (jsxs(Flex, { children: [localization.groupedBy, ' ', grouping.map((columnId, index) => (jsxs(Fragment$1, { children: [index > 0 ? localization.thenBy : '', jsxs(Badge, Object.assign({ className: classes$a['alert-badge'], rightSection: jsx(ActionIcon, { color: "white", onClick: () => table.getColumn(columnId).toggleGrouping(), size: "xs", variant: "subtle", children: jsx(IconX, { style: { transform: 'scale(0.8)' } }) }), variant: "filled" }, badgeProps, { children: [table.getColumn(columnId).columnDef.header, ' '] }))] }, `${index}-${columnId}`)))] })) : null;
-    return (jsx(Collapse, { expanded: showAlertBanner || !!selectedAlert || !!groupedAlert, transitionDuration: stackAlertBanner ? 200 : 0, children: jsx(Alert, Object.assign({ color: "blue", icon: false }, alertProps, { className: clsx(classes$a.alert, stackAlertBanner &&
-                !positionToolbarAlertBanner &&
-                classes$a['alert-stacked'], !stackAlertBanner &&
-                positionToolbarAlertBanner === 'bottom' &&
-                classes$a['alert-bottom'], alertProps === null || alertProps === void 0 ? void 0 : alertProps.className), children: (_d = renderToolbarAlertBannerContent === null || renderToolbarAlertBannerContent === void 0 ? void 0 : renderToolbarAlertBannerContent({
-                groupedAlert,
-                selectedAlert,
-                table,
-            })) !== null && _d !== void 0 ? _d : (jsxs(Flex, { className: clsx(classes$a['toolbar-alert'], positionToolbarAlertBanner === 'head-overlay' &&
-                    classes$a['head-overlay'], density), children: [enableRowSelection &&
-                        enableSelectAll &&
-                        positionToolbarAlertBanner === 'head-overlay' && (jsx(MRT_SelectCheckbox, { table: table })), jsxs(Stack, { children: [alertProps === null || alertProps === void 0 ? void 0 : alertProps.children, selectedAlert, groupedAlert] })] })) })) }));
-};
+var classes$a = {"root":"MRT_TableHead-module_root__j9NkO","root-grid":"MRT_TableHead-module_root-grid__c3aGl","root-table-row-group":"MRT_TableHead-module_root-table-row-group__d9FO4","root-sticky":"MRT_TableHead-module_root-sticky__0kuDE","banner-tr":"MRT_TableHead-module_banner-tr__EhT-x","banner-th":"MRT_TableHead-module_banner-th__KwM5a","grid":"MRT_TableHead-module_grid__OJ-td"};
 
 const MRT_TableHead = (_a) => {
     var { columnVirtualizer, table } = _a, rest = __rest(_a, ["columnVirtualizer", "table"]);
-    const { getHeaderGroups, getSelectedRowModel, getState, options: { enableStickyHeader, layoutMode, mantineTableHeadProps, positionToolbarAlertBanner, }, refs: { tableHeadRef }, } = table;
-    const { isFullScreen, showAlertBanner } = getState();
+    const { getHeaderGroups, getSelectedRowModel, state, options: { enableStickyHeader, layoutMode, mantineTableHeadProps, positionToolbarAlertBanner, }, refs: { tableHeadRef }, } = table;
+    const { isFullScreen, showAlertBanner } = state;
     const tableHeadProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableHeadProps, {
         table,
     })), rest);
     const stickyHeader = enableStickyHeader || isFullScreen;
-    return (jsx(TableThead, Object.assign({}, tableHeadProps, { className: clsx(classes$n.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid'))
-            ? classes$n['root-grid']
-            : classes$n['root-table-row-group'], stickyHeader && classes$n['root-sticky'], tableHeadProps === null || tableHeadProps === void 0 ? void 0 : tableHeadProps.className), pos: stickyHeader && (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) ? 'sticky' : 'relative', ref: (ref) => {
+    return (jsx(TableThead, Object.assign({}, tableHeadProps, { className: clsx(classes$a.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid'))
+            ? classes$a['root-grid']
+            : classes$a['root-table-row-group'], stickyHeader && classes$a['root-sticky'], tableHeadProps === null || tableHeadProps === void 0 ? void 0 : tableHeadProps.className), pos: stickyHeader && (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) ? 'sticky' : 'relative', ref: (ref) => {
             tableHeadRef.current = ref;
-            assignRef(tableHeadProps === null || tableHeadProps === void 0 ? void 0 : tableHeadProps.ref, ref);
+            if (tableHeadProps === null || tableHeadProps === void 0 ? void 0 : tableHeadProps.ref) {
+                // @ts-ignore
+                tableHeadProps.ref.current = ref;
+            }
         }, children: positionToolbarAlertBanner === 'head-overlay' &&
-            (showAlertBanner || getSelectedRowModel().rows.length > 0) ? (jsx(TableTr, { className: clsx(classes$n['banner-tr'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$n.grid), children: jsx(TableTh, { className: clsx(classes$n['banner-th'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$n.grid), colSpan: table.getVisibleLeafColumns().length, children: jsx(MRT_ToolbarAlertBanner, { table: table }) }) })) : (getHeaderGroups().map((headerGroup) => (jsx(MRT_TableHeadRow, { columnVirtualizer: columnVirtualizer, headerGroup: headerGroup, table: table }, headerGroup.id)))) })));
+            (showAlertBanner || getSelectedRowModel().rows.length > 0) ? (jsx(TableTr, { className: clsx(classes$a['banner-tr'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$a.grid), children: jsx(TableTh, { className: clsx(classes$a['banner-th'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$a.grid), colSpan: table.getVisibleLeafColumns().length, children: jsx(MRT_ToolbarAlertBanner, { table: table }) }) })) : (getHeaderGroups().map((headerGroup) => (jsx(MRT_TableHeadRow, { columnVirtualizer: columnVirtualizer, headerGroup: headerGroup, table: table }, headerGroup.id)))) })));
 };
 
 var classes$9 = {"root":"MRT_GlobalFilterTextInput-module_root__Xmcpv","collapse":"MRT_GlobalFilterTextInput-module_collapse__v311d"};
 
 const MRT_GlobalFilterTextInput = (_a) => {
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getState, options: { enableGlobalFilterModes, icons: { IconSearch, IconX }, localization, mantineSearchTextInputProps, manualFiltering, positionGlobalFilter, }, refs: { searchInputRef }, setGlobalFilter, } = table;
-    const { globalFilter, showGlobalFilter } = getState();
+    const { state, options: { enableGlobalFilterModes, icons: { IconSearch, IconX }, localization, mantineSearchTextInputProps, manualFiltering, positionGlobalFilter, }, refs: { searchInputRef }, setGlobalFilter, } = table;
+    const { globalFilter, showGlobalFilter } = state;
     const textFieldProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineSearchTextInputProps, {
         table,
     })), rest);
@@ -2552,6 +2592,25 @@ const MRT_GlobalFilterTextInput = (_a) => {
 };
 
 const flexRender = flexRender$1;
+/**
+ * A helper utility for creating MRT column definitions with type inference
+ * for each individual column's `TValue`. Mirrors v9's `createColumnHelper`
+ * surface (`accessor`, `columns`, `display`, `group`) but bound to MRT's
+ * column-def shape (extra MRT-specific props, `StockFeatures` pre-bound).
+ *
+ * From a JavaScript perspective, `display` / `group` / `columns` are identity
+ * functions — they exist purely to anchor TypeScript inference.
+ *
+ * @example
+ * ```tsx
+ * const helper = createMRTColumnHelper<Person>()
+ * const columns = helper.columns([
+ *   helper.accessor('firstName', { header: 'First' }),
+ *   helper.accessor((row) => row.lastName, { id: 'lastName' }),
+ *   helper.display({ id: 'actions', header: 'Actions' }),
+ * ])
+ * ```
+ */
 function createMRTColumnHelper() {
     return {
         accessor: (accessor, column) => {
@@ -2559,11 +2618,12 @@ function createMRTColumnHelper() {
                 ? Object.assign(Object.assign({}, column), { accessorFn: accessor })
                 : Object.assign(Object.assign({}, column), { accessorKey: accessor });
         },
+        columns: (columns) => columns,
         display: (column) => column,
         group: (column) => column,
     };
 }
-const createRow = (table, originalRow, rowIndex = -1, depth = 0, subRows, parentId) => createRow$1(table, 'mrt-row-create', originalRow !== null && originalRow !== void 0 ? originalRow : Object.assign({}, ...getAllLeafColumnDefs(table.options.columns).map((col) => ({
+const createRow = (table, originalRow, rowIndex = -1, depth = 0, subRows, parentId) => constructRow(table, 'mrt-row-create', originalRow !== null && originalRow !== void 0 ? originalRow : Object.assign({}, ...getAllLeafColumnDefs(table.options.columns).map((col) => ({
     [getColumnId(col)]: '',
 }))), rowIndex, depth, subRows, parentId);
 
@@ -2625,12 +2685,12 @@ const getMRT_RowExpandColumnDef = (tableOptions) => {
 
 const getMRT_RowNumbersColumnDef = (tableOptions) => {
     const { localization, rowNumberDisplayMode } = tableOptions;
-    const { pagination: { pageIndex, pageSize }, } = tableOptions.state;
-    return Object.assign({ Cell: ({ renderedRowIndex = 0, row }) => {
+    return Object.assign({ Cell: ({ renderedRowIndex = 0, row, table }) => {
             var _a;
-            return ((_a = (rowNumberDisplayMode === 'static'
+            const { pageIndex, pageSize } = table.atoms.pagination.get();
+            return (((_a = (rowNumberDisplayMode === 'static'
                 ? renderedRowIndex + pageSize * pageIndex
-                : row.index)) !== null && _a !== void 0 ? _a : 0) + 1;
+                : row.index)) !== null && _a !== void 0 ? _a : 0) + 1);
         }, grow: false, Header: () => localization.rowNumber }, defaultDisplayColumnProps({
         header: 'rowNumbers',
         id: 'mrt-row-numbers',
@@ -2660,42 +2720,50 @@ const getMRT_RowSelectColumnDef = (tableOptions) => {
     }));
 };
 
-const MRT_AggregationFns = Object.assign({}, aggregationFns);
+const MRT_RowAggregationFns = Object.assign({}, aggregationFns);
 
+const createMantineReactTableIcon = (icon, displayName) => {
+    const MantineReactTableIcon = forwardRef((_a, ref) => {
+        var { color = 'currentColor', size = 18, strokeWidth = 1.5 } = _a, props = __rest(_a, ["color", "size", "strokeWidth"]);
+        return (jsx(HugeiconsIcon, Object.assign({}, props, { color: color, icon: icon, ref: ref, size: size, strokeWidth: strokeWidth })));
+    });
+    MantineReactTableIcon.displayName = displayName;
+    return MantineReactTableIcon;
+};
 const MRT_Default_Icons = {
-    IconArrowAutofitContent,
-    IconArrowsSort,
-    IconBaselineDensityLarge,
-    IconBaselineDensityMedium,
-    IconBaselineDensitySmall,
-    IconBoxMultiple,
-    IconChevronDown,
-    IconChevronLeft,
-    IconChevronLeftPipe,
-    IconChevronRight,
-    IconChevronRightPipe,
-    IconChevronsDown,
-    IconCircleX,
-    IconClearAll,
-    IconColumns,
-    IconDeviceFloppy,
-    IconDots,
-    IconDotsVertical,
-    IconEdit,
-    IconEyeOff,
-    IconFilter,
-    IconFilterCog,
-    IconFilterOff,
-    IconGripHorizontal,
-    IconMaximize,
-    IconMinimize,
-    IconPinned,
-    IconPinnedOff,
-    IconSearch,
-    IconSearchOff,
-    IconSortAscending,
-    IconSortDescending,
-    IconX,
+    IconArrowAutofitContent: createMantineReactTableIcon(FitToScreenIcon, 'MRTArrowAutofitContentIcon'),
+    IconArrowsSort: createMantineReactTableIcon(Sorting01Icon, 'MRTArrowsSortIcon'),
+    IconBaselineDensityLarge: createMantineReactTableIcon(Menu01Icon, 'MRTDensityLargeIcon'),
+    IconBaselineDensityMedium: createMantineReactTableIcon(Menu02Icon, 'MRTDensityMediumIcon'),
+    IconBaselineDensitySmall: createMantineReactTableIcon(Menu03Icon, 'MRTDensitySmallIcon'),
+    IconBoxMultiple: createMantineReactTableIcon(Copy01Icon, 'MRTBoxMultipleIcon'),
+    IconChevronDown: createMantineReactTableIcon(ChevronDownIcon, 'MRTChevronDownIcon'),
+    IconChevronLeft: createMantineReactTableIcon(ChevronLeftIcon, 'MRTChevronLeftIcon'),
+    IconChevronLeftPipe: createMantineReactTableIcon(PreviousIcon, 'MRTChevronLeftPipeIcon'),
+    IconChevronRight: createMantineReactTableIcon(ChevronRightIcon, 'MRTChevronRightIcon'),
+    IconChevronRightPipe: createMantineReactTableIcon(NextIcon, 'MRTChevronRightPipeIcon'),
+    IconChevronsDown: createMantineReactTableIcon(ArrowDownDoubleIcon, 'MRTChevronsDownIcon'),
+    IconCircleX: createMantineReactTableIcon(CancelCircleIcon, 'MRTCircleXIcon'),
+    IconClearAll: createMantineReactTableIcon(CleanIcon, 'MRTClearAllIcon'),
+    IconColumns: createMantineReactTableIcon(LayoutThreeColumnIcon, 'MRTColumnsIcon'),
+    IconDeviceFloppy: createMantineReactTableIcon(SaveIcon, 'MRTSaveIcon'),
+    IconDots: createMantineReactTableIcon(MoreHorizontalIcon, 'MRTDotsIcon'),
+    IconDotsVertical: createMantineReactTableIcon(MoreVerticalIcon, 'MRTDotsVerticalIcon'),
+    IconEdit: createMantineReactTableIcon(Edit01Icon, 'MRTEditIcon'),
+    IconEyeOff: createMantineReactTableIcon(EyeOffIcon, 'MRTEyeOffIcon'),
+    IconFilter: createMantineReactTableIcon(FilterIcon, 'MRTFilterIcon'),
+    IconFilterCog: createMantineReactTableIcon(FilterEditIcon, 'MRTFilterCogIcon'),
+    IconFilterOff: createMantineReactTableIcon(FilterRemoveIcon, 'MRTFilterOffIcon'),
+    IconGripHorizontal: createMantineReactTableIcon(GripHorizontalIcon, 'MRTGripHorizontalIcon'),
+    IconMaximize: createMantineReactTableIcon(Maximize01Icon, 'MRTMaximizeIcon'),
+    IconMinimize: createMantineReactTableIcon(Minimize01Icon, 'MRTMinimizeIcon'),
+    IconPinned: createMantineReactTableIcon(PinIcon, 'MRTPinnedIcon'),
+    IconPinnedOff: createMantineReactTableIcon(PinOffIcon, 'MRTPinnedOffIcon'),
+    IconSearch: createMantineReactTableIcon(SearchIcon, 'MRTSearchIcon'),
+    IconSearchOff: createMantineReactTableIcon(SearchRemoveIcon, 'MRTSearchOffIcon'),
+    IconSortAscending: createMantineReactTableIcon(SortByUp01Icon, 'MRTSortAscendingIcon'),
+    IconSortDescending: createMantineReactTableIcon(SortByDown01Icon, 'MRTSortDescendingIcon'),
+    IconX: createMantineReactTableIcon(Cancel01Icon, 'MRTXIcon'),
 };
 
 const MRT_Localization_EN = {
@@ -2814,16 +2882,15 @@ const MRT_DefaultDisplayColumn = {
 };
 const useMRT_TableOptions = (_a) => {
     var _b;
-    var { aggregationFns, autoResetExpanded = false, columnFilterDisplayMode = 'subheader', columnResizeDirection, columnResizeMode = 'onChange', createDisplayMode = 'modal', defaultColumn, defaultDisplayColumn, editDisplayMode = 'modal', enableBatchRowSelection = true, enableBottomToolbar = true, enableColumnActions = true, enableColumnFilters = true, enableColumnOrdering = false, enableColumnPinning = false, enableColumnResizing = false, enableColumnVirtualization, enableDensityToggle = true, enableExpandAll = true, enableExpanding, enableFacetedValues = false, enableFilterMatchHighlighting = true, enableFilters = true, enableFullScreenToggle = true, enableGlobalFilter = true, enableGlobalFilterRankedResults = true, enableGrouping = false, enableHeaderActionsHoverReveal = false, enableHiding = true, enableMultiRowSelection = true, enableMultiSort = true, enablePagination = true, enableRowPinning = false, enableRowSelection = false, enableRowVirtualization, enableSelectAll = true, enableSorting = true, enableStickyHeader = false, enableTableFooter = true, enableTableHead = true, enableToolbarInternalActions = true, enableTopToolbar = true, filterFns, icons, layoutMode, localization, manualFiltering, manualGrouping, manualPagination, manualSorting, paginationDisplayMode = 'default', positionActionsColumn = 'first', positionCreatingRow = 'top', positionExpandColumn = 'first', positionGlobalFilter = 'right', positionPagination = 'bottom', positionToolbarAlertBanner = 'top', positionToolbarDropZone = 'top', rowNumberDisplayMode = 'static', rowPinningDisplayMode = 'sticky', selectAllMode = 'page', sortingFns } = _a, rest = __rest(_a, ["aggregationFns", "autoResetExpanded", "columnFilterDisplayMode", "columnResizeDirection", "columnResizeMode", "createDisplayMode", "defaultColumn", "defaultDisplayColumn", "editDisplayMode", "enableBatchRowSelection", "enableBottomToolbar", "enableColumnActions", "enableColumnFilters", "enableColumnOrdering", "enableColumnPinning", "enableColumnResizing", "enableColumnVirtualization", "enableDensityToggle", "enableExpandAll", "enableExpanding", "enableFacetedValues", "enableFilterMatchHighlighting", "enableFilters", "enableFullScreenToggle", "enableGlobalFilter", "enableGlobalFilterRankedResults", "enableGrouping", "enableHeaderActionsHoverReveal", "enableHiding", "enableMultiRowSelection", "enableMultiSort", "enablePagination", "enableRowPinning", "enableRowSelection", "enableRowVirtualization", "enableSelectAll", "enableSorting", "enableStickyHeader", "enableTableFooter", "enableTableHead", "enableToolbarInternalActions", "enableTopToolbar", "filterFns", "icons", "layoutMode", "localization", "manualFiltering", "manualGrouping", "manualPagination", "manualSorting", "paginationDisplayMode", "positionActionsColumn", "positionCreatingRow", "positionExpandColumn", "positionGlobalFilter", "positionPagination", "positionToolbarAlertBanner", "positionToolbarDropZone", "rowNumberDisplayMode", "rowPinningDisplayMode", "selectAllMode", "sortingFns"]);
+    var { aggregationFns, autoResetExpanded = false, columnFilterDisplayMode = 'subheader', columnResizeDirection, columnResizeMode = 'onChange', createDisplayMode = 'modal', defaultColumn, defaultDisplayColumn, editDisplayMode = 'modal', enableBatchRowSelection = true, enableBottomToolbar = true, enableColumnActions = true, enableColumnFilters = true, enableColumnOrdering = false, enableColumnPinning = false, enableColumnResizing = false, enableColumnVirtualization, enableDensityToggle = true, enableExpandAll = true, enableExpanding, enableFacetedValues = false, enableFilterMatchHighlighting = true, enableFilters = true, enableFullScreenToggle = true, enableGlobalFilter = true, enableGlobalFilterRankedResults = true, enableGrouping = false, enableHeaderActionsHoverReveal = false, enableHiding = true, enableMultiRowSelection = true, enableMultiSort = true, enablePagination = true, enableRowPinning = false, enableRowSelection = false, enableRowVirtualization, enableSelectAll = true, enableSorting = true, enableStickyHeader = false, enableTableFooter = true, enableTableHead = true, enableToolbarInternalActions = true, enableTopToolbar = true, filterFns, icons, layoutMode, localization, manualFiltering, manualGrouping, manualPagination, manualSorting, paginationDisplayMode = 'default', positionActionsColumn = 'first', positionCreatingRow = 'top', positionExpandColumn = 'first', positionGlobalFilter = 'right', positionPagination = 'bottom', positionToolbarAlertBanner = 'top', positionToolbarDropZone = 'top', rowNumberDisplayMode = 'static', rowPinningDisplayMode = 'sticky', selectAllMode = 'page', sortFns } = _a, rest = __rest(_a, ["aggregationFns", "autoResetExpanded", "columnFilterDisplayMode", "columnResizeDirection", "columnResizeMode", "createDisplayMode", "defaultColumn", "defaultDisplayColumn", "editDisplayMode", "enableBatchRowSelection", "enableBottomToolbar", "enableColumnActions", "enableColumnFilters", "enableColumnOrdering", "enableColumnPinning", "enableColumnResizing", "enableColumnVirtualization", "enableDensityToggle", "enableExpandAll", "enableExpanding", "enableFacetedValues", "enableFilterMatchHighlighting", "enableFilters", "enableFullScreenToggle", "enableGlobalFilter", "enableGlobalFilterRankedResults", "enableGrouping", "enableHeaderActionsHoverReveal", "enableHiding", "enableMultiRowSelection", "enableMultiSort", "enablePagination", "enableRowPinning", "enableRowSelection", "enableRowVirtualization", "enableSelectAll", "enableSorting", "enableStickyHeader", "enableTableFooter", "enableTableHead", "enableToolbarInternalActions", "enableTopToolbar", "filterFns", "icons", "layoutMode", "localization", "manualFiltering", "manualGrouping", "manualPagination", "manualSorting", "paginationDisplayMode", "positionActionsColumn", "positionCreatingRow", "positionExpandColumn", "positionGlobalFilter", "positionPagination", "positionToolbarAlertBanner", "positionToolbarDropZone", "rowNumberDisplayMode", "rowPinningDisplayMode", "selectAllMode", "sortFns"]);
     const direction = useDirection();
     icons = useMemo(() => (Object.assign(Object.assign({}, MRT_Default_Icons), icons)), [icons]);
     localization = useMemo(() => (Object.assign(Object.assign({}, MRT_Localization_EN), localization)), [localization]);
-    aggregationFns = useMemo(() => (Object.assign(Object.assign({}, MRT_AggregationFns), aggregationFns)), []);
+    aggregationFns = useMemo(() => (Object.assign(Object.assign({}, MRT_RowAggregationFns), aggregationFns)), []);
     filterFns = useMemo(() => (Object.assign(Object.assign({}, MRT_FilterFns), filterFns)), []);
-    sortingFns = useMemo(() => (Object.assign(Object.assign({}, MRT_SortingFns), sortingFns)), []);
+    sortFns = useMemo(() => (Object.assign(Object.assign({}, MRT_SortFns), sortFns)), []);
     defaultColumn = useMemo(() => (Object.assign(Object.assign({}, MRT_DefaultColumn), defaultColumn)), [defaultColumn]);
     defaultDisplayColumn = useMemo(() => (Object.assign(Object.assign({}, MRT_DefaultDisplayColumn), defaultDisplayColumn)), [defaultDisplayColumn]);
-    //cannot be changed after initialization
     [enableColumnVirtualization, enableRowVirtualization] = useMemo(() => [enableColumnVirtualization, enableRowVirtualization], []);
     if (!columnResizeDirection) {
         columnResizeDirection = direction.dir || 'ltr';
@@ -2888,15 +2955,27 @@ const useMRT_TableOptions = (_a) => {
         enableTableHead,
         enableToolbarInternalActions,
         enableTopToolbar,
-        filterFns, getCoreRowModel: getCoreRowModel(), getExpandedRowModel: enableExpanding || enableGrouping ? getExpandedRowModel() : undefined, getFacetedMinMaxValues: enableFacetedValues
-            ? getFacetedMinMaxValues()
-            : undefined, getFacetedRowModel: enableFacetedValues ? getFacetedRowModel() : undefined, getFacetedUniqueValues: enableFacetedValues
-            ? getFacetedUniqueValues()
-            : undefined, getFilteredRowModel: enableColumnFilters || enableGlobalFilter || enableFilters
-            ? getFilteredRowModel()
-            : undefined, getGroupedRowModel: enableGrouping ? getGroupedRowModel() : undefined, getPaginationRowModel: enablePagination
-            ? getPaginationRowModel()
-            : undefined, getSortedRowModel: enableSorting ? getSortedRowModel() : undefined, getSubRows: (row) => row === null || row === void 0 ? void 0 : row.subRows, icons,
+        filterFns, features: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, stockFeatures), ((enableColumnFilters || enableGlobalFilter || enableFilters) &&
+            !manualFiltering
+            ? { filteredRowModel: createFilteredRowModel(), filterFns }
+            : {})), (enableSorting && !manualSorting
+            ? { sortedRowModel: createSortedRowModel(), sortFns }
+            : {})), (enablePagination && !manualPagination
+            ? { paginatedRowModel: createPaginatedRowModel() }
+            : {})), (enableExpanding || enableGrouping
+            ? { expandedRowModel: createExpandedRowModel() }
+            : {})), (enableGrouping && !manualGrouping
+            ? {
+                groupedRowModel: createGroupedRowModel(),
+                aggregationFns,
+            }
+            : {})), (enableFacetedValues
+            ? {
+                facetedRowModel: createFacetedRowModel(),
+                facetedMinMaxValues: createFacetedMinMaxValues(),
+                facetedUniqueValues: createFacetedUniqueValues(),
+            }
+            : {})), getSubRows: (row) => row === null || row === void 0 ? void 0 : row.subRows, icons,
         layoutMode,
         localization,
         manualFiltering,
@@ -2914,7 +2993,7 @@ const useMRT_TableOptions = (_a) => {
         rowNumberDisplayMode,
         rowPinningDisplayMode,
         selectAllMode,
-        sortingFns }, rest);
+        sortFns }, rest);
 };
 
 const blankColProps = {
@@ -2934,10 +3013,10 @@ const getMRT_RowSpacerColumnDef = (tableOptions) => {
 };
 
 const useMRT_Effects = (table) => {
-    const { getIsSomeRowsPinned, getPrePaginationRowModel, getState, options: { enablePagination, enableRowPinning, rowCount }, } = table;
-    const { columnOrder, density, globalFilter, isFullScreen, isLoading, pagination, showSkeletons, sorting, } = getState();
+    const { getIsSomeRowsPinned, getPrePaginatedRowModel, state, options: { enablePagination, enableRowPinning, rowCount }, } = table;
+    const { columnOrder, density, globalFilter, isFullScreen, isLoading, pagination, showSkeletons, sorting, } = state;
     const totalColumnCount = table.options.columns.length;
-    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginationRowModel().rows.length;
+    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().rows.length;
     const rerender = useReducer(() => ({}), {})[1];
     const initialBodyHeight = useRef(undefined);
     const previousTop = useRef(undefined);
@@ -2946,18 +3025,18 @@ const useMRT_Effects = (table) => {
             initialBodyHeight.current = document.body.style.height;
         }
     }, []);
-    //hide scrollbars when table is in full screen mode, preserve body scroll position after full screen exit
+    // hide scrollbars when table is in full screen mode, preserve body scroll position after full screen exit
     useEffect(() => {
         if (typeof window !== 'undefined') {
             if (isFullScreen) {
-                previousTop.current = document.body.getBoundingClientRect().top; //save scroll position
-                document.body.style.height = '100dvh'; //hide page scrollbars when table is in full screen mode
+                previousTop.current = document.body.getBoundingClientRect().top; // save scroll position
+                document.body.style.height = '100dvh'; // hide page scrollbars when table is in full screen mode
             }
             else {
                 document.body.style.height = initialBodyHeight.current;
                 if (!previousTop.current)
                     return;
-                //restore scroll position
+                // restore scroll position
                 window.scrollTo({
                     behavior: 'instant',
                     top: -1 * previousTop.current,
@@ -2965,13 +3044,13 @@ const useMRT_Effects = (table) => {
             }
         }
     }, [isFullScreen]);
-    //recalculate column order when columns change or features are toggled on/off
+    // recalculate column order when columns change or features are toggled on/off
     useEffect(() => {
         if (totalColumnCount !== columnOrder.length) {
-            table.setColumnOrder(getDefaultColumnOrderIds(table.options));
+            table.setColumnOrder(getDefaultColumnOrderIds(Object.assign(Object.assign({}, table.options), { state })));
         }
     }, [totalColumnCount]);
-    //if page index is out of bounds, set it to the last page
+    // if page index is out of bounds, set it to the last page
     useEffect(() => {
         if (!enablePagination || isLoading || showSkeletons)
             return;
@@ -2981,7 +3060,7 @@ const useMRT_Effects = (table) => {
             table.setPageIndex(Math.ceil(totalRowCount / pageSize) - 1);
         }
     }, [totalRowCount]);
-    //turn off sort when global filter is looking for ranked results
+    // turn off sort when global filter is looking for ranked results
     const appliedSort = useRef(sorting);
     useEffect(() => {
         if (sorting.length) {
@@ -2998,7 +3077,7 @@ const useMRT_Effects = (table) => {
             table.setSorting(() => appliedSort.current || []);
         }
     }, [globalFilter]);
-    //fix pinned row top style when density changes
+    // fix pinned row top style when density changes
     useEffect(() => {
         if (enableRowPinning && getIsSomeRowsPinned()) {
             setTimeout(() => {
@@ -3009,12 +3088,28 @@ const useMRT_Effects = (table) => {
 };
 
 /**
- * The MRT hook that wraps the TanStack useReactTable hook and adds additional functionality
+ * The MRT hook that wraps the TanStack `useTable` hook and adds MRT-specific
+ * state, refs, and helpers. State management is built on top of TanStack
+ * Store atoms (`useCreateAtom` from `@tanstack/react-store`):
+ *
+ * - **TanStack-aware slices** (`columnOrder`, `columnResizing`, `grouping`,
+ *   `pagination`) are passed via the `atoms` option on `useTable`. Library
+ *   writes (e.g. `table.setSorting(...)`, `table.firstPage()`) flow directly
+ *   through these atoms, and they're automatically tracked in
+ *   `table.state` by the v9 store.
+ * - **MRT-only slices** (`density`, `isFullScreen`, `creatingRow`,
+ *   `editingCell`, `editingRow`, `draggingColumn`, `draggingRow`,
+ *   `hoveredColumn`, `hoveredRow`, `globalFilterFn`, `columnFilterFns`,
+ *   `showAlertBanner`, `showColumnFilters`, `showGlobalFilter`,
+ *   `showToolbarDropZone`) live in atoms outside the v9 store and are
+ *   merged into `table.state` after construction so MRT components can read
+ *   them via the same `state` surface.
+ *
  * @param definedTableOptions - table options with proper defaults set
  * @returns the MRT table instance
  */
 const useMRT_TableInstance = (definedTableOptions) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11;
     const lastSelectedRowId = useRef(null);
     const bottomToolbarRef = useRef(null);
     const editInputRefs = useRef({});
@@ -3026,7 +3121,7 @@ const useMRT_TableInstance = (definedTableOptions) => {
     const topToolbarRef = useRef(null);
     const tableHeadRef = useRef(null);
     const tableFooterRef = useRef(null);
-    //transform initial state with proper column order
+    // transform initial state with proper column order
     const initialState = useMemo(() => {
         var _a, _b, _c;
         const initState = (_a = definedTableOptions.initialState) !== null && _a !== void 0 ? _a : {};
@@ -3036,35 +3131,74 @@ const useMRT_TableInstance = (definedTableOptions) => {
         return initState;
     }, []);
     definedTableOptions.initialState = initialState;
-    const [creatingRow, _setCreatingRow] = useState((_a = initialState.creatingRow) !== null && _a !== void 0 ? _a : null);
-    const [columnFilterFns, setColumnFilterFns] = useState(() => Object.assign({}, ...getAllLeafColumnDefs(definedTableOptions.columns).map((col) => {
-        var _a, _b, _c, _d;
-        return ({
-            [getColumnId(col)]: col.filterFn instanceof Function
-                ? ((_a = col.filterFn.name) !== null && _a !== void 0 ? _a : 'custom')
-                : ((_d = (_b = col.filterFn) !== null && _b !== void 0 ? _b : (_c = initialState === null || initialState === void 0 ? void 0 : initialState.columnFilterFns) === null || _c === void 0 ? void 0 : _c[getColumnId(col)]) !== null && _d !== void 0 ? _d : getDefaultColumnFilterFn(col)),
-        });
-    })));
-    const [columnOrder, onColumnOrderChange] = useState((_b = initialState.columnOrder) !== null && _b !== void 0 ? _b : []);
-    const [columnSizingInfo, onColumnSizingInfoChange] = useState((_c = initialState.columnSizingInfo) !== null && _c !== void 0 ? _c : {});
-    const [density, setDensity] = useState((_d = initialState === null || initialState === void 0 ? void 0 : initialState.density) !== null && _d !== void 0 ? _d : 'md');
-    const [draggingColumn, setDraggingColumn] = useState((_e = initialState.draggingColumn) !== null && _e !== void 0 ? _e : null);
-    const [draggingRow, setDraggingRow] = useState((_f = initialState.draggingRow) !== null && _f !== void 0 ? _f : null);
-    const [editingCell, setEditingCell] = useState((_g = initialState.editingCell) !== null && _g !== void 0 ? _g : null);
-    const [editingRow, setEditingRow] = useState((_h = initialState.editingRow) !== null && _h !== void 0 ? _h : null);
-    const [globalFilterFn, setGlobalFilterFn] = useState((_j = initialState.globalFilterFn) !== null && _j !== void 0 ? _j : 'fuzzy');
-    const [grouping, onGroupingChange] = useState((_k = initialState.grouping) !== null && _k !== void 0 ? _k : []);
-    const [hoveredColumn, setHoveredColumn] = useState((_l = initialState.hoveredColumn) !== null && _l !== void 0 ? _l : null);
-    const [hoveredRow, setHoveredRow] = useState((_m = initialState.hoveredRow) !== null && _m !== void 0 ? _m : null);
-    const [isFullScreen, setIsFullScreen] = useState((_o = initialState === null || initialState === void 0 ? void 0 : initialState.isFullScreen) !== null && _o !== void 0 ? _o : false);
-    const [pagination, onPaginationChange] = useState((_p = initialState === null || initialState === void 0 ? void 0 : initialState.pagination) !== null && _p !== void 0 ? _p : { pageIndex: 0, pageSize: 10 });
-    const [showAlertBanner, setShowAlertBanner] = useState((_q = initialState === null || initialState === void 0 ? void 0 : initialState.showAlertBanner) !== null && _q !== void 0 ? _q : false);
-    const [showColumnFilters, setShowColumnFilters] = useState((_r = initialState === null || initialState === void 0 ? void 0 : initialState.showColumnFilters) !== null && _r !== void 0 ? _r : false);
-    const [showGlobalFilter, setShowGlobalFilter] = useState((_s = initialState === null || initialState === void 0 ? void 0 : initialState.showGlobalFilter) !== null && _s !== void 0 ? _s : false);
-    const [showToolbarDropZone, setShowToolbarDropZone] = useState((_t = initialState === null || initialState === void 0 ? void 0 : initialState.showToolbarDropZone) !== null && _t !== void 0 ? _t : false);
+    // ---------------------------------------------------------------------------
+    // TanStack-aware atoms (passed to `useTable` via `atoms` option). The library
+    // both reads and writes through these.
+    // ---------------------------------------------------------------------------
+    const columnOrderAtom = useCreateAtom((_a = initialState.columnOrder) !== null && _a !== void 0 ? _a : []);
+    const columnResizingAtom = useCreateAtom((_b = initialState.columnResizing) !== null && _b !== void 0 ? _b : {});
+    const groupingAtom = useCreateAtom((_c = initialState.grouping) !== null && _c !== void 0 ? _c : []);
+    const paginationAtom = useCreateAtom((_d = initialState === null || initialState === void 0 ? void 0 : initialState.pagination) !== null && _d !== void 0 ? _d : { pageIndex: 0, pageSize: 10 });
+    // Subscribe so the consumer re-renders when these slices change. (The library
+    // also reads from these atoms internally; the subscriptions here are for the
+    // MRT component tree.)
+    const columnOrder = useSelector(columnOrderAtom);
+    const columnResizing = useSelector(columnResizingAtom);
+    const grouping = useSelector(groupingAtom);
+    const pagination = useSelector(paginationAtom);
+    // ---------------------------------------------------------------------------
+    // MRT-only atoms — these slices aren't part of v9's `TableState` so they
+    // can't be passed via the `atoms` option. They're maintained as standalone
+    // atoms and merged into `table.state` after construction.
+    // ---------------------------------------------------------------------------
+    // Build the initial columnFilterFns map from each column's `filterFn` (or
+    // the registered default if none set). Constructed as a plain Record so
+    // `useCreateAtom`'s overload resolves to `Atom<T>` (writable) rather than
+    // the function-style `ReadonlyAtom<T>` overload.
+    const initialColumnFilterFns = {};
+    for (const col of getAllLeafColumnDefs(definedTableOptions.columns)) {
+        initialColumnFilterFns[getColumnId(col)] =
+            col.filterFn instanceof Function
+                ? ((_e = col.filterFn.name) !== null && _e !== void 0 ? _e : 'custom')
+                : ((_h = (_f = col.filterFn) !== null && _f !== void 0 ? _f : (_g = initialState === null || initialState === void 0 ? void 0 : initialState.columnFilterFns) === null || _g === void 0 ? void 0 : _g[getColumnId(col)]) !== null && _h !== void 0 ? _h : getDefaultColumnFilterFn(col));
+    }
+    const columnFilterFnsAtom = useCreateAtom(initialColumnFilterFns);
+    const creatingRowAtom = useCreateAtom((_j = initialState.creatingRow) !== null && _j !== void 0 ? _j : null);
+    const densityAtom = useCreateAtom((_k = initialState === null || initialState === void 0 ? void 0 : initialState.density) !== null && _k !== void 0 ? _k : 'md');
+    const draggingColumnAtom = useCreateAtom((_l = initialState.draggingColumn) !== null && _l !== void 0 ? _l : null);
+    const draggingRowAtom = useCreateAtom((_m = initialState.draggingRow) !== null && _m !== void 0 ? _m : null);
+    const editingCellAtom = useCreateAtom((_o = initialState.editingCell) !== null && _o !== void 0 ? _o : null);
+    const editingRowAtom = useCreateAtom((_p = initialState.editingRow) !== null && _p !== void 0 ? _p : null);
+    const globalFilterFnAtom = useCreateAtom((_q = initialState.globalFilterFn) !== null && _q !== void 0 ? _q : 'fuzzy');
+    const hoveredColumnAtom = useCreateAtom((_r = initialState.hoveredColumn) !== null && _r !== void 0 ? _r : null);
+    const hoveredRowAtom = useCreateAtom((_s = initialState.hoveredRow) !== null && _s !== void 0 ? _s : null);
+    const isFullScreenAtom = useCreateAtom((_t = initialState === null || initialState === void 0 ? void 0 : initialState.isFullScreen) !== null && _t !== void 0 ? _t : false);
+    const showAlertBannerAtom = useCreateAtom((_u = initialState === null || initialState === void 0 ? void 0 : initialState.showAlertBanner) !== null && _u !== void 0 ? _u : false);
+    const showColumnFiltersAtom = useCreateAtom((_v = initialState === null || initialState === void 0 ? void 0 : initialState.showColumnFilters) !== null && _v !== void 0 ? _v : false);
+    const showGlobalFilterAtom = useCreateAtom((_w = initialState === null || initialState === void 0 ? void 0 : initialState.showGlobalFilter) !== null && _w !== void 0 ? _w : false);
+    const showToolbarDropZoneAtom = useCreateAtom((_x = initialState === null || initialState === void 0 ? void 0 : initialState.showToolbarDropZone) !== null && _x !== void 0 ? _x : false);
+    const columnFilterFns = useSelector(columnFilterFnsAtom);
+    const creatingRow = useSelector(creatingRowAtom);
+    const density = useSelector(densityAtom);
+    const draggingColumn = useSelector(draggingColumnAtom);
+    const draggingRow = useSelector(draggingRowAtom);
+    const editingCell = useSelector(editingCellAtom);
+    const editingRow = useSelector(editingRowAtom);
+    const globalFilterFn = useSelector(globalFilterFnAtom);
+    const hoveredColumn = useSelector(hoveredColumnAtom);
+    const hoveredRow = useSelector(hoveredRowAtom);
+    const isFullScreen = useSelector(isFullScreenAtom);
+    const showAlertBanner = useSelector(showAlertBannerAtom);
+    const showColumnFilters = useSelector(showColumnFiltersAtom);
+    const showGlobalFilter = useSelector(showGlobalFilterAtom);
+    const showToolbarDropZone = useSelector(showToolbarDropZoneAtom);
+    // Mirror values into options.state so utilities that read
+    // `tableOptions.state.X` (e.g. column prep, display-column factories) keep
+    // working. The user can still override individual slices by setting
+    // `definedTableOptions.state` from outside.
     definedTableOptions.state = Object.assign({ columnFilterFns,
         columnOrder,
-        columnSizingInfo,
+        columnResizing,
         creatingRow,
         density,
         draggingColumn,
@@ -3081,41 +3215,83 @@ const useMRT_TableInstance = (definedTableOptions) => {
         showColumnFilters,
         showGlobalFilter,
         showToolbarDropZone }, definedTableOptions.state);
-    //The table options now include all state needed to help determine column visibility and order logic
+    // The table options now include all state needed to help determine column visibility and order logic
     const statefulTableOptions = definedTableOptions;
-    //don't recompute columnDefs while resizing column or dragging column/row
+    // Column preparation mutates/augments definitions and must rerun when an
+    // input that affects those definitions changes. Keep the resulting array
+    // stable across unrelated state updates such as pagination.
     const columnDefsRef = useRef([]);
-    statefulTableOptions.columns =
-        statefulTableOptions.state.columnSizingInfo.isResizingColumn ||
-            statefulTableOptions.state.draggingColumn ||
-            statefulTableOptions.state.draggingRow
-            ? columnDefsRef.current
-            : prepareColumns({
-                columnDefs: [
-                    ...[
-                        showRowPinningColumn(statefulTableOptions) &&
-                            getMRT_RowPinningColumnDef(statefulTableOptions),
-                        showRowDragColumn(statefulTableOptions) &&
-                            getMRT_RowDragColumnDef(statefulTableOptions),
-                        showRowActionsColumn(statefulTableOptions) &&
-                            getMRT_RowActionsColumnDef(statefulTableOptions),
-                        showRowExpandColumn(statefulTableOptions) &&
-                            getMRT_RowExpandColumnDef(statefulTableOptions),
-                        showRowSelectionColumn(statefulTableOptions) &&
-                            getMRT_RowSelectColumnDef(statefulTableOptions),
-                        showRowNumbersColumn(statefulTableOptions) &&
-                            getMRT_RowNumbersColumnDef(statefulTableOptions),
-                    ].filter(Boolean),
-                    ...statefulTableOptions.columns,
-                    ...[
-                        showRowSpacerColumn(statefulTableOptions) &&
-                            getMRT_RowSpacerColumnDef(statefulTableOptions),
-                    ].filter(Boolean),
-                ],
-                tableOptions: statefulTableOptions,
-            });
-    columnDefsRef.current = statefulTableOptions.columns;
-    //if loading, generate blank rows to show skeleton loaders
+    const columnPreparationDepsRef = useRef(undefined);
+    const sourceColumns = statefulTableOptions.columns;
+    const columnPreparationDeps = [
+        sourceColumns,
+        statefulTableOptions.defaultColumn,
+        statefulTableOptions.defaultDisplayColumn,
+        statefulTableOptions.displayColumnDefOptions,
+        statefulTableOptions.filterFns,
+        statefulTableOptions.sortFns,
+        statefulTableOptions.localization,
+        statefulTableOptions.state.columnFilterFns,
+        statefulTableOptions.state.creatingRow,
+        statefulTableOptions.state.grouping,
+        statefulTableOptions.createDisplayMode,
+        statefulTableOptions.editDisplayMode,
+        statefulTableOptions.enableEditing,
+        statefulTableOptions.enableExpandAll,
+        statefulTableOptions.enableExpanding,
+        statefulTableOptions.enableGrouping,
+        statefulTableOptions.enableMultiRowSelection,
+        statefulTableOptions.enableRowActions,
+        statefulTableOptions.enableRowDragging,
+        statefulTableOptions.enableRowNumbers,
+        statefulTableOptions.enableRowOrdering,
+        statefulTableOptions.enableRowPinning,
+        statefulTableOptions.enableRowSelection,
+        statefulTableOptions.enableSelectAll,
+        statefulTableOptions.groupedColumnMode,
+        statefulTableOptions.layoutMode,
+        statefulTableOptions.positionExpandColumn,
+        statefulTableOptions.renderDetailPanel,
+        statefulTableOptions.rowNumberDisplayMode,
+        statefulTableOptions.rowPinningDisplayMode,
+    ];
+    const previousColumnPreparationDeps = columnPreparationDepsRef.current;
+    const columnPreparationChanged = !previousColumnPreparationDeps ||
+        columnPreparationDeps.length !== previousColumnPreparationDeps.length ||
+        columnPreparationDeps.some((dependency, index) => !Object.is(dependency, previousColumnPreparationDeps[index]));
+    const freezePreparedColumns = !!columnDefsRef.current.length &&
+        (statefulTableOptions.state.columnResizing.isResizingColumn ||
+            !!statefulTableOptions.state.draggingColumn ||
+            !!statefulTableOptions.state.draggingRow);
+    if (columnPreparationChanged && !freezePreparedColumns) {
+        columnDefsRef.current = prepareColumns({
+            columnDefs: [
+                ...[
+                    showRowPinningColumn(statefulTableOptions) &&
+                        getMRT_RowPinningColumnDef(statefulTableOptions),
+                    showRowDragColumn(statefulTableOptions) &&
+                        getMRT_RowDragColumnDef(statefulTableOptions),
+                    showRowActionsColumn(statefulTableOptions) &&
+                        getMRT_RowActionsColumnDef(statefulTableOptions),
+                    showRowExpandColumn(statefulTableOptions) &&
+                        getMRT_RowExpandColumnDef(statefulTableOptions),
+                    showRowSelectionColumn(statefulTableOptions) &&
+                        getMRT_RowSelectColumnDef(statefulTableOptions),
+                    showRowNumbersColumn(statefulTableOptions) &&
+                        getMRT_RowNumbersColumnDef(statefulTableOptions),
+                ].filter(Boolean),
+                ...sourceColumns,
+                ...[
+                    showRowSpacerColumn(statefulTableOptions) &&
+                        getMRT_RowSpacerColumnDef(statefulTableOptions),
+                ].filter(Boolean),
+            ],
+            tableOptions: statefulTableOptions,
+        });
+        columnPreparationDepsRef.current = columnPreparationDeps;
+    }
+    statefulTableOptions.columns = columnDefsRef.current;
+    // if loading, generate blank rows to show skeleton loaders
     statefulTableOptions.data = useMemo(() => (statefulTableOptions.state.isLoading ||
         statefulTableOptions.state.showSkeletons) &&
         !statefulTableOptions.data.length
@@ -3129,11 +3305,40 @@ const useMRT_TableInstance = (definedTableOptions) => {
         statefulTableOptions.state.isLoading,
         statefulTableOptions.state.showSkeletons,
     ]);
-    //@ts-ignore
-    const table = useReactTable(Object.assign(Object.assign({ onColumnOrderChange,
-        onColumnSizingInfoChange,
-        onGroupingChange,
-        onPaginationChange }, statefulTableOptions), { globalFilterFn: (_u = statefulTableOptions.filterFns) === null || _u === void 0 ? void 0 : _u[globalFilterFn !== null && globalFilterFn !== void 0 ? globalFilterFn : 'fuzzy'] }));
+    const table = useTable(Object.assign(Object.assign({}, statefulTableOptions), { globalFilterFn: (globalFilterFn !== null && globalFilterFn !== void 0 ? globalFilterFn : 'fuzzy'),
+        // Hand TanStack-aware slices over to our external atoms — library writes
+        // (e.g. `table.setPageIndex(...)`, drag-resize) flow straight into them.
+        atoms: {
+            columnOrder: columnOrderAtom,
+            columnResizing: columnResizingAtom,
+            grouping: groupingAtom,
+            pagination: paginationAtom,
+        } }), (state) => state);
+    // v9 spells the resize setter `setcolumnResizing` (lowercase 'c') because
+    // it's auto-generated from the state-key name. Expose a camelCase alias so
+    // MRT consumers don't need to know about that quirk; route writes through
+    // our owned atom directly.
+    table.setColumnResizing = columnResizingAtom.set;
+    // The v9 store doesn't track MRT-only slices, so `table.state` is missing
+    // them after `useTable` returns. Patch them in here so all MRT components
+    // can read `table.state.density`, `table.state.isFullScreen`, etc.
+    table.state = Object.assign(Object.assign({}, table.state), { columnFilterFns,
+        creatingRow,
+        density,
+        draggingColumn,
+        draggingRow,
+        editingCell,
+        editingRow,
+        globalFilterFn,
+        hoveredColumn,
+        hoveredRow,
+        isFullScreen,
+        showAlertBanner,
+        showColumnFilters,
+        showGlobalFilter,
+        showToolbarDropZone });
+    // v8-style `getState()` alias for any consumer that still calls it.
+    table.getState = () => table.state;
     table.refs = {
         bottomToolbarRef,
         editInputRefs,
@@ -3147,6 +3352,11 @@ const useMRT_TableInstance = (definedTableOptions) => {
         tablePaperRef,
         topToolbarRef,
     };
+    // Setters write through atom.set (or call the user-supplied on*Change
+    // handler if one was provided so external state ownership still works).
+    // The `as any` casts bridge atom.set's overloaded signature with React's
+    // `Dispatch<SetStateAction<T>>` shape — the runtime contract is identical
+    // (both accept a value or an updater function).
     table.setCreatingRow = (row) => {
         let _row = row;
         if (row === true) {
@@ -3156,52 +3366,201 @@ const useMRT_TableInstance = (definedTableOptions) => {
             statefulTableOptions.onCreatingRowChange(_row);
         }
         else {
-            _setCreatingRow(_row);
+            creatingRowAtom.set(_row);
         }
     };
-    table.setColumnFilterFns =
-        (_v = statefulTableOptions.onColumnFilterFnsChange) !== null && _v !== void 0 ? _v : setColumnFilterFns;
-    table.setDensity = (_w = statefulTableOptions.onDensityChange) !== null && _w !== void 0 ? _w : setDensity;
-    table.setDraggingColumn =
-        (_x = statefulTableOptions.onDraggingColumnChange) !== null && _x !== void 0 ? _x : setDraggingColumn;
-    table.setDraggingRow =
-        (_y = statefulTableOptions.onDraggingRowChange) !== null && _y !== void 0 ? _y : setDraggingRow;
-    table.setEditingCell =
-        (_z = statefulTableOptions.onEditingCellChange) !== null && _z !== void 0 ? _z : setEditingCell;
-    table.setEditingRow =
-        (_0 = statefulTableOptions.onEditingRowChange) !== null && _0 !== void 0 ? _0 : setEditingRow;
-    table.setGlobalFilterFn =
-        (_1 = statefulTableOptions.onGlobalFilterFnChange) !== null && _1 !== void 0 ? _1 : setGlobalFilterFn;
-    table.setHoveredColumn =
-        (_2 = statefulTableOptions.onHoveredColumnChange) !== null && _2 !== void 0 ? _2 : setHoveredColumn;
-    table.setHoveredRow =
-        (_3 = statefulTableOptions.onHoveredRowChange) !== null && _3 !== void 0 ? _3 : setHoveredRow;
-    table.setIsFullScreen =
-        (_4 = statefulTableOptions.onIsFullScreenChange) !== null && _4 !== void 0 ? _4 : setIsFullScreen;
-    table.setShowAlertBanner =
-        (_5 = statefulTableOptions.onShowAlertBannerChange) !== null && _5 !== void 0 ? _5 : setShowAlertBanner;
+    table.setColumnFilterFns = ((_y = statefulTableOptions.onColumnFilterFnsChange) !== null && _y !== void 0 ? _y : columnFilterFnsAtom.set);
+    table.setDensity = ((_z = statefulTableOptions.onDensityChange) !== null && _z !== void 0 ? _z : densityAtom.set);
+    table.setDraggingColumn = ((_0 = statefulTableOptions.onDraggingColumnChange) !== null && _0 !== void 0 ? _0 : draggingColumnAtom.set);
+    table.setDraggingRow = ((_1 = statefulTableOptions.onDraggingRowChange) !== null && _1 !== void 0 ? _1 : draggingRowAtom.set);
+    table.setEditingCell = ((_2 = statefulTableOptions.onEditingCellChange) !== null && _2 !== void 0 ? _2 : editingCellAtom.set);
+    table.setEditingRow = ((_3 = statefulTableOptions.onEditingRowChange) !== null && _3 !== void 0 ? _3 : editingRowAtom.set);
+    table.setGlobalFilterFn = ((_4 = statefulTableOptions.onGlobalFilterFnChange) !== null && _4 !== void 0 ? _4 : globalFilterFnAtom.set);
+    table.setHoveredColumn = ((_5 = statefulTableOptions.onHoveredColumnChange) !== null && _5 !== void 0 ? _5 : hoveredColumnAtom.set);
+    table.setHoveredRow = ((_6 = statefulTableOptions.onHoveredRowChange) !== null && _6 !== void 0 ? _6 : hoveredRowAtom.set);
+    table.setIsFullScreen = ((_7 = statefulTableOptions.onIsFullScreenChange) !== null && _7 !== void 0 ? _7 : isFullScreenAtom.set);
+    table.setShowAlertBanner = ((_8 = statefulTableOptions.onShowAlertBannerChange) !== null && _8 !== void 0 ? _8 : showAlertBannerAtom.set);
     table.setShowColumnFilters =
-        (_6 = statefulTableOptions.onShowColumnFiltersChange) !== null && _6 !== void 0 ? _6 : setShowColumnFilters;
-    table.setShowGlobalFilter =
-        (_7 = statefulTableOptions.onShowGlobalFilterChange) !== null && _7 !== void 0 ? _7 : setShowGlobalFilter;
+        ((_9 = statefulTableOptions.onShowColumnFiltersChange) !== null && _9 !== void 0 ? _9 : showColumnFiltersAtom.set);
+    table.setShowGlobalFilter = ((_10 = statefulTableOptions.onShowGlobalFilterChange) !== null && _10 !== void 0 ? _10 : showGlobalFilterAtom.set);
     table.setShowToolbarDropZone =
-        (_8 = statefulTableOptions.onShowToolbarDropZoneChange) !== null && _8 !== void 0 ? _8 : setShowToolbarDropZone;
+        ((_11 = statefulTableOptions.onShowToolbarDropZoneChange) !== null && _11 !== void 0 ? _11 : showToolbarDropZoneAtom.set);
     useMRT_Effects(table);
     return table;
 };
 
 const useMantineReactTable = (tableOptions) => useMRT_TableInstance(useMRT_TableOptions(tableOptions));
 
-var classes$8 = {"root":"MRT_TablePaper-module_root__q0v5L"};
+var commonClasses = {"common-toolbar-styles":"common-styles-module_common-toolbar-styles__DnjR8"};
 
-var classes$7 = {"root":"MRT_TableContainer-module_root__JIsGB","root-sticky":"MRT_TableContainer-module_root-sticky__uC4qx","root-fullscreen":"MRT_TableContainer-module_root-fullscreen__aM8Jg"};
+var classes$8 = {"root":"MRT_BottomToolbar-module_root__VDeWo","root-fullscreen":"MRT_BottomToolbar-module_root-fullscreen__esE15","custom-toolbar-container":"MRT_BottomToolbar-module_custom-toolbar-container__XcDRF","paginator-container":"MRT_BottomToolbar-module_paginator-container__A3eWY","paginator-container-alert-banner":"MRT_BottomToolbar-module_paginator-container-alert-banner__gyqtO"};
 
-var classes$6 = {"root":"MRT_Table-module_root__ms2uS","root-grid":"MRT_Table-module_root-grid__2Pynz"};
+var classes$7 = {"collapse":"MRT_ProgressBar-module_collapse__rOLJH","collapse-top":"MRT_ProgressBar-module_collapse-top__oCi0h"};
+
+const MRT_ProgressBar = (_a) => {
+    var { isTopToolbar, table } = _a, rest = __rest(_a, ["isTopToolbar", "table"]);
+    const { state, options: { mantineProgressProps }, } = table;
+    const { isSaving, showProgressBars } = state;
+    const linearProgressProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineProgressProps, {
+        isTopToolbar,
+        table,
+    })), rest);
+    return (jsx(Collapse, { className: clsx(classes$7.collapse, isTopToolbar && classes$7['collapse-top']), expanded: isSaving || showProgressBars, children: jsx(Progress, Object.assign({ animated: true, "aria-busy": "true", "aria-label": "Loading", radius: 0, value: 100 }, linearProgressProps)) }));
+};
+
+var classes$6 = {"root":"MRT_TablePagination-module_root__yZ8pm","pagesize":"MRT_TablePagination-module_pagesize__-vmTn","with-top-margin":"MRT_TablePagination-module_with-top-margin__aM5-m"};
+
+const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100].map((x) => x.toString());
+const MRT_TablePagination = (_a) => {
+    var _b;
+    var { position = 'bottom', table } = _a, props = __rest(_a, ["position", "table"]);
+    const { getPrePaginatedRowModel, state, options: { enableToolbarInternalActions, icons: { IconChevronLeft, IconChevronLeftPipe, IconChevronRight, IconChevronRightPipe, }, localization, mantinePaginationProps, paginationDisplayMode, rowCount, }, setPageIndex, setPageSize, } = table;
+    const { pagination: { pageIndex = 0, pageSize = 10 }, showGlobalFilter, } = state;
+    const paginationProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantinePaginationProps, {
+        table,
+    })), props);
+    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().rows.length;
+    const numberOfPages = Math.ceil(totalRowCount / pageSize);
+    const showFirstLastPageButtons = numberOfPages > 2;
+    const firstRowIndex = pageIndex * pageSize;
+    const lastRowIndex = Math.min(pageIndex * pageSize + pageSize, totalRowCount);
+    const _c = paginationProps !== null && paginationProps !== void 0 ? paginationProps : {}, { rowsPerPageOptions = defaultRowsPerPage, showRowsPerPage = true, withEdges = showFirstLastPageButtons } = _c, rest = __rest(_c, ["rowsPerPageOptions", "showRowsPerPage", "withEdges"]);
+    const needsTopMargin = position === 'top' && enableToolbarInternalActions && !showGlobalFilter;
+    return (jsxs(Box, { className: clsx('mrt-table-pagination', classes$6.root, needsTopMargin && classes$6['with-top-margin']), children: [(paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.showRowsPerPage) !== false && (jsxs(Group, { gap: "xs", children: [jsx(Text, { id: "rpp-label", children: localization.rowsPerPage }), jsx(Select, { allowDeselect: false, "aria-labelledby": "rpp-label", className: classes$6.pagesize, data: (_b = paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.rowsPerPageOptions) !== null && _b !== void 0 ? _b : defaultRowsPerPage, onChange: (value) => setPageSize(+value), value: pageSize.toString() })] })), paginationDisplayMode === 'pages' ? (jsx(Pagination, Object.assign({ firstIcon: IconChevronLeftPipe, lastIcon: IconChevronRightPipe, nextIcon: IconChevronRight, onChange: (newPageIndex) => setPageIndex(newPageIndex - 1), previousIcon: IconChevronLeft, total: numberOfPages, value: pageIndex + 1, withEdges: withEdges }, rest))) : paginationDisplayMode === 'default' ? (jsxs(Fragment, { children: [jsx(Text, { children: `${lastRowIndex === 0 ? 0 : (firstRowIndex + 1).toLocaleString()}-${lastRowIndex.toLocaleString()} ${localization.of} ${totalRowCount.toLocaleString()}` }), jsxs(Group, { gap: 6, children: [withEdges && (jsx(ActionIcon, { "aria-label": localization.goToFirstPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(0), variant: "subtle", children: jsx(IconChevronLeftPipe, {}) })), jsx(ActionIcon, { "aria-label": localization.goToPreviousPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(pageIndex - 1), variant: "subtle", children: jsx(IconChevronLeft, {}) }), jsx(ActionIcon, { "aria-label": localization.goToNextPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(pageIndex + 1), variant: "subtle", children: jsx(IconChevronRight, {}) }), withEdges && (jsx(ActionIcon, { "aria-label": localization.goToLastPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(numberOfPages - 1), variant: "subtle", children: jsx(IconChevronRightPipe, {}) }))] })] })) : null] }));
+};
+
+var classes$5 = {"root":"MRT_ToolbarDropZone-module_root__eGTXb","hovered":"MRT_ToolbarDropZone-module_hovered__g7PeJ"};
+
+const MRT_ToolbarDropZone = (_a) => {
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { state, options: { enableGrouping, localization }, setHoveredColumn, setShowToolbarDropZone, } = table;
+    const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = state;
+    const handleDragEnter = (_event) => {
+        setHoveredColumn({ id: 'drop-zone' });
+    };
+    useEffect(() => {
+        var _a;
+        if (((_a = table.options.state) === null || _a === void 0 ? void 0 : _a.showToolbarDropZone) !== undefined) {
+            setShowToolbarDropZone(!!enableGrouping &&
+                !!draggingColumn &&
+                draggingColumn.columnDef.enableGrouping !== false &&
+                !grouping.includes(draggingColumn.id));
+        }
+    }, [enableGrouping, draggingColumn, grouping]);
+    return (jsx(Transition, { mounted: showToolbarDropZone, transition: "fade", children: () => {
+            var _a, _b;
+            return (jsx(Flex, Object.assign({ className: clsx('mrt-toolbar-dropzone', classes$5.root, (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === 'drop-zone' && classes$5.hovered), onDragEnter: handleDragEnter }, rest, { children: jsx(Text, { children: localization.dropToGroupBy.replace('{column}', (_b = (_a = draggingColumn === null || draggingColumn === void 0 ? void 0 : draggingColumn.columnDef) === null || _a === void 0 ? void 0 : _a.header) !== null && _b !== void 0 ? _b : '') }) })));
+        } }));
+};
+
+const MRT_BottomToolbar = (_a) => {
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { state, options: { enablePagination, mantineBottomToolbarProps, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderBottomToolbarCustomActions, }, refs: { bottomToolbarRef }, } = table;
+    const { isFullScreen } = state;
+    const isMobile = useMediaQuery('(max-width: 720px)');
+    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineBottomToolbarProps, {
+        table,
+    })), rest);
+    const stackAlertBanner = isMobile || !!renderBottomToolbarCustomActions;
+    return (jsxs(Box, Object.assign({}, toolbarProps, { className: clsx('mrt-bottom-toolbar', classes$8.root, commonClasses['common-toolbar-styles'], isFullScreen && classes$8['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
+            if (node) {
+                bottomToolbarRef.current = node;
+                if (toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref) {
+                    toolbarProps.ref.current = node;
+                }
+            }
+        }, children: [jsx(MRT_ProgressBar, { isTopToolbar: false, table: table }), positionToolbarAlertBanner === 'bottom' && (jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'bottom'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsx(MRT_ToolbarDropZone, { table: table })), jsxs(Box, { className: classes$8['custom-toolbar-container'], children: [renderBottomToolbarCustomActions ? (renderBottomToolbarCustomActions({ table })) : (jsx("span", {})), jsx(Box, { className: clsx(classes$8['paginator-container'], stackAlertBanner && classes$8['paginator-container-alert-banner']), children: enablePagination &&
+                            ['both', 'bottom'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsx(MRT_TablePagination, { position: "bottom", table: table })) })] })] })));
+};
+
+var classes$4 = {"root":"MRT_TopToolbar-module_root__r4-V9","root-fullscreen":"MRT_TopToolbar-module_root-fullscreen__3itT8","actions-container":"MRT_TopToolbar-module_actions-container__-uL0u","actions-container-stack-alert":"MRT_TopToolbar-module_actions-container-stack-alert__OYDL6"};
+
+var classes$3 = {"root":"MRT_ToolbarInternalButtons-module_root__NKoUG"};
+
+const MRT_ToolbarInternalButtons = (_a) => {
+    var _b;
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { options: { columnFilterDisplayMode, enableColumnFilters, enableColumnOrdering, enableColumnPinning, enableDensityToggle, enableFilters, enableFullScreenToggle, enableGlobalFilter, enableHiding, initialState, renderToolbarInternalActions, }, } = table;
+    return (jsx(Flex, Object.assign({}, rest, { className: clsx('mrt-toolbar-internal-buttons', classes$3.root, rest === null || rest === void 0 ? void 0 : rest.className), children: (_b = renderToolbarInternalActions === null || renderToolbarInternalActions === void 0 ? void 0 : renderToolbarInternalActions({ table })) !== null && _b !== void 0 ? _b : (jsxs(Fragment, { children: [enableFilters &&
+                    enableGlobalFilter &&
+                    !(initialState === null || initialState === void 0 ? void 0 : initialState.showGlobalFilter) && (jsx(MRT_ToggleGlobalFilterButton, { table: table })), enableFilters &&
+                    enableColumnFilters &&
+                    columnFilterDisplayMode !== 'popover' && (jsx(MRT_ToggleFiltersButton, { table: table })), (enableHiding || enableColumnOrdering || enableColumnPinning) && (jsx(MRT_ShowHideColumnsButton, { table: table })), enableDensityToggle && (jsx(MRT_ToggleDensePaddingButton, { table: table })), enableFullScreenToggle && (jsx(MRT_ToggleFullScreenButton, { table: table }))] })) })));
+};
+
+const MRT_TopToolbar = (_a) => {
+    var _b;
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { state, options: { enableGlobalFilter, enablePagination, enableToolbarInternalActions, mantineTopToolbarProps, positionGlobalFilter, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderTopToolbarCustomActions, }, refs: { topToolbarRef }, } = table;
+    const { isFullScreen, showGlobalFilter } = state;
+    const isMobile = useMediaQuery('(max-width:720px)');
+    const isTablet = useMediaQuery('(max-width:1024px)');
+    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTopToolbarProps, { table })), rest);
+    const stackAlertBanner = isMobile ||
+        !!renderTopToolbarCustomActions ||
+        (showGlobalFilter && isTablet);
+    const globalFilterProps = {
+        style: !isTablet
+            ? {
+                zIndex: 3,
+            }
+            : undefined,
+        table,
+    };
+    return (jsxs(Box, Object.assign({}, toolbarProps, { className: clsx(commonClasses['common-toolbar-styles'], classes$4['root'], isFullScreen && classes$4['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
+            if (node) {
+                topToolbarRef.current = node;
+                if (toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref) {
+                    toolbarProps.ref.current = node;
+                }
+            }
+        }, children: [positionToolbarAlertBanner === 'top' && (jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'top'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsx(MRT_ToolbarDropZone, { table: table })), jsxs(Flex, { className: clsx(classes$4['actions-container'], stackAlertBanner && classes$4['actions-container-stack-alert']), children: [enableGlobalFilter && positionGlobalFilter === 'left' && (jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), (_b = renderTopToolbarCustomActions === null || renderTopToolbarCustomActions === void 0 ? void 0 : renderTopToolbarCustomActions({ table })) !== null && _b !== void 0 ? _b : jsx("span", {}), enableToolbarInternalActions ? (jsxs(Flex, { justify: 'end', wrap: 'wrap-reverse', children: [enableGlobalFilter && positionGlobalFilter === 'right' && (jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), jsx(MRT_ToolbarInternalButtons, { table: table })] })) : (enableGlobalFilter &&
+                        positionGlobalFilter === 'right' && (jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))))] }), enablePagination &&
+                ['both', 'top'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsx(Flex, { justify: "end", children: jsx(MRT_TablePagination, { position: "top", table: table }) })), jsx(MRT_ProgressBar, { isTopToolbar: true, table: table })] })));
+};
+
+const MRT_EditRowModal = (_a) => {
+    var _b;
+    var { open, table } = _a, rest = __rest(_a, ["open", "table"]);
+    const { state, options: { mantineCreateRowModalProps, mantineEditRowModalProps, onCreatingRowCancel, onEditingRowCancel, renderCreateRowModalContent, renderEditRowModalContent, }, setCreatingRow, setEditingRow, } = table;
+    const { creatingRow, editingRow } = state;
+    const row = (creatingRow !== null && creatingRow !== void 0 ? creatingRow : editingRow);
+    const arg = { row, table };
+    const modalProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditRowModalProps, arg)), (creatingRow && parseFromValuesOrFunc(mantineCreateRowModalProps, arg))), rest);
+    const internalEditComponents = row
+        .getAllCells()
+        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
+        .map((cell) => (jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
+    const handleCancel = () => {
+        var _a;
+        if (creatingRow) {
+            onCreatingRowCancel === null || onCreatingRowCancel === void 0 ? void 0 : onCreatingRowCancel({ row, table });
+            setCreatingRow(null);
+        }
+        else {
+            onEditingRowCancel === null || onEditingRowCancel === void 0 ? void 0 : onEditingRowCancel({ row, table });
+            setEditingRow(null);
+        }
+        row._valuesCache = {}; // reset values cache
+        (_a = modalProps.onClose) === null || _a === void 0 ? void 0 : _a.call(modalProps);
+    };
+    return (createElement(Modal, Object.assign({ opened: open, withCloseButton: false }, modalProps, { key: row.id, onClose: handleCancel }), (_b = ((creatingRow &&
+        (renderCreateRowModalContent === null || renderCreateRowModalContent === void 0 ? void 0 : renderCreateRowModalContent({
+            internalEditComponents,
+            row,
+            table,
+        }))) ||
+        (renderEditRowModalContent === null || renderEditRowModalContent === void 0 ? void 0 : renderEditRowModalContent({
+            internalEditComponents,
+            row,
+            table,
+        })))) !== null && _b !== void 0 ? _b : (jsxs(Fragment, { children: [jsx("form", { onSubmit: (e) => e.preventDefault(), children: jsx(Stack, { gap: "lg", pb: 24, pt: 16, children: internalEditComponents }) }), jsx(Flex, { justify: "flex-end", children: jsx(MRT_EditActionButtons, { row: row, table: table, variant: "text" }) })] }))));
+};
 
 const useMRT_ColumnVirtualizer = (table) => {
     var _a, _b, _c, _d;
-    const { getLeftLeafColumns, getRightLeafColumns, getState, getVisibleLeafColumns, options: { columnVirtualizerInstanceRef, columnVirtualizerOptions, enableColumnPinning, enableColumnVirtualization, }, refs: { tableContainerRef }, } = table;
-    const { columnPinning, draggingColumn } = getState();
+    const { getStartLeafColumns, getEndLeafColumns, state, getVisibleLeafColumns, options: { columnVirtualizerInstanceRef, columnVirtualizerOptions, enableColumnPinning, enableColumnVirtualization, }, refs: { tableContainerRef }, } = table;
+    const { columnPinning, draggingColumn } = state;
     if (!enableColumnVirtualization)
         return undefined;
     const columnVirtualizerProps = parseFromValuesOrFunc(columnVirtualizerOptions, {
@@ -3210,8 +3569,8 @@ const useMRT_ColumnVirtualizer = (table) => {
     const visibleColumns = getVisibleLeafColumns();
     const [leftPinnedIndexes, rightPinnedIndexes] = useMemo(() => enableColumnPinning
         ? [
-            getLeftLeafColumns().map((c) => c.getPinnedIndex()),
-            getRightLeafColumns()
+            getStartLeafColumns().map((c) => c.getPinnedIndex()),
+            getEndLeafColumns()
                 .map((column) => visibleColumns.length - column.getPinnedIndex() - 1)
                 .sort((a, b) => a - b),
         ]
@@ -3243,24 +3602,25 @@ const useMRT_ColumnVirtualizer = (table) => {
         const leftNonPinnedEnd = ((_b = virtualColumns[leftPinnedIndexes.length - 1]) === null || _b === void 0 ? void 0 : _b.end) || 0;
         const rightNonPinnedStart = ((_c = virtualColumns[numColumns - numPinnedRight]) === null || _c === void 0 ? void 0 : _c.start) || 0;
         const rightNonPinnedEnd = ((_d = virtualColumns[numColumns - numPinnedRight - 1]) === null || _d === void 0 ? void 0 : _d.end) || 0;
-        columnVirtualizer.virtualPaddingLeft =
-            leftNonPinnedStart - leftNonPinnedEnd;
+        columnVirtualizer.virtualPaddingLeft = leftNonPinnedStart - leftNonPinnedEnd;
         columnVirtualizer.virtualPaddingRight =
             totalSize -
                 rightNonPinnedEnd -
                 (numPinnedRight ? totalSize - rightNonPinnedStart : 0);
     }
     if (columnVirtualizerInstanceRef) {
-        //@ts-ignore
+        // @ts-ignore - TODO: fix this
         columnVirtualizerInstanceRef.current = columnVirtualizer;
     }
     return columnVirtualizer;
 };
 
+var classes$2 = {"root":"MRT_Table-module_root__ms2uS","root-grid":"MRT_Table-module_root-grid__2Pynz"};
+
 const MRT_Table = (_a) => {
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getFlatHeaders, getState, options: { columns, enableTableFooter, enableTableHead, layoutMode, mantineTableProps, memoMode, }, } = table;
-    const { columnSizing, columnSizingInfo, columnVisibility, density } = getState();
+    const { getFlatHeaders, state, options: { columns, enableTableFooter, enableTableHead, layoutMode, mantineTableProps, memoMode, }, } = table;
+    const { columnSizing, columnResizing, columnVisibility, density } = state;
     const tableProps = Object.assign(Object.assign({ highlightOnHover: true, horizontalSpacing: density, verticalSpacing: density }, parseFromValuesOrFunc(mantineTableProps, { table })), rest);
     const columnSizeVars = useMemo(() => {
         const headers = getFlatHeaders();
@@ -3272,7 +3632,7 @@ const MRT_Table = (_a) => {
             colSizes[`--col-${parseCSSVarId(header.column.id)}-size`] = colSize;
         }
         return colSizes;
-    }, [columns, columnSizing, columnSizingInfo, columnVisibility]);
+    }, [columns, columnSizing, columnResizing, columnVisibility]);
     const columnVirtualizer = useMRT_ColumnVirtualizer(table);
     const commonTableGroupProps = {
         columnVirtualizer,
@@ -3280,56 +3640,20 @@ const MRT_Table = (_a) => {
     };
     const { colorScheme } = useMantineColorScheme();
     const { stripedColor } = tableProps;
-    return (jsxs(Table, Object.assign({ className: clsx('mrt-table', classes$6.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$6['root-grid'], tableProps.className) }, tableProps, { __vars: Object.assign(Object.assign(Object.assign({}, columnSizeVars), { '--mrt-striped-row-background-color': stripedColor, '--mrt-striped-row-hover-background-color': stripedColor
+    return (jsxs(Table, Object.assign({ className: clsx('mrt-table', classes$2.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$2['root-grid'], tableProps.className) }, tableProps, { __vars: Object.assign(Object.assign(Object.assign({}, columnSizeVars), { '--mrt-striped-row-background-color': stripedColor, '--mrt-striped-row-hover-background-color': stripedColor
                 ? colorScheme === 'dark'
                     ? lighten(stripedColor, 0.08)
                     : darken(stripedColor, 0.12)
-                : undefined }), tableProps.__vars), children: [enableTableHead && jsx(MRT_TableHead, Object.assign({}, commonTableGroupProps)), memoMode === 'table-body' || columnSizingInfo.isResizingColumn ? (jsx(Memo_MRT_TableBody, Object.assign({}, commonTableGroupProps, { tableProps: tableProps }))) : (jsx(MRT_TableBody, Object.assign({}, commonTableGroupProps, { tableProps: tableProps }))), enableTableFooter && jsx(MRT_TableFooter, Object.assign({}, commonTableGroupProps))] })));
+                : undefined }), tableProps.__vars), children: [enableTableHead && jsx(MRT_TableHead, Object.assign({}, commonTableGroupProps)), memoMode === 'table-body' || columnResizing.isResizingColumn ? (jsx(Memo_MRT_TableBody, Object.assign({}, commonTableGroupProps, { tableProps: tableProps }))) : (jsx(MRT_TableBody, Object.assign({}, commonTableGroupProps, { tableProps: tableProps }))), enableTableFooter && jsx(MRT_TableFooter, Object.assign({}, commonTableGroupProps))] })));
 };
 
-const MRT_EditRowModal = (_a) => {
-    var _b;
-    var { open, table } = _a, rest = __rest(_a, ["open", "table"]);
-    const { getState, options: { mantineCreateRowModalProps, mantineEditRowModalProps, onCreatingRowCancel, onEditingRowCancel, renderCreateRowModalContent, renderEditRowModalContent, }, setCreatingRow, setEditingRow, } = table;
-    const { creatingRow, editingRow } = getState();
-    const row = (creatingRow !== null && creatingRow !== void 0 ? creatingRow : editingRow);
-    const arg = { row, table };
-    const modalProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditRowModalProps, arg)), (creatingRow && parseFromValuesOrFunc(mantineCreateRowModalProps, arg))), rest);
-    const internalEditComponents = row
-        .getAllCells()
-        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
-        .map((cell) => (jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
-    const handleCancel = () => {
-        var _a;
-        if (creatingRow) {
-            onCreatingRowCancel === null || onCreatingRowCancel === void 0 ? void 0 : onCreatingRowCancel({ row, table });
-            setCreatingRow(null);
-        }
-        else {
-            onEditingRowCancel === null || onEditingRowCancel === void 0 ? void 0 : onEditingRowCancel({ row, table });
-            setEditingRow(null);
-        }
-        row._valuesCache = {}; //reset values cache
-        (_a = modalProps.onClose) === null || _a === void 0 ? void 0 : _a.call(modalProps);
-    };
-    return (createElement(Modal, Object.assign({ opened: open, withCloseButton: false }, modalProps, { key: row.id, onClose: handleCancel }), (_b = ((creatingRow &&
-        (renderCreateRowModalContent === null || renderCreateRowModalContent === void 0 ? void 0 : renderCreateRowModalContent({
-            internalEditComponents,
-            row,
-            table,
-        }))) ||
-        (renderEditRowModalContent === null || renderEditRowModalContent === void 0 ? void 0 : renderEditRowModalContent({
-            internalEditComponents,
-            row,
-            table,
-        })))) !== null && _b !== void 0 ? _b : (jsxs(Fragment, { children: [jsx("form", { onSubmit: (e) => e.preventDefault(), children: jsx(Stack, { gap: "lg", pb: 24, pt: 16, children: internalEditComponents }) }), jsx(Flex, { justify: "flex-end", children: jsx(MRT_EditActionButtons, { row: row, table: table, variant: "text" }) })] }))));
-};
+var classes$1 = {"root":"MRT_TableContainer-module_root__JIsGB","root-sticky":"MRT_TableContainer-module_root-sticky__uC4qx","root-fullscreen":"MRT_TableContainer-module_root-fullscreen__aM8Jg"};
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 const MRT_TableContainer = (_a) => {
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getState, options: { createDisplayMode, editDisplayMode, enableStickyHeader, mantineLoadingOverlayProps, mantineTableContainerProps, }, refs: { bottomToolbarRef, tableContainerRef, topToolbarRef }, } = table;
-    const { creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay, } = getState();
+    const { state, options: { createDisplayMode, editDisplayMode, enableStickyHeader, mantineLoadingOverlayProps, mantineTableContainerProps, }, refs: { bottomToolbarRef, tableContainerRef, topToolbarRef }, } = table;
+    const { creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay, } = state;
     const [totalToolbarHeight, setTotalToolbarHeight] = useState(0);
     const tableContainerProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableContainerProps, { table })), rest);
     const loadingOverlayProps = parseFromValuesOrFunc(mantineLoadingOverlayProps, { table });
@@ -3345,147 +3669,30 @@ const MRT_TableContainer = (_a) => {
     });
     const createModalOpen = createDisplayMode === 'modal' && creatingRow;
     const editModalOpen = editDisplayMode === 'modal' && editingRow;
-    return (jsxs(Box, Object.assign({}, tableContainerProps, { __vars: Object.assign({ '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.__vars), className: clsx('mrt-table-container', classes$7.root, enableStickyHeader && classes$7['root-sticky'], isFullScreen && classes$7['root-fullscreen'], tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.className), ref: (node) => {
+    return (jsxs(Box, Object.assign({}, tableContainerProps, { __vars: Object.assign({ '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.__vars), className: clsx('mrt-table-container', classes$1.root, enableStickyHeader && classes$1['root-sticky'], isFullScreen && classes$1['root-fullscreen'], tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.className), ref: (node) => {
             if (node) {
                 tableContainerRef.current = node;
-                assignRef(tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.ref, node);
+                if (tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.ref) {
+                    // @ts-ignore
+                    tableContainerProps.ref.current = node;
+                }
             }
         }, children: [jsx(LoadingOverlay, Object.assign({ visible: isLoading || showLoadingOverlay, zIndex: 2 }, loadingOverlayProps)), jsx(MRT_Table, { table: table }), (createModalOpen || editModalOpen) && (jsx(MRT_EditRowModal, { open: true, table: table }))] })));
 };
 
-var commonClasses = {"common-toolbar-styles":"common-styles-module_common-toolbar-styles__DnjR8"};
-
-var classes$5 = {"root":"MRT_BottomToolbar-module_root__VDeWo","root-fullscreen":"MRT_BottomToolbar-module_root-fullscreen__esE15","custom-toolbar-container":"MRT_BottomToolbar-module_custom-toolbar-container__XcDRF","paginator-container":"MRT_BottomToolbar-module_paginator-container__A3eWY","paginator-container-alert-banner":"MRT_BottomToolbar-module_paginator-container-alert-banner__gyqtO"};
-
-var classes$4 = {"collapse":"MRT_ProgressBar-module_collapse__rOLJH","collapse-top":"MRT_ProgressBar-module_collapse-top__oCi0h"};
-
-const MRT_ProgressBar = (_a) => {
-    var { isTopToolbar, table } = _a, rest = __rest(_a, ["isTopToolbar", "table"]);
-    const { getState, options: { mantineProgressProps }, } = table;
-    const { isSaving, showProgressBars } = getState();
-    const linearProgressProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineProgressProps, {
-        isTopToolbar,
-        table,
-    })), rest);
-    return (jsx(Collapse, { className: clsx(classes$4.collapse, isTopToolbar && classes$4['collapse-top']), expanded: isSaving || showProgressBars, children: jsx(Progress, Object.assign({ animated: true, "aria-busy": "true", "aria-label": "Loading", radius: 0, value: 100 }, linearProgressProps)) }));
-};
-
-var classes$3 = {"root":"MRT_TablePagination-module_root__yZ8pm","pagesize":"MRT_TablePagination-module_pagesize__-vmTn","with-top-margin":"MRT_TablePagination-module_with-top-margin__aM5-m"};
-
-const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100].map((x) => x.toString());
-const MRT_TablePagination = (_a) => {
-    var _b;
-    var { position = 'bottom', table } = _a, props = __rest(_a, ["position", "table"]);
-    const { getPrePaginationRowModel, getState, options: { enableToolbarInternalActions, icons: { IconChevronLeft, IconChevronLeftPipe, IconChevronRight, IconChevronRightPipe, }, localization, mantinePaginationProps, paginationDisplayMode, rowCount, }, setPageIndex, setPageSize, } = table;
-    const { pagination: { pageIndex = 0, pageSize = 10 }, showGlobalFilter, } = getState();
-    const paginationProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantinePaginationProps, {
-        table,
-    })), props);
-    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginationRowModel().rows.length;
-    const numberOfPages = Math.ceil(totalRowCount / pageSize);
-    const showFirstLastPageButtons = numberOfPages > 2;
-    const firstRowIndex = pageIndex * pageSize;
-    const lastRowIndex = Math.min(pageIndex * pageSize + pageSize, totalRowCount);
-    const _c = paginationProps !== null && paginationProps !== void 0 ? paginationProps : {}, { rowsPerPageOptions = defaultRowsPerPage, showRowsPerPage = true, withEdges = showFirstLastPageButtons } = _c, rest = __rest(_c, ["rowsPerPageOptions", "showRowsPerPage", "withEdges"]);
-    const needsTopMargin = position === 'top' && enableToolbarInternalActions && !showGlobalFilter;
-    return (jsxs(Box, { className: clsx('mrt-table-pagination', classes$3.root, needsTopMargin && classes$3['with-top-margin']), children: [(paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.showRowsPerPage) !== false && (jsxs(Group, { gap: "xs", children: [jsx(Text, { id: "rpp-label", children: localization.rowsPerPage }), jsx(Select, { allowDeselect: false, "aria-labelledby": "rpp-label", className: classes$3.pagesize, data: (_b = paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.rowsPerPageOptions) !== null && _b !== void 0 ? _b : defaultRowsPerPage, onChange: (value) => setPageSize(+value), value: pageSize.toString() })] })), paginationDisplayMode === 'pages' ? (jsx(Pagination, Object.assign({ firstIcon: IconChevronLeftPipe, lastIcon: IconChevronRightPipe, nextIcon: IconChevronRight, onChange: (newPageIndex) => setPageIndex(newPageIndex - 1), previousIcon: IconChevronLeft, total: numberOfPages, value: pageIndex + 1, withEdges: withEdges }, rest))) : paginationDisplayMode === 'default' ? (jsxs(Fragment, { children: [jsx(Text, { children: `${lastRowIndex === 0 ? 0 : (firstRowIndex + 1).toLocaleString()}-${lastRowIndex.toLocaleString()} ${localization.of} ${totalRowCount.toLocaleString()}` }), jsxs(Group, { gap: 6, children: [withEdges && (jsx(ActionIcon, { "aria-label": localization.goToFirstPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(0), variant: "subtle", children: jsx(IconChevronLeftPipe, {}) })), jsx(ActionIcon, { "aria-label": localization.goToPreviousPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(pageIndex - 1), variant: "subtle", children: jsx(IconChevronLeft, {}) }), jsx(ActionIcon, { "aria-label": localization.goToNextPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(pageIndex + 1), variant: "subtle", children: jsx(IconChevronRight, {}) }), withEdges && (jsx(ActionIcon, { "aria-label": localization.goToLastPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(numberOfPages - 1), variant: "subtle", children: jsx(IconChevronRightPipe, {}) }))] })] })) : null] }));
-};
-
-var classes$2 = {"root":"MRT_ToolbarDropZone-module_root__eGTXb","hovered":"MRT_ToolbarDropZone-module_hovered__g7PeJ"};
-
-const MRT_ToolbarDropZone = (_a) => {
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getState, options: { enableGrouping, localization }, setHoveredColumn, setShowToolbarDropZone, } = table;
-    const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = getState();
-    const handleDragEnter = (_event) => {
-        setHoveredColumn({ id: 'drop-zone' });
-    };
-    useEffect(() => {
-        var _a;
-        if (((_a = table.options.state) === null || _a === void 0 ? void 0 : _a.showToolbarDropZone) !== undefined) {
-            setShowToolbarDropZone(!!enableGrouping &&
-                !!draggingColumn &&
-                draggingColumn.columnDef.enableGrouping !== false &&
-                !grouping.includes(draggingColumn.id));
-        }
-    }, [enableGrouping, draggingColumn, grouping]);
-    return (jsx(Transition, { mounted: showToolbarDropZone, transition: "fade", children: () => {
-            var _a, _b;
-            return (jsx(Flex, Object.assign({ className: clsx('mrt-toolbar-dropzone', classes$2.root, (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === 'drop-zone' && classes$2.hovered), onDragEnter: handleDragEnter }, rest, { children: jsx(Text, { children: localization.dropToGroupBy.replace('{column}', (_b = (_a = draggingColumn === null || draggingColumn === void 0 ? void 0 : draggingColumn.columnDef) === null || _a === void 0 ? void 0 : _a.header) !== null && _b !== void 0 ? _b : '') }) })));
-        } }));
-};
-
-const MRT_BottomToolbar = (_a) => {
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getState, options: { enablePagination, mantineBottomToolbarProps, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderBottomToolbarCustomActions, }, refs: { bottomToolbarRef }, } = table;
-    const { isFullScreen } = getState();
-    const isMobile = useMediaQuery('(max-width: 720px)');
-    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineBottomToolbarProps, {
-        table,
-    })), rest);
-    const stackAlertBanner = isMobile || !!renderBottomToolbarCustomActions;
-    return (jsxs(Box, Object.assign({}, toolbarProps, { className: clsx('mrt-bottom-toolbar', classes$5.root, commonClasses['common-toolbar-styles'], isFullScreen && classes$5['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
-            if (node) {
-                bottomToolbarRef.current = node;
-                assignRef(toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref, node);
-            }
-        }, children: [jsx(MRT_ProgressBar, { isTopToolbar: false, table: table }), positionToolbarAlertBanner === 'bottom' && (jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'bottom'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsx(MRT_ToolbarDropZone, { table: table })), jsxs(Box, { className: classes$5['custom-toolbar-container'], children: [renderBottomToolbarCustomActions ? (renderBottomToolbarCustomActions({ table })) : (jsx("span", {})), jsx(Box, { className: clsx(classes$5['paginator-container'], stackAlertBanner && classes$5['paginator-container-alert-banner']), children: enablePagination &&
-                            ['both', 'bottom'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsx(MRT_TablePagination, { position: "bottom", table: table })) })] })] })));
-};
-
-var classes$1 = {"root":"MRT_TopToolbar-module_root__r4-V9","root-fullscreen":"MRT_TopToolbar-module_root-fullscreen__3itT8","actions-container":"MRT_TopToolbar-module_actions-container__-uL0u","actions-container-stack-alert":"MRT_TopToolbar-module_actions-container-stack-alert__OYDL6"};
-
-var classes = {"root":"MRT_ToolbarInternalButtons-module_root__NKoUG"};
-
-const MRT_ToolbarInternalButtons = (_a) => {
-    var _b;
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { options: { columnFilterDisplayMode, enableColumnFilters, enableColumnOrdering, enableColumnPinning, enableDensityToggle, enableFilters, enableFullScreenToggle, enableGlobalFilter, enableHiding, initialState, renderToolbarInternalActions, }, } = table;
-    return (jsx(Flex, Object.assign({}, rest, { className: clsx('mrt-toolbar-internal-buttons', classes.root, rest === null || rest === void 0 ? void 0 : rest.className), children: (_b = renderToolbarInternalActions === null || renderToolbarInternalActions === void 0 ? void 0 : renderToolbarInternalActions({ table })) !== null && _b !== void 0 ? _b : (jsxs(Fragment, { children: [enableFilters &&
-                    enableGlobalFilter &&
-                    !(initialState === null || initialState === void 0 ? void 0 : initialState.showGlobalFilter) && (jsx(MRT_ToggleGlobalFilterButton, { table: table })), enableFilters &&
-                    enableColumnFilters &&
-                    columnFilterDisplayMode !== 'popover' && (jsx(MRT_ToggleFiltersButton, { table: table })), (enableHiding || enableColumnOrdering || enableColumnPinning) && (jsx(MRT_ShowHideColumnsButton, { table: table })), enableDensityToggle && (jsx(MRT_ToggleDensePaddingButton, { table: table })), enableFullScreenToggle && (jsx(MRT_ToggleFullScreenButton, { table: table }))] })) })));
-};
-
-const MRT_TopToolbar = (_a) => {
-    var _b;
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getState, options: { enableGlobalFilter, enablePagination, enableToolbarInternalActions, mantineTopToolbarProps, positionGlobalFilter, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderTopToolbarCustomActions, }, refs: { topToolbarRef }, } = table;
-    const { isFullScreen, showGlobalFilter } = getState();
-    const isMobile = useMediaQuery('(max-width:720px)');
-    const isTablet = useMediaQuery('(max-width:1024px)');
-    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTopToolbarProps, { table })), rest);
-    const stackAlertBanner = isMobile ||
-        !!renderTopToolbarCustomActions ||
-        (showGlobalFilter && isTablet);
-    const globalFilterProps = {
-        style: !isTablet
-            ? {
-                zIndex: 3,
-            }
-            : undefined,
-        table,
-    };
-    return (jsxs(Box, Object.assign({}, toolbarProps, { className: clsx(commonClasses['common-toolbar-styles'], classes$1['root'], isFullScreen && classes$1['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
-            if (node) {
-                topToolbarRef.current = node;
-                assignRef(toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref, node);
-            }
-        }, children: [positionToolbarAlertBanner === 'top' && (jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'top'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsx(MRT_ToolbarDropZone, { table: table })), jsxs(Flex, { className: clsx(classes$1['actions-container'], stackAlertBanner && classes$1['actions-container-stack-alert']), children: [enableGlobalFilter && positionGlobalFilter === 'left' && (jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), (_b = renderTopToolbarCustomActions === null || renderTopToolbarCustomActions === void 0 ? void 0 : renderTopToolbarCustomActions({ table })) !== null && _b !== void 0 ? _b : jsx("span", {}), enableToolbarInternalActions ? (jsxs(Flex, { justify: 'end', wrap: 'wrap-reverse', children: [enableGlobalFilter && positionGlobalFilter === 'right' && (jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), jsx(MRT_ToolbarInternalButtons, { table: table })] })) : (enableGlobalFilter &&
-                        positionGlobalFilter === 'right' && (jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))))] }), enablePagination &&
-                ['both', 'top'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsx(Flex, { justify: "end", children: jsx(MRT_TablePagination, { position: "top", table: table }) })), jsx(MRT_ProgressBar, { isTopToolbar: true, table: table })] })));
-};
+var classes = {"root":"MRT_TablePaper-module_root__q0v5L"};
 
 const MRT_TablePaper = (_a) => {
     var _b, _c;
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getState, options: { enableBottomToolbar, enableTopToolbar, mantinePaperProps, renderBottomToolbar, renderTopToolbar, }, refs: { tablePaperRef }, } = table;
-    const { isFullScreen } = getState();
+    const { state, options: { enableBottomToolbar, enableTopToolbar, mantinePaperProps, renderBottomToolbar, renderTopToolbar, }, refs: { tablePaperRef }, } = table;
+    const { isFullScreen } = state;
     const tablePaperProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantinePaperProps, { table })), rest);
-    return (jsxs(Paper, Object.assign({ shadow: "xs", withBorder: true }, tablePaperProps, { className: clsx('mrt-table-paper', classes$8.root, isFullScreen && 'mrt-table-paper-fullscreen', tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.className), ref: (ref) => {
+    return (jsxs(Paper, Object.assign({ shadow: "xs", withBorder: true }, tablePaperProps, { className: clsx('mrt-table-paper', classes.root, isFullScreen && 'mrt-table-paper-fullscreen', tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.className), ref: (ref) => {
             tablePaperRef.current = ref;
-            assignRef(tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.ref, ref);
+            if (tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.ref) {
+                tablePaperProps.ref.current = ref;
+            }
         },
         // rare case where we should use inline styles to guarantee highest specificity
         style: (theme) => (Object.assign(Object.assign({ zIndex: isFullScreen ? 200 : undefined }, parseFromValuesOrFunc(tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.style, theme)), (isFullScreen
@@ -3521,5 +3728,5 @@ const MantineReactTable = (props) => {
     return jsx(MRT_TablePaper, { table: table });
 };
 
-export { MRT_AggregationFns, MRT_BottomToolbar, MRT_ColumnActionMenu, MRT_ColumnPinningButtons, MRT_CopyButton, MRT_DefaultColumn, MRT_DefaultDisplayColumn, MRT_EditActionButtons, MRT_EditCellTextInput, MRT_EditRowModal, MRT_ExpandAllButton, MRT_ExpandButton, MRT_FilterCheckbox, MRT_FilterFns, MRT_FilterOptionMenu, MRT_FilterRangeFields, MRT_FilterRangeSlider, MRT_FilterTextInput, MRT_GlobalFilterTextInput, MRT_GrabHandleButton, MRT_ProgressBar, MRT_RowActionMenu, MRT_RowPinButton, MRT_SelectCheckbox, MRT_ShowHideColumnsButton, MRT_ShowHideColumnsMenu, MRT_ShowHideColumnsMenuItems, MRT_SortingFns, MRT_Table, MRT_TableBody, MRT_TableBodyCell, MRT_TableBodyCellValue, MRT_TableBodyEmptyRow, MRT_TableBodyRow, MRT_TableBodyRowGrabHandle, MRT_TableBodyRowPinButton, MRT_TableContainer, MRT_TableDetailPanel, MRT_TableFooter, MRT_TableFooterCell, MRT_TableFooterRow, MRT_TableHead, MRT_TableHeadCell, MRT_TableHeadCellFilterContainer, MRT_TableHeadCellFilterLabel, MRT_TableHeadCellGrabHandle, MRT_TableHeadCellResizeHandle, MRT_TableHeadCellSortLabel, MRT_TableHeadRow, MRT_TablePagination, MRT_TablePaper, MRT_ToggleDensePaddingButton, MRT_ToggleFiltersButton, MRT_ToggleFullScreenButton, MRT_ToggleGlobalFilterButton, MRT_ToggleRowActionMenuButton, MRT_ToolbarAlertBanner, MRT_ToolbarDropZone, MRT_ToolbarInternalButtons, MRT_TopToolbar, MantineReactTable, Memo_MRT_TableBody, Memo_MRT_TableBodyCell, Memo_MRT_TableBodyRow, assignRef, createMRTColumnHelper, createRow, dataVariable, defaultDisplayColumnProps, flexRender, getAllLeafColumnDefs, getCanRankRows, getColumnId, getDefaultColumnFilterFn, getDefaultColumnOrderIds, getIsRankingRows, getIsRowSelected, getLeadingDisplayColumnIds, getMRT_RowSelectionHandler, getMRT_Rows, getMRT_SelectAllHandler, getPrimaryColor, getPrimaryShade, getTrailingDisplayColumnIds, localizedFilterOption, mrtFilterOptions, parseCSSVarId, parseFromValuesOrFunc, prepareColumns, rankGlobalFuzzy, reorderColumn, showRowActionsColumn, showRowDragColumn, showRowExpandColumn, showRowNumbersColumn, showRowPinningColumn, showRowSelectionColumn, showRowSpacerColumn, useMRT_ColumnVirtualizer, useMRT_Effects, useMRT_RowVirtualizer, useMRT_Rows, useMRT_TableInstance, useMRT_TableOptions, useMantineReactTable };
+export { MRT_BottomToolbar, MRT_ColumnActionMenu, MRT_ColumnPinningButtons, MRT_CopyButton, MRT_DefaultColumn, MRT_DefaultDisplayColumn, MRT_EditActionButtons, MRT_EditCellTextInput, MRT_EditRowModal, MRT_ExpandAllButton, MRT_ExpandButton, MRT_FilterCheckbox, MRT_FilterFns, MRT_FilterOptionMenu, MRT_FilterRangeFields, MRT_FilterRangeSlider, MRT_FilterTextInput, MRT_GlobalFilterTextInput, MRT_GrabHandleButton, MRT_ProgressBar, MRT_RowActionMenu, MRT_RowAggregationFns, MRT_RowPinButton, MRT_SelectCheckbox, MRT_ShowHideColumnsButton, MRT_ShowHideColumnsMenu, MRT_ShowHideColumnsMenuItems, MRT_SortFns, MRT_Table, MRT_TableBody, MRT_TableBodyCell, MRT_TableBodyCellValue, MRT_TableBodyEmptyRow, MRT_TableBodyRow, MRT_TableBodyRowGrabHandle, MRT_TableBodyRowPinButton, MRT_TableContainer, MRT_TableDetailPanel, MRT_TableFooter, MRT_TableFooterCell, MRT_TableFooterRow, MRT_TableHead, MRT_TableHeadCell, MRT_TableHeadCellFilterContainer, MRT_TableHeadCellFilterLabel, MRT_TableHeadCellGrabHandle, MRT_TableHeadCellResizeHandle, MRT_TableHeadCellSortLabel, MRT_TableHeadRow, MRT_TablePagination, MRT_TablePaper, MRT_ToggleDensePaddingButton, MRT_ToggleFiltersButton, MRT_ToggleFullScreenButton, MRT_ToggleGlobalFilterButton, MRT_ToggleRowActionMenuButton, MRT_ToolbarAlertBanner, MRT_ToolbarDropZone, MRT_ToolbarInternalButtons, MRT_TopToolbar, MantineReactTable, Memo_MRT_TableBody, Memo_MRT_TableBodyCell, Memo_MRT_TableBodyRow, createMRTColumnHelper, createRow, dataVariable, defaultDisplayColumnProps, flexRender, getAllLeafColumnDefs, getCanRankRows, getColumnId, getDefaultColumnFilterFn, getDefaultColumnOrderIds, getIsRankingRows, getIsRowSelected, getLeadingDisplayColumnIds, getMRT_RowSelectionHandler, getMRT_Rows, getMRT_SelectAllHandler, getPrimaryColor, getPrimaryShade, getTrailingDisplayColumnIds, localizedFilterOption, mrtFilterOptions, parseCSSVarId, parseFromValuesOrFunc, prepareColumns, rankGlobalFuzzy, reorderColumn, showRowActionsColumn, showRowDragColumn, showRowExpandColumn, showRowNumbersColumn, showRowPinningColumn, showRowSelectionColumn, showRowSpacerColumn, useMRT_ColumnVirtualizer, useMRT_Effects, useMRT_RowVirtualizer, useMRT_Rows, useMRT_TableInstance, useMRT_TableOptions, useMantineReactTable };
 //# sourceMappingURL=index.esm.mjs.map

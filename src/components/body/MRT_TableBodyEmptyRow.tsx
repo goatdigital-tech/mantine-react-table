@@ -1,30 +1,20 @@
-import clsx from 'clsx';
+import clsx from 'clsx'
 
-import classes from './MRT_TableBody.module.css';
+import { useMemo } from 'react'
 
-import { useMemo } from 'react';
+import { constructRow as createRow } from '@tanstack/react-table'
 
-import { createRow } from '@tanstack/react-table';
+import { TableTd, Text } from '@mantine/core'
 
-import {
-  type TableProps,
-  TableTd,
-  type TableTrProps,
-  Text,
-} from '@mantine/core';
-
-import { MRT_TableBodyRow } from './MRT_TableBodyRow';
-
-import {
-  type MRT_Row,
-  type MRT_RowData,
-  type MRT_TableInstance,
-} from '../../types';
-import { MRT_ExpandButton } from '../buttons/MRT_ExpandButton';
+import { MRT_ExpandButton } from '../buttons/MRT_ExpandButton'
+import { MRT_TableBodyRow } from './MRT_TableBodyRow'
+import classes from './MRT_TableBody.module.css'
+import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../../types'
+import type { TableProps, TableTrProps } from '@mantine/core'
 
 interface Props<TData extends MRT_RowData> extends TableTrProps {
-  table: MRT_TableInstance<TData>;
-  tableProps: Partial<TableProps>;
+  table: MRT_TableInstance<TData>
+  tableProps: Partial<TableProps>
 }
 
 export const MRT_TableBodyEmptyRow = <TData extends MRT_RowData>({
@@ -33,7 +23,7 @@ export const MRT_TableBodyEmptyRow = <TData extends MRT_RowData>({
   ...commonRowProps
 }: Props<TData>) => {
   const {
-    getState,
+    state,
     options: {
       layoutMode,
       localization,
@@ -41,8 +31,8 @@ export const MRT_TableBodyEmptyRow = <TData extends MRT_RowData>({
       renderEmptyRowsFallback,
     },
     refs: { tablePaperRef },
-  } = table;
-  const { columnFilters, globalFilter } = getState();
+  } = table
+  const { columnFilters, globalFilter } = state
 
   const emptyRow = useMemo(
     () =>
@@ -54,14 +44,14 @@ export const MRT_TableBodyEmptyRow = <TData extends MRT_RowData>({
         0,
       ) as MRT_Row<TData>,
     [],
-  );
+  )
 
   const emptyRowProps = {
     ...commonRowProps,
     renderedRowIndex: 0,
     row: emptyRow,
     virtualRow: undefined,
-  };
+  }
 
   return (
     <MRT_TableBodyRow
@@ -105,5 +95,5 @@ export const MRT_TableBodyEmptyRow = <TData extends MRT_RowData>({
         )}
       </td>
     </MRT_TableBodyRow>
-  );
-};
+  )
+}

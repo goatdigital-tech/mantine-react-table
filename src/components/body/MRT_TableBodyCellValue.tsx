@@ -1,21 +1,22 @@
-import { Highlight, type HighlightProps } from '@mantine/core';
+import { Highlight } from '@mantine/core'
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import type { HighlightProps } from '@mantine/core'
 
-import {
-  type MRT_Cell,
-  type MRT_CellValue,
-  type MRT_RowData,
-  type MRT_TableInstance,
-} from '../../types';
-import { parseFromValuesOrFunc } from '../../utils/utils';
+import type {
+  MRT_Cell,
+  MRT_CellValue,
+  MRT_RowData,
+  MRT_TableInstance,
+} from '../../types'
 
-const allowedTypes = ['string', 'number'];
-const allowedFilterVariants = ['text', 'autocomplete'];
+const allowedTypes = ['string', 'number']
+const allowedFilterVariants = ['text', 'autocomplete']
 
 interface Props<TData extends MRT_RowData, TValue = MRT_CellValue> {
-  cell: MRT_Cell<TData, TValue>;
-  renderedColumnIndex?: number;
-  renderedRowIndex?: number;
-  table: MRT_TableInstance<TData>;
+  cell: MRT_Cell<TData, TValue>
+  renderedColumnIndex?: number
+  renderedRowIndex?: number
+  table: MRT_TableInstance<TData>
 }
 
 export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
@@ -25,23 +26,23 @@ export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
   table,
 }: Props<TData>) => {
   const {
-    getState,
+    state,
     options: {
       enableFilterMatchHighlighting,
       mantineHighlightProps = { size: 'sm' },
     },
-  } = table;
-  const { column, row } = cell;
-  const { columnDef } = column;
-  const { globalFilter, globalFilterFn } = getState();
-  const filterValue = column.getFilterValue();
+  } = table
+  const { column, row } = cell
+  const { columnDef } = column
+  const { globalFilter, globalFilterFn } = state
+  const filterValue = column.getFilterValue()
 
   const highlightProps = parseFromValuesOrFunc(mantineHighlightProps, {
     cell,
     column,
     row,
     table,
-  }) as Partial<HighlightProps>;
+  }) as Partial<HighlightProps>
 
   let renderedCellValue =
     cell.getIsAggregated() && columnDef.AggregatedCell
@@ -60,12 +61,12 @@ export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
               row,
               table,
             })
-          : undefined;
+          : undefined
 
-  const isGroupedValue = renderedCellValue !== undefined;
+  const isGroupedValue = renderedCellValue !== undefined
 
   if (!isGroupedValue) {
-    renderedCellValue = cell.renderValue() as number | string;
+    renderedCellValue = cell.renderValue() as number | string
   }
 
   if (
@@ -80,20 +81,20 @@ export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
         allowedTypes.includes(typeof globalFilter) &&
         column.getCanGlobalFilter()))
   ) {
-    let highlight: string | string[] = (
+    let highlight: string | Array<string> = (
       column.getFilterValue() ??
       globalFilter ??
       ''
-    ).toString() as string;
+    ).toString() as string
     if ((filterValue ? columnDef._filterFn : globalFilterFn) === 'fuzzy') {
-      highlight = highlight.split(' ');
+      highlight = highlight.split(' ')
     }
 
     renderedCellValue = (
       <Highlight color="yellow.3" highlight={highlight} {...highlightProps}>
         {renderedCellValue?.toString()}
       </Highlight>
-    );
+    )
   }
 
   if (columnDef.Cell && !isGroupedValue) {
@@ -105,8 +106,8 @@ export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
       renderedRowIndex,
       row,
       table,
-    });
+    })
   }
 
-  return renderedCellValue;
-};
+  return renderedCellValue
+}
