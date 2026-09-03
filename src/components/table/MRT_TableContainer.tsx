@@ -2,19 +2,22 @@ import clsx from 'clsx'
 
 import { useEffect, useLayoutEffect, useState } from 'react'
 
-import { Box, LoadingOverlay } from '@mantine/core'
+import {
+  LoadingOverlay,
+  ScrollArea,
+  type ScrollAreaAutosizeProps,
+} from '@mantine/core'
 
 import { parseFromValuesOrFunc } from '../../utils/utils'
 import { MRT_EditRowModal } from '../modals/MRT_EditRowModal'
 import { MRT_Table } from './MRT_Table'
 import classes from './MRT_TableContainer.module.css'
 import type { MRT_RowData, MRT_TableInstance } from '../../types'
-import type { BoxProps } from '@mantine/core'
 
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
-interface Props<TData extends MRT_RowData> extends BoxProps {
+interface Props<TData extends MRT_RowData> extends ScrollAreaAutosizeProps {
   table: MRT_TableInstance<TData>
 }
 
@@ -47,6 +50,8 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
     ...parseFromValuesOrFunc(mantineTableContainerProps, { table }),
     ...rest,
   }
+  const { ref: tableContainerPropRef, ...resolvedTableContainerProps } =
+    tableContainerProps
   const loadingOverlayProps = parseFromValuesOrFunc(
     mantineLoadingOverlayProps,
     { table },
@@ -70,25 +75,26 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
   const editModalOpen = editDisplayMode === 'modal' && editingRow
 
   return (
-    <Box
-      {...tableContainerProps}
+    <ScrollArea.Autosize
+      {...resolvedTableContainerProps}
       __vars={{
         '--mrt-top-toolbar-height': `${totalToolbarHeight}`,
-        ...tableContainerProps?.__vars,
+        ...resolvedTableContainerProps.__vars,
       }}
       className={clsx(
         'mrt-table-container',
         classes.root,
         enableStickyHeader && classes['root-sticky'],
         isFullScreen && classes['root-fullscreen'],
-        tableContainerProps?.className,
+        resolvedTableContainerProps.className,
       )}
-      ref={(node: HTMLDivElement) => {
+      viewportRef={(node: HTMLDivElement) => {
         if (node) {
           tableContainerRef.current = node
-          if (tableContainerProps?.ref) {
-            // @ts-ignore
-            tableContainerProps.ref.current = node
+          if (typeof tableContainerPropRef === 'function') {
+            tableContainerPropRef(node)
+          } else if (tableContainerPropRef) {
+            tableContainerPropRef.current = node
           }
         }
       }}
@@ -102,6 +108,6 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
       {(createModalOpen || editModalOpen) && (
         <MRT_EditRowModal open table={table} />
       )}
-    </Box>
+    </ScrollArea.Autosize>
   )
 }

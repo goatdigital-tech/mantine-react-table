@@ -1,7 +1,7 @@
 import { jsx, Fragment, jsxs } from 'react/jsx-runtime';
 import clsx from 'clsx';
 import { useMemo, useCallback, useState, memo, useEffect, useRef, Fragment as Fragment$1, forwardRef, useReducer, createElement, useLayoutEffect } from 'react';
-import { Select, MultiSelect, TextInput, TableTr, TableTd, Collapse, CopyButton, Tooltip, UnstyledButton, Highlight, useDirection, Skeleton, Box, ActionIcon, Text, TableTbody, Flex, Button, useMantineTheme, Menu, Switch, TableTh, TableTfoot, Radio, Checkbox, Badge, Alert, Stack, Autocomplete, RangeSlider, Popover, Transition, Indicator, TableThead, Progress, Group, Pagination, Modal, useMantineColorScheme, Table, lighten, darken, LoadingOverlay, Paper } from '@mantine/core';
+import { Select, MultiSelect, TextInput, TableTr, TableTd, Collapse, CopyButton, Tooltip, UnstyledButton, Highlight, useDirection, Skeleton, Box, ActionIcon, Text, TableTbody, Flex, Button, useMantineTheme, Menu, Switch, TableTh, TableTfoot, Radio, Checkbox, Badge, Alert, Stack, Autocomplete, RangeSlider, Popover, Transition, Indicator, TableThead, Progress, Group, Pagination, Modal, useMantineColorScheme, Table, lighten, darken, ScrollArea, LoadingOverlay, Paper } from '@mantine/core';
 import { compareItems, rankItem, rankings } from '@tanstack/match-sorter-utils';
 import { sortFns, constructRow, filterFns, Subscribe, flexRender as flexRender$1, aggregationFns, stockFeatures, createFilteredRowModel, createSortedRowModel, createPaginatedRowModel, createExpandedRowModel, createGroupedRowModel, createFacetedRowModel, createFacetedMinMaxValues, createFacetedUniqueValues, useTable } from '@tanstack/react-table';
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual';
@@ -3642,6 +3642,7 @@ const MRT_TableContainer = (_a) => {
     const { creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay, } = state;
     const [totalToolbarHeight, setTotalToolbarHeight] = useState(0);
     const tableContainerProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableContainerProps, { table })), rest);
+    const { ref: tableContainerPropRef } = tableContainerProps, resolvedTableContainerProps = __rest(tableContainerProps, ["ref"]);
     const loadingOverlayProps = parseFromValuesOrFunc(mantineLoadingOverlayProps, { table });
     useIsomorphicLayoutEffect(() => {
         var _a, _b, _c, _d;
@@ -3655,12 +3656,14 @@ const MRT_TableContainer = (_a) => {
     });
     const createModalOpen = createDisplayMode === 'modal' && creatingRow;
     const editModalOpen = editDisplayMode === 'modal' && editingRow;
-    return (jsxs(Box, Object.assign({}, tableContainerProps, { __vars: Object.assign({ '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.__vars), className: clsx('mrt-table-container', classes$1.root, enableStickyHeader && classes$1['root-sticky'], isFullScreen && classes$1['root-fullscreen'], tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.className), ref: (node) => {
+    return (jsxs(ScrollArea.Autosize, Object.assign({}, resolvedTableContainerProps, { __vars: Object.assign({ '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, resolvedTableContainerProps.__vars), className: clsx('mrt-table-container', classes$1.root, enableStickyHeader && classes$1['root-sticky'], isFullScreen && classes$1['root-fullscreen'], resolvedTableContainerProps.className), viewportRef: (node) => {
             if (node) {
                 tableContainerRef.current = node;
-                if (tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.ref) {
-                    // @ts-ignore
-                    tableContainerProps.ref.current = node;
+                if (typeof tableContainerPropRef === 'function') {
+                    tableContainerPropRef(node);
+                }
+                else if (tableContainerPropRef) {
+                    tableContainerPropRef.current = node;
                 }
             }
         }, children: [jsx(LoadingOverlay, Object.assign({ visible: isLoading || showLoadingOverlay, zIndex: 2 }, loadingOverlayProps)), jsx(MRT_Table, { table: table }), (createModalOpen || editModalOpen) && (jsx(MRT_EditRowModal, { open: true, table: table }))] })));

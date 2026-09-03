@@ -3644,6 +3644,7 @@ const MRT_TableContainer = (_a) => {
     const { creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay, } = state;
     const [totalToolbarHeight, setTotalToolbarHeight] = react.useState(0);
     const tableContainerProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableContainerProps, { table })), rest);
+    const { ref: tableContainerPropRef } = tableContainerProps, resolvedTableContainerProps = __rest(tableContainerProps, ["ref"]);
     const loadingOverlayProps = parseFromValuesOrFunc(mantineLoadingOverlayProps, { table });
     useIsomorphicLayoutEffect(() => {
         var _a, _b, _c, _d;
@@ -3657,12 +3658,14 @@ const MRT_TableContainer = (_a) => {
     });
     const createModalOpen = createDisplayMode === 'modal' && creatingRow;
     const editModalOpen = editDisplayMode === 'modal' && editingRow;
-    return (jsxRuntime.jsxs(core.Box, Object.assign({}, tableContainerProps, { __vars: Object.assign({ '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.__vars), className: clsx('mrt-table-container', classes$1.root, enableStickyHeader && classes$1['root-sticky'], isFullScreen && classes$1['root-fullscreen'], tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.className), ref: (node) => {
+    return (jsxRuntime.jsxs(core.ScrollArea.Autosize, Object.assign({}, resolvedTableContainerProps, { __vars: Object.assign({ '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, resolvedTableContainerProps.__vars), className: clsx('mrt-table-container', classes$1.root, enableStickyHeader && classes$1['root-sticky'], isFullScreen && classes$1['root-fullscreen'], resolvedTableContainerProps.className), viewportRef: (node) => {
             if (node) {
                 tableContainerRef.current = node;
-                if (tableContainerProps === null || tableContainerProps === void 0 ? void 0 : tableContainerProps.ref) {
-                    // @ts-ignore
-                    tableContainerProps.ref.current = node;
+                if (typeof tableContainerPropRef === 'function') {
+                    tableContainerPropRef(node);
+                }
+                else if (tableContainerPropRef) {
+                    tableContainerPropRef.current = node;
                 }
             }
         }, children: [jsxRuntime.jsx(core.LoadingOverlay, Object.assign({ visible: isLoading || showLoadingOverlay, zIndex: 2 }, loadingOverlayProps)), jsxRuntime.jsx(MRT_Table, { table: table }), (createModalOpen || editModalOpen) && (jsxRuntime.jsx(MRT_EditRowModal, { open: true, table: table }))] })));

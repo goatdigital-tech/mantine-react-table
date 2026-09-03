@@ -3,7 +3,7 @@ import { MutableRefObject, HTMLProps, Dispatch, SetStateAction, ReactNode, RefOb
 import * as _tanstack_react_table from '@tanstack/react-table';
 import { Row, StockFeatures, DeepKeys, ColumnFiltersState, ColumnOrderState, ColumnPinningState, columnResizingState, ColumnSizingState, ColumnVisibilityState, ExpandedState, GroupingState, PaginationState, RowSelectionState, SortingState, Updater, AccessorFn, DeepValue, Table, TableState, ColumnDef, Column, Header, HeaderGroup, Cell, AggregationFnDef, SortFn, FilterFn, OnChangeFn, TableOptions, RowPinningPosition, Renderable } from '@tanstack/react-table';
 import { VirtualItem, VirtualizerOptions, Virtualizer } from '@tanstack/react-virtual';
-import { PaginationProps, ActionIconProps, UnstyledButtonProps, SelectProps, TextInputProps, AutocompleteProps, CheckboxProps, MultiSelectProps, RangeSliderProps, TableTdProps, TableThProps, BoxProps, ModalProps, HighlightProps, LoadingOverlayProps, PaperProps, ProgressProps, RadioProps, SwitchProps, SkeletonProps, TableTbodyProps, TableTrProps, TableTfootProps, TableTheadProps, TableProps, BadgeProps, AlertProps, FlexProps, MenuProps, MantineTheme } from '@mantine/core';
+import { PaginationProps, ActionIconProps, UnstyledButtonProps, SelectProps, TextInputProps, AutocompleteProps, CheckboxProps, MultiSelectProps, RangeSliderProps, TableTdProps, TableThProps, BoxProps, ModalProps, HighlightProps, LoadingOverlayProps, PaperProps, ProgressProps, RadioProps, SwitchProps, SkeletonProps, TableTbodyProps, TableTrProps, TableTfootProps, TableTheadProps, TableProps, BadgeProps, AlertProps, FlexProps, MenuProps, ScrollAreaAutosizeProps, MantineTheme } from '@mantine/core';
 import { DateInputProps } from '@mantine/dates';
 import { RankingInfo } from '@tanstack/match-sorter-utils';
 
@@ -1401,7 +1401,7 @@ interface Props$9<TData extends MRT_RowData> extends TableProps {
 }
 declare const MRT_Table: <TData extends MRT_RowData>({ table, ...rest }: Props$9<TData>) => react.JSX.Element;
 
-interface Props$8<TData extends MRT_RowData> extends BoxProps {
+interface Props$8<TData extends MRT_RowData> extends ScrollAreaAutosizeProps {
     table: MRT_TableInstance<TData>;
 }
 declare const MRT_TableContainer: <TData extends MRT_RowData>({ table, ...rest }: Props$8<TData>) => react.JSX.Element;
