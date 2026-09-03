@@ -1,15 +1,16 @@
 import clsx from 'clsx'
 
+import classes from './MRT_GlobalFilterTextInput.module.css'
+
 import { useEffect, useRef, useState } from 'react'
 
 import { ActionIcon, Collapse, Menu, TextInput, Tooltip } from '@mantine/core'
+import type { TextInputProps } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 
+import type { MRT_RowData, MRT_TableInstance } from '../../types'
 import { parseFromValuesOrFunc } from '../../utils/utils'
 import { MRT_FilterOptionMenu } from '../menus/MRT_FilterOptionMenu'
-import classes from './MRT_GlobalFilterTextInput.module.css'
-import type { MRT_RowData, MRT_TableInstance } from '../../types'
-import type { TextInputProps } from '@mantine/core'
 
 interface Props<TData extends MRT_RowData> extends TextInputProps {
   table: MRT_TableInstance<TData>
@@ -20,7 +21,6 @@ export const MRT_GlobalFilterTextInput = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: {
       enableGlobalFilterModes,
       icons: { IconSearch, IconX },
@@ -31,6 +31,7 @@ export const MRT_GlobalFilterTextInput = <TData extends MRT_RowData>({
     },
     refs: { searchInputRef },
     setGlobalFilter,
+    state,
   } = table
   const { globalFilter, showGlobalFilter } = state
 

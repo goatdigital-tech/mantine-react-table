@@ -1,5 +1,7 @@
 import clsx from 'clsx'
 
+import classes from './MRT_ToolbarAlertBanner.module.css'
+
 import { Fragment, useMemo } from 'react'
 
 import {
@@ -11,13 +13,12 @@ import {
   Flex,
   Stack,
 } from '@mantine/core'
+import type { AlertProps } from '@mantine/core'
 
+import type { MRT_RowData, MRT_TableInstance } from '../../types'
 import { getMRT_SelectAllHandler } from '../../utils/row.utils'
 import { parseFromValuesOrFunc } from '../../utils/utils'
 import { MRT_SelectCheckbox } from '../inputs/MRT_SelectCheckbox'
-import classes from './MRT_ToolbarAlertBanner.module.css'
-import type { MRT_RowData, MRT_TableInstance } from '../../types'
-import type { AlertProps } from '@mantine/core'
 
 interface Props<TData extends MRT_RowData> extends Partial<AlertProps> {
   stackAlertBanner?: boolean
@@ -32,7 +33,6 @@ export const MRT_ToolbarAlertBanner = <TData extends MRT_RowData>({
   const {
     getFilteredSelectedRowModel,
     getPrePaginatedRowModel,
-    state,
     options: {
       enableRowSelection,
       enableSelectAll,
@@ -45,6 +45,7 @@ export const MRT_ToolbarAlertBanner = <TData extends MRT_RowData>({
       renderToolbarAlertBannerContent,
       rowCount,
     },
+    state,
   } = table
   const { density, grouping, rowSelection, showAlertBanner } = state
 

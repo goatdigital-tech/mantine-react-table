@@ -1,10 +1,12 @@
 import clsx from 'clsx'
 
-import { Collapse, TableTd, TableTr } from '@mantine/core'
-
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_EditCellTextInput } from '../inputs/MRT_EditCellTextInput'
 import classes from './MRT_TableDetailPanel.module.css'
+
+import type { RefObject } from 'react'
+
+import { Collapse, TableTd, TableTr } from '@mantine/core'
+import type { TableTdProps } from '@mantine/core'
+
 import type {
   MRT_Row,
   MRT_RowData,
@@ -12,8 +14,8 @@ import type {
   MRT_TableInstance,
   MRT_VirtualItem,
 } from '../../types'
-import type { TableTdProps } from '@mantine/core'
-import type { RefObject } from 'react'
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import { MRT_EditCellTextInput } from '../inputs/MRT_EditCellTextInput'
 
 interface Props<TData extends MRT_RowData> extends TableTdProps {
   parentRowRef: RefObject<HTMLTableRowElement | null>
@@ -36,7 +38,6 @@ export const MRT_TableDetailPanel = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     getVisibleLeafColumns,
     options: {
       layoutMode,
@@ -44,6 +45,7 @@ export const MRT_TableDetailPanel = <TData extends MRT_RowData>({
       mantineTableBodyRowProps,
       renderDetailPanel,
     },
+    state,
   } = table
   const { isLoading } = state
 

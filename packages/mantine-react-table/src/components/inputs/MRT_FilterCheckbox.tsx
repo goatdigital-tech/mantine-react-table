@@ -1,8 +1,8 @@
 import clsx from 'clsx'
 
-import { Checkbox, Tooltip } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
 import classes from './MRT_FilterCheckBox.module.css'
+
+import { Checkbox, Tooltip } from '@mantine/core'
 import type { CheckboxProps } from '@mantine/core'
 
 import type {
@@ -11,6 +11,7 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 interface Props<
   TData extends MRT_RowData,
@@ -26,8 +27,8 @@ export const MRT_FilterCheckbox = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: { localization, mantineFilterCheckboxProps },
+    state,
   } = table
   const { density } = state
   const { columnDef } = column

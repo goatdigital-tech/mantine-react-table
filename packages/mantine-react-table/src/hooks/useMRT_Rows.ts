@@ -1,15 +1,15 @@
 import { useMemo } from 'react'
 
-import { getMRT_Rows } from '../utils/row.utils'
 import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../types'
+import { getMRT_Rows } from '../utils/row.utils'
 
 export const useMRT_Rows = <TData extends MRT_RowData>(
   table: MRT_TableInstance<TData>,
 ): Array<MRT_Row<TData>> => {
   const {
     getRowModel,
-    state,
     options: { data, enableGlobalFilterRankedResults, positionCreatingRow },
+    state,
   } = table
   const {
     creatingRow,

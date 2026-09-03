@@ -45,4 +45,25 @@ test('renders the table container with Mantine ScrollArea', () => {
 
   assert.match(html, /mantine-ScrollArea-root/);
   assert.match(html, /data-autosize="true"/);
+  assert.match(html, /data-offset-scrollbars="present"/);
+});
+
+test('allows ScrollArea defaults to be overridden', () => {
+  const html = renderToStaticMarkup(
+    React.createElement(
+      MantineProvider,
+      null,
+      React.createElement(MantineReactTable, {
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        data: [{ name: 'Ada' }],
+        mantineTableContainerProps: {
+          offsetScrollbars: false,
+          type: 'never',
+        },
+      }),
+    ),
+  );
+
+  assert.doesNotMatch(html, /data-offset-scrollbars="present"/);
+  assert.match(html, /data-hidden="true"/);
 });

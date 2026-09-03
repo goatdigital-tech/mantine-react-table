@@ -1,9 +1,10 @@
 import clsx from 'clsx'
 
-import { ActionIcon, Tooltip } from '@mantine/core'
 import classes from './MRT_GrabHandleButton.module.css'
+
 import type { DragEventHandler } from 'react'
 
+import { ActionIcon, Tooltip } from '@mantine/core'
 import type { ActionIconProps } from '@mantine/core'
 
 import type { HTMLPropsRef, MRT_RowData, MRT_TableInstance } from '../../types'

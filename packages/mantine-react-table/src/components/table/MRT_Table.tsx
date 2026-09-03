@@ -1,18 +1,19 @@
 import clsx from 'clsx'
 
+import classes from './MRT_Table.module.css'
+
 import { useMemo } from 'react'
 
-import { Table, darken, lighten, useMantineColorScheme } from '@mantine/core'
+import { darken, lighten, Table, useMantineColorScheme } from '@mantine/core'
+import type { TableProps } from '@mantine/core'
 
 import { useMRT_ColumnVirtualizer } from '../../hooks/useMRT_ColumnVirtualizer'
+import type { MRT_RowData, MRT_TableInstance } from '../../types'
 import { parseCSSVarId } from '../../utils/style.utils'
 import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_TableBody, Memo_MRT_TableBody } from '../body/MRT_TableBody'
+import { Memo_MRT_TableBody, MRT_TableBody } from '../body/MRT_TableBody'
 import { MRT_TableFooter } from '../footer/MRT_TableFooter'
 import { MRT_TableHead } from '../head/MRT_TableHead'
-import classes from './MRT_Table.module.css'
-import type { TableProps } from '@mantine/core'
-import type { MRT_RowData, MRT_TableInstance } from '../../types'
 
 interface Props<TData extends MRT_RowData> extends TableProps {
   table: MRT_TableInstance<TData>
@@ -24,7 +25,6 @@ export const MRT_Table = <TData extends MRT_RowData>({
 }: Props<TData>) => {
   const {
     getFlatHeaders,
-    state,
     options: {
       columns,
       enableTableFooter,
@@ -33,8 +33,9 @@ export const MRT_Table = <TData extends MRT_RowData>({
       mantineTableProps,
       memoMode,
     },
+    state,
   } = table
-  const { columnSizing, columnResizing, columnVisibility, density } = state
+  const { columnResizing, columnSizing, columnVisibility, density } = state
 
   const tableProps = {
     highlightOnHover: true,

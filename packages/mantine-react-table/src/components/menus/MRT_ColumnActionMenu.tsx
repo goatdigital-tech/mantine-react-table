@@ -1,9 +1,10 @@
-import { ActionIcon, Menu, Tooltip } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
 import classes from './MRT_ColumnActionMenu.module.css'
+
+import { ActionIcon, Menu, Tooltip } from '@mantine/core'
 import type { MenuProps } from '@mantine/core'
 
 import type { MRT_Header, MRT_RowData, MRT_TableInstance } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 interface Props<TData extends MRT_RowData> extends MenuProps {
   header: MRT_Header<TData>
@@ -16,7 +17,6 @@ export const MRT_ColumnActionMenu = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: {
       columnFilterDisplayMode,
       enableColumnFilters,
@@ -48,6 +48,7 @@ export const MRT_ColumnActionMenu = <TData extends MRT_RowData>({
     setColumnOrder,
     setColumnResizing,
     setShowColumnFilters,
+    state,
     toggleAllColumnsVisible,
   } = table
   const { column } = header
@@ -81,7 +82,7 @@ export const MRT_ColumnActionMenu = <TData extends MRT_RowData>({
     column.toggleVisibility(false)
   }
 
-  const handlePinColumn = (pinDirection: 'start' | 'end' | false) => {
+  const handlePinColumn = (pinDirection: 'end' | 'start' | false) => {
     column.pin(pinDirection)
   }
 

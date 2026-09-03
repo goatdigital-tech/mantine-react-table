@@ -17,3 +17,8 @@
     100vh - calc(var(--mrt-top-toolbar-height) * 1px)
   ) !important;
 }
+
+.root-sticky
+  :global(.mantine-ScrollArea-scrollbar[data-orientation='vertical']) {
+  top: calc(var(--mrt-table-head-height) * 1px);
+}

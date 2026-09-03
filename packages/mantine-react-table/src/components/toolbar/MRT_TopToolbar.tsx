@@ -1,11 +1,11 @@
 import clsx from 'clsx'
 
-import { Box, Flex } from '@mantine/core'
-import { useMediaQuery } from '@mantine/hooks'
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_GlobalFilterTextInput } from '../inputs/MRT_GlobalFilterTextInput'
 import commonClasses from './common.styles.module.css'
 import classes from './MRT_TopToolbar.module.css'
+
+import { Box, Flex } from '@mantine/core'
+import type { BoxProps } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 
 import { MRT_ProgressBar } from './MRT_ProgressBar'
 import { MRT_TablePagination } from './MRT_TablePagination'
@@ -14,7 +14,8 @@ import { MRT_ToolbarDropZone } from './MRT_ToolbarDropZone'
 import { MRT_ToolbarInternalButtons } from './MRT_ToolbarInternalButtons'
 
 import type { MRT_RowData, MRT_TableInstance } from '../../types'
-import type { BoxProps } from '@mantine/core'
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import { MRT_GlobalFilterTextInput } from '../inputs/MRT_GlobalFilterTextInput'
 
 interface Props<TData extends MRT_RowData> extends BoxProps {
   table: MRT_TableInstance<TData>
@@ -25,7 +26,6 @@ export const MRT_TopToolbar = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: {
       enableGlobalFilter,
       enablePagination,
@@ -38,6 +38,7 @@ export const MRT_TopToolbar = <TData extends MRT_RowData>({
       renderTopToolbarCustomActions,
     },
     refs: { topToolbarRef },
+    state,
   } = table
 
   const { isFullScreen, showGlobalFilter } = state

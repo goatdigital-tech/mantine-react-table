@@ -23,7 +23,6 @@ const next: Record<TogglableDensityState, TogglableDensityState> = {
 
 export const MRT_ToggleDensePaddingButton = <TData extends MRT_RowData>({
   table: {
-    state,
     options: {
       icons: {
         IconBaselineDensityLarge,
@@ -33,6 +32,7 @@ export const MRT_ToggleDensePaddingButton = <TData extends MRT_RowData>({
       localization: { toggleDensity },
     },
     setDensity,
+    state,
   },
   title,
   ...rest

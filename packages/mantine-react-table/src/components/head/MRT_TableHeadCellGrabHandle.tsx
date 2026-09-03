@@ -1,6 +1,3 @@
-import { reorderColumn } from '../../utils/column.utils'
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_GrabHandleButton } from '../buttons/MRT_GrabHandleButton'
 import type { DragEvent, RefObject } from 'react'
 
 import type { ActionIconProps } from '@mantine/core'
@@ -11,6 +8,9 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
+import { reorderColumn } from '../../utils/column.utils'
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import { MRT_GrabHandleButton } from '../buttons/MRT_GrabHandleButton'
 
 interface Props<
   TData extends MRT_RowData,
@@ -28,11 +28,11 @@ export const MRT_TableHeadCellGrabHandle = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: { enableColumnOrdering, mantineColumnDragHandleProps },
     setColumnOrder,
     setDraggingColumn,
     setHoveredColumn,
+    state,
   } = table
   const { columnDef } = column
   const { columnOrder, draggingColumn, hoveredColumn } = state

@@ -1,8 +1,8 @@
 import { useEffect, useReducer, useRef } from 'react'
 
+import type { MRT_RowData, MRT_SortingState, MRT_TableInstance } from '../types'
 import { getDefaultColumnOrderIds } from '../utils/displayColumn.utils'
 import { getCanRankRows } from '../utils/row.utils'
-import type { MRT_RowData, MRT_SortingState, MRT_TableInstance } from '../types'
 
 export const useMRT_Effects = <TData extends MRT_RowData>(
   table: MRT_TableInstance<TData>,
@@ -10,8 +10,8 @@ export const useMRT_Effects = <TData extends MRT_RowData>(
   const {
     getIsSomeRowsPinned,
     getPrePaginatedRowModel,
-    state,
     options: { enablePagination, enableRowPinning, rowCount },
+    state,
   } = table
   const {
     columnOrder,

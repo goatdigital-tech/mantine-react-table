@@ -1,15 +1,15 @@
+import type { MouseEvent } from 'react'
+
 import { Checkbox, Radio, Switch, Tooltip } from '@mantine/core'
+import type { CheckboxProps, RadioProps, SwitchProps } from '@mantine/core'
+
+import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../../types'
 import {
   getIsRowSelected,
   getMRT_RowSelectionHandler,
   getMRT_SelectAllHandler,
 } from '../../utils/row.utils'
 import { parseFromValuesOrFunc } from '../../utils/utils'
-import type { MouseEvent } from 'react'
-
-import type { CheckboxProps, RadioProps, SwitchProps } from '@mantine/core'
-
-import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../../types'
 
 interface Props<TData extends MRT_RowData> extends CheckboxProps {
   renderedRowIndex?: number
@@ -24,7 +24,6 @@ export const MRT_SelectCheckbox = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: {
       enableMultiRowSelection,
       localization,
@@ -33,6 +32,7 @@ export const MRT_SelectCheckbox = <TData extends MRT_RowData>({
       selectAllMode,
       selectDisplayMode,
     },
+    state,
   } = table
   const { density, isLoading } = state
 

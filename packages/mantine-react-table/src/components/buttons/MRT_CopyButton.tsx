@@ -1,10 +1,10 @@
 import clsx from 'clsx'
 
-import { CopyButton, Tooltip, UnstyledButton } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
 import classes from './MRT_CopyButton.module.css'
+
 import type { ReactNode } from 'react'
 
+import { CopyButton, Tooltip, UnstyledButton } from '@mantine/core'
 import type { UnstyledButtonProps } from '@mantine/core'
 
 import type {
@@ -13,6 +13,7 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 interface Props<
   TData extends MRT_RowData,

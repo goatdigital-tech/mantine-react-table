@@ -1,5 +1,7 @@
 import clsx from 'clsx'
 
+import classes from './MRT_TableContainer.module.css'
+
 import { useEffect, useLayoutEffect, useState } from 'react'
 
 import {
@@ -8,11 +10,11 @@ import {
   type ScrollAreaAutosizeProps,
 } from '@mantine/core'
 
+import { MRT_Table } from './MRT_Table'
+
+import type { MRT_RowData, MRT_TableInstance } from '../../types'
 import { parseFromValuesOrFunc } from '../../utils/utils'
 import { MRT_EditRowModal } from '../modals/MRT_EditRowModal'
-import { MRT_Table } from './MRT_Table'
-import classes from './MRT_TableContainer.module.css'
-import type { MRT_RowData, MRT_TableInstance } from '../../types'
 
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect
@@ -26,7 +28,6 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: {
       createDisplayMode,
       editDisplayMode,
@@ -34,7 +35,13 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
       mantineLoadingOverlayProps,
       mantineTableContainerProps,
     },
-    refs: { bottomToolbarRef, tableContainerRef, topToolbarRef },
+    refs: {
+      bottomToolbarRef,
+      tableContainerRef,
+      tableHeadRef,
+      topToolbarRef,
+    },
+    state,
   } = table
   const {
     creatingRow,
@@ -45,6 +52,7 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
   } = state
 
   const [totalToolbarHeight, setTotalToolbarHeight] = useState(0)
+  const [tableHeadHeight, setTableHeadHeight] = useState(0)
 
   const tableContainerProps = {
     ...parseFromValuesOrFunc(mantineTableContainerProps, { table }),
@@ -69,22 +77,27 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
         : 0
 
     setTotalToolbarHeight(topToolbarHeight + bottomToolbarHeight)
+    setTableHeadHeight(tableHeadRef.current?.offsetHeight ?? 0)
   })
 
   const createModalOpen = createDisplayMode === 'modal' && creatingRow
   const editModalOpen = editDisplayMode === 'modal' && editingRow
+  const stickyHeader = enableStickyHeader || isFullScreen
 
   return (
     <ScrollArea.Autosize
+      offsetScrollbars="present"
+      type="auto"
       {...resolvedTableContainerProps}
       __vars={{
+        '--mrt-table-head-height': `${tableHeadHeight}`,
         '--mrt-top-toolbar-height': `${totalToolbarHeight}`,
         ...resolvedTableContainerProps.__vars,
       }}
       className={clsx(
         'mrt-table-container',
         classes.root,
-        enableStickyHeader && classes['root-sticky'],
+        stickyHeader && classes['root-sticky'],
         isFullScreen && classes['root-fullscreen'],
         resolvedTableContainerProps.className,
       )}
