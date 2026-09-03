@@ -30,3 +30,19 @@ test('renders skeleton cells instead of placeholder values while loading', () =>
   assert.match(html, /mantine-Skeleton-root/);
   assert.doesNotMatch(html, /placeholder-value/);
 });
+
+test('renders the table container with Mantine ScrollArea', () => {
+  const html = renderToStaticMarkup(
+    React.createElement(
+      MantineProvider,
+      null,
+      React.createElement(MantineReactTable, {
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        data: [{ name: 'Ada' }],
+      }),
+    ),
+  );
+
+  assert.match(html, /mantine-ScrollArea-root/);
+  assert.match(html, /data-autosize="true"/);
+});
