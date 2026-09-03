@@ -2423,7 +2423,9 @@ const MRT_TableHeadCell = (_a) => {
                                         classes$l['content-wrapper-hidden-overflow'], ((_h = (_g = columnDef.header) === null || _g === void 0 ? void 0 : _g.length) !== null && _h !== void 0 ? _h : 0) < 20 &&
                                         classes$l['content-wrapper-nowrap']), children: headerElement }), column.getCanFilter() &&
                                     (column.getIsFiltered() || showColumnButtons) && (jsxRuntime.jsx(MRT_TableHeadCellFilterLabel, { header: header, table: table })), column.getCanSort() &&
-                                    (column.getIsSorted() || showColumnButtons) && (jsxRuntime.jsx(MRT_TableHeadCellSortLabel, { header: header, table: table }))] }), columnDefType !== 'group' && (jsxRuntime.jsxs(core.Flex, { className: clsx('mrt-table-head-cell-content-actions', classes$l['content-actions']), children: [showDragHandle && (jsxRuntime.jsx(MRT_TableHeadCellGrabHandle, { column: column, table: table, tableHeadCellRef: {
+                                    (column.getIsSorted() || showColumnButtons) && (jsxRuntime.jsx(MRT_TableHeadCellSortLabel, { header: header, table: table }))] }), columnDefType !== 'group' &&
+                            (showDragHandle ||
+                                (columnActionsEnabled && showColumnButtons)) && (jsxRuntime.jsxs(core.Flex, { className: clsx('mrt-table-head-cell-content-actions', classes$l['content-actions']), children: [showDragHandle && (jsxRuntime.jsx(MRT_TableHeadCellGrabHandle, { column: column, table: table, tableHeadCellRef: {
                                         current: tableHeadCellRefs.current[column.id],
                                     } })), columnActionsEnabled && showColumnButtons && (jsxRuntime.jsx(MRT_ColumnActionMenu, { header: header, onChange: setIsOpenedColumnActions, opened: isOpenedColumnActions, table: table }))] })), column.getCanResize() && (jsxRuntime.jsx(MRT_TableHeadCellResizeHandle, { header: header, table: table }))] }))), columnFilterDisplayMode === 'subheader' && column.getCanFilter() && (jsxRuntime.jsx(MRT_TableHeadCellFilterContainer, { header: header, table: table }))] })));
 };
@@ -3306,7 +3308,7 @@ const useMRT_TableInstance = (definedTableOptions) => {
         statefulTableOptions.state.isLoading,
         statefulTableOptions.state.showSkeletons,
     ]);
-    const table = reactTable.useTable(Object.assign(Object.assign({}, statefulTableOptions), {
+    const table = reactTable.useTable(Object.assign(Object.assign({}, statefulTableOptions), { 
         // Hand TanStack-aware slices over to our external atoms — library writes
         // (e.g. `table.setPageIndex(...)`, drag-resize) flow straight into them.
         atoms: {

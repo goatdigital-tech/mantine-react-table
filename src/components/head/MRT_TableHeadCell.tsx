@@ -266,7 +266,9 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
                     <MRT_TableHeadCellSortLabel header={header} table={table} />
                   )}
               </Flex>
-              {columnDefType !== 'group' && (
+              {columnDefType !== 'group' &&
+                (showDragHandle ||
+                  (columnActionsEnabled && showColumnButtons)) && (
                 <Flex
                   className={clsx(
                     'mrt-table-head-cell-content-actions',
@@ -291,7 +293,7 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
                     />
                   )}
                 </Flex>
-              )}
+                )}
               {column.getCanResize() && (
                 <MRT_TableHeadCellResizeHandle header={header} table={table} />
               )}
