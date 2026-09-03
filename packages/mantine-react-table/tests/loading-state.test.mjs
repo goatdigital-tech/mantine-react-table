@@ -67,3 +67,30 @@ test('allows ScrollArea defaults to be overridden', () => {
   assert.doesNotMatch(html, /data-offset-scrollbars="present"/);
   assert.match(html, /data-hidden="true"/);
 });
+
+test('pins row actions without rendering an empty header actions container', () => {
+  const html = renderToStaticMarkup(
+    React.createElement(
+      MantineProvider,
+      null,
+      React.createElement(MantineReactTable, {
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        data: [{ name: 'Ada' }],
+        enableColumnPinning: true,
+        enableRowActions: true,
+        initialState: {
+          columnPinning: { end: ['mrt-row-actions'], start: [] },
+        },
+        renderRowActions: () => React.createElement('span', null, 'Actions'),
+      }),
+    ),
+  );
+
+  const actionsHeader = html.match(
+    /<th[^>]*data-column-pinned="end"[^>]*>[\s\S]*?<\/th>/,
+  )?.[0];
+
+  assert.ok(actionsHeader);
+  assert.doesNotMatch(actionsHeader, /mrt-table-head-cell-content-actions/);
+  assert.match(html, /<td[^>]*data-column-pinned="end"/);
+});
