@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from 'react'
 
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { parseFromValuesOrFunc } from '../utils/utils'
-import { extraIndexRangeExtractor } from '../utils/virtualization.utils'
 import type { Range } from '@tanstack/react-virtual'
 
 import type {
@@ -10,6 +8,8 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../types'
+import { parseFromValuesOrFunc } from '../utils/utils'
+import { extraIndexRangeExtractor } from '../utils/virtualization.utils'
 
 export const useMRT_ColumnVirtualizer = <
   TData extends MRT_RowData,
@@ -19,9 +19,8 @@ export const useMRT_ColumnVirtualizer = <
   table: MRT_TableInstance<TData>,
 ): MRT_ColumnVirtualizer | undefined => {
   const {
-    getStartLeafColumns,
     getEndLeafColumns,
-    state,
+    getStartLeafColumns,
     getVisibleLeafColumns,
     options: {
       columnVirtualizerInstanceRef,
@@ -30,6 +29,7 @@ export const useMRT_ColumnVirtualizer = <
       enableColumnVirtualization,
     },
     refs: { tableContainerRef },
+    state,
   } = table
   const { columnPinning, draggingColumn } = state
 

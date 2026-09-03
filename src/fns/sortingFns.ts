@@ -1,6 +1,6 @@
 import { compareItems } from '@tanstack/match-sorter-utils'
-import { sortFns } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
+import { sortFns } from '@tanstack/react-table'
 import type { Row, StockFeatures } from '@tanstack/react-table'
 
 import type { MRT_Row, MRT_RowData } from '../types'

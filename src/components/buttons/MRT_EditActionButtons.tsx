@@ -1,7 +1,8 @@
 import clsx from 'clsx'
 
-import { ActionIcon, Box, Button, Tooltip } from '@mantine/core'
 import classes from './MRT_EditActionButtons.module.css'
+
+import { ActionIcon, Box, Button, Tooltip } from '@mantine/core'
 import type { BoxProps } from '@mantine/core'
 
 import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../../types'
@@ -19,7 +20,6 @@ export const MRT_EditActionButtons = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: {
       icons: { IconCircleX, IconDeviceFloppy },
       localization,
@@ -31,6 +31,7 @@ export const MRT_EditActionButtons = <TData extends MRT_RowData>({
     refs: { editInputRefs },
     setCreatingRow,
     setEditingRow,
+    state,
   } = table
   const { creatingRow, editingRow, isSaving } = state
 

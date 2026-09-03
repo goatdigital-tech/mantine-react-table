@@ -10,13 +10,13 @@ interface Props<TData extends MRT_RowData>
 
 export const MRT_ToggleGlobalFilterButton = <TData extends MRT_RowData>({
   table: {
-    state,
     options: {
       icons: { IconSearch, IconSearchOff },
       localization: { showHideSearch },
     },
     refs: { searchInputRef },
     setShowGlobalFilter,
+    state,
   },
   title,
   ...rest

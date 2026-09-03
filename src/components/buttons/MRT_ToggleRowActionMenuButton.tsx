@@ -1,8 +1,9 @@
+import type { MouseEvent } from 'react'
+
 import { ActionIcon, Tooltip } from '@mantine/core'
 
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_RowActionMenu } from '../menus/MRT_RowActionMenu'
 import { MRT_EditActionButtons } from './MRT_EditActionButtons'
+
 import type {
   MRT_Cell,
   MRT_CellValue,
@@ -10,7 +11,8 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
-import type { MouseEvent } from 'react'
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import { MRT_RowActionMenu } from '../menus/MRT_RowActionMenu'
 
 interface Props<TData extends MRT_RowData, TValue = MRT_CellValue> {
   cell: MRT_Cell<TData, TValue>
@@ -24,7 +26,6 @@ export const MRT_ToggleRowActionMenuButton = <TData extends MRT_RowData>({
   table,
 }: Props<TData>) => {
   const {
-    state,
     options: {
       createDisplayMode,
       editDisplayMode,
@@ -35,6 +36,7 @@ export const MRT_ToggleRowActionMenuButton = <TData extends MRT_RowData>({
       renderRowActions,
     },
     setEditingRow,
+    state,
   } = table
 
   const { creatingRow, editingRow } = state

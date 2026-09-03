@@ -1,13 +1,15 @@
 import clsx from 'clsx'
 
-import { TableTh, useDirection } from '@mantine/core'
+import classes from './MRT_TableFooterCell.module.css'
 
+import type { CSSProperties } from 'react'
+
+import { TableTh, useDirection } from '@mantine/core'
+import type { TableThProps } from '@mantine/core'
+
+import type { MRT_Header, MRT_RowData, MRT_TableInstance } from '../../types'
 import { parseCSSVarId } from '../../utils/style.utils'
 import { parseFromValuesOrFunc } from '../../utils/utils'
-import classes from './MRT_TableFooterCell.module.css'
-import type { MRT_Header, MRT_RowData, MRT_TableInstance } from '../../types'
-import type { TableThProps } from '@mantine/core'
-import type { CSSProperties } from 'react'
 
 interface Props<TData extends MRT_RowData> extends TableThProps {
   footer: MRT_Header<TData>
@@ -80,13 +82,13 @@ export const MRT_TableFooterCell = <TData extends MRT_RowData>({
             : direction.dir === 'rtl'
               ? 'right'
               : 'left'),
-        '--mrt-table-cell-start':
-          isColumnPinned === 'start'
-            ? `${column.getStart(isColumnPinned)}`
-            : undefined,
         '--mrt-table-cell-end':
           isColumnPinned === 'end'
             ? `${column.getAfter(isColumnPinned)}`
+            : undefined,
+        '--mrt-table-cell-start':
+          isColumnPinned === 'start'
+            ? `${column.getStart(isColumnPinned)}`
             : undefined,
         ...tableCellProps?.__vars,
       }}

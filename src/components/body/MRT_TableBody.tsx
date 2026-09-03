@@ -1,15 +1,17 @@
 import clsx from 'clsx'
 
+import classes from './MRT_TableBody.module.css'
+
 import { memo, useMemo } from 'react'
 
 import { TableTbody } from '@mantine/core'
+import type { TableProps, TableTbodyProps } from '@mantine/core'
+
+import { MRT_TableBodyEmptyRow } from './MRT_TableBodyEmptyRow'
+import { Memo_MRT_TableBodyRow, MRT_TableBodyRow } from './MRT_TableBodyRow'
 
 import { useMRT_Rows } from '../../hooks/useMRT_Rows'
 import { useMRT_RowVirtualizer } from '../../hooks/useMRT_RowVirtualizer'
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_TableBodyRow, Memo_MRT_TableBodyRow } from './MRT_TableBodyRow'
-import { MRT_TableBodyEmptyRow } from './MRT_TableBodyEmptyRow'
-import classes from './MRT_TableBody.module.css'
 import type {
   MRT_ColumnVirtualizer,
   MRT_Row,
@@ -17,7 +19,7 @@ import type {
   MRT_TableInstance,
   MRT_VirtualItem,
 } from '../../types'
-import type { TableProps, TableTbodyProps } from '@mantine/core'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 export interface MRT_TableBodyProps<
   TData extends MRT_RowData,
@@ -37,7 +39,6 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
     getBottomRows,
     getIsSomeRowsPinned,
     getRowModel,
-    state,
     getTopRows,
     options: {
       enableStickyFooter,
@@ -49,6 +50,7 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
       rowPinningDisplayMode,
     },
     refs: { tableFooterRef, tableHeadRef },
+    state,
   } = table
   const { isFullScreen, rowPinning } = state
 

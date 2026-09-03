@@ -1,4 +1,7 @@
+import classes from './MRT_ShowHideColumnsMenuItems.module.css'
+
 import { useRef, useState } from 'react'
+import type { Dispatch, DragEvent, SetStateAction } from 'react'
 
 import {
   Box,
@@ -9,18 +12,16 @@ import {
   useMantineTheme,
 } from '@mantine/core'
 
-import { reorderColumn } from '../../utils/column.utils'
-import { dataVariable, getPrimaryColor } from '../../utils/style.utils'
-import { MRT_ColumnPinningButtons } from '../buttons/MRT_ColumnPinningButtons'
-import { MRT_GrabHandleButton } from '../buttons/MRT_GrabHandleButton'
-import classes from './MRT_ShowHideColumnsMenuItems.module.css'
 import type {
   MRT_CellValue,
   MRT_Column,
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
-import type { Dispatch, DragEvent, SetStateAction } from 'react'
+import { reorderColumn } from '../../utils/column.utils'
+import { dataVariable, getPrimaryColor } from '../../utils/style.utils'
+import { MRT_ColumnPinningButtons } from '../buttons/MRT_ColumnPinningButtons'
+import { MRT_GrabHandleButton } from '../buttons/MRT_GrabHandleButton'
 
 interface Props<TData extends MRT_RowData, TValue = MRT_CellValue> {
   allColumns: Array<MRT_Column<TData>>
@@ -39,7 +40,6 @@ export const MRT_ShowHideColumnsMenuItems = <TData extends MRT_RowData>({
 }: Props<TData>) => {
   const theme = useMantineTheme()
   const {
-    state,
     options: {
       enableColumnOrdering,
       enableColumnPinning,
@@ -47,6 +47,7 @@ export const MRT_ShowHideColumnsMenuItems = <TData extends MRT_RowData>({
       localization,
     },
     setColumnOrder,
+    state,
   } = table
   const { columnOrder } = state
   const { columnDef } = column

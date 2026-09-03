@@ -1,8 +1,9 @@
+import classes from './MRT_FilterOptionMenu.module.css'
+
 import { Fragment, useMemo } from 'react'
 
 import { Menu } from '@mantine/core'
 
-import classes from './MRT_FilterOptionMenu.module.css'
 import type {
   MRT_FilterOption,
   MRT_Header,
@@ -118,7 +119,6 @@ export const MRT_FilterOptionMenu = <TData extends MRT_RowData>({
   table,
 }: Props<TData>) => {
   const {
-    state,
     options: {
       columnFilterModeOptions,
       globalFilterModeOptions,
@@ -128,6 +128,7 @@ export const MRT_FilterOptionMenu = <TData extends MRT_RowData>({
     },
     setColumnFilterFns,
     setGlobalFilterFn,
+    state,
   } = table
   const { globalFilterFn } = state
   const { column } = header ?? {}

@@ -1,6 +1,9 @@
 import clsx from 'clsx'
 
+import classes from './MRT_FilterTextInput.module.css'
+
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { MouseEvent } from 'react'
 
 import {
   ActionIcon,
@@ -11,15 +14,13 @@ import {
   Select,
   TextInput,
 } from '@mantine/core'
+import type { TextInputProps } from '@mantine/core'
 import { DateInput } from '@mantine/dates'
 import { useDebouncedValue } from '@mantine/hooks'
 
 import { localizedFilterOption } from '../../fns/filterFns'
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import classes from './MRT_FilterTextInput.module.css'
 import type { MRT_Header, MRT_RowData, MRT_TableInstance } from '../../types'
-import type { TextInputProps } from '@mantine/core'
-import type { MouseEvent } from 'react'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 interface Props<TData extends MRT_RowData> extends TextInputProps {
   header: MRT_Header<TData>

@@ -1,9 +1,9 @@
 import { Box } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_RowPinButton } from '../buttons/MRT_RowPinButton'
 import type { ActionIconProps } from '@mantine/core'
 
 import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import { MRT_RowPinButton } from '../buttons/MRT_RowPinButton'
 
 interface Props<TData extends MRT_RowData> extends ActionIconProps {
   row: MRT_Row<TData>
@@ -16,8 +16,8 @@ export const MRT_TableBodyRowPinButton = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: { enableRowPinning, rowPinningDisplayMode },
+    state,
   } = table
   const { density } = state
 

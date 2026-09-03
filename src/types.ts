@@ -60,6 +60,7 @@ import type {
   ProgressProps,
   RadioProps,
   RangeSliderProps,
+  ScrollAreaAutosizeProps,
   SelectProps,
   SkeletonProps,
   SwitchProps,
@@ -67,8 +68,8 @@ import type {
   TableTbodyProps,
   TableTdProps,
   TableTfootProps,
-  TableThProps,
   TableTheadProps,
+  TableThProps,
   TableTrProps,
   TextInputProps,
   UnstyledButtonProps,
@@ -115,8 +116,8 @@ export type MRT_RowData = Record<string, any>;
 export type MRT_CellValue = unknown;
 
 export type MRT_ColumnAccessorKey<TData extends MRT_RowData> =
-  | (DeepKeys<TData> & string)
-  | (string & {});
+  | ({} & string)
+  | (DeepKeys<TData> & string);
 
 export type MRT_ColumnFiltersState = ColumnFiltersState;
 export type MRT_ColumnOrderState = ColumnOrderState;
@@ -194,7 +195,7 @@ export type MRT_ColumnHelper<TData extends MRT_RowData> = {
    */
   columns: <TColumns extends ReadonlyArray<MRT_ColumnDef<TData, any>>>(
     columns: [...TColumns],
-  ) => Array<MRT_ColumnDef<TData, any>> & [...TColumns];
+  ) => [...TColumns] & Array<MRT_ColumnDef<TData, any>>;
   /**
    * Creates a display column definition for non-data columns like row actions
    * or row numbers.
@@ -318,17 +319,17 @@ export type MRT_TableInstance<TData extends MRT_RowData> = {
   getCenterLeafColumns: () => Array<MRT_Column<TData>>;
   getCenterRows: () => Array<MRT_Row<TData>>;
   getColumn: (columnId: string) => MRT_Column<TData>;
+  getEndLeafColumns: () => Array<MRT_Column<TData>>;
   getExpandedRowModel: () => MRT_RowModel<TData>;
   getFilteredSelectedRowModel: () => MRT_RowModel<TData>;
   getFlatHeaders: () => Array<MRT_Header<TData>>;
   getHeaderGroups: () => Array<MRT_HeaderGroup<TData>>;
-  getStartLeafColumns: () => Array<MRT_Column<TData>>;
   getPaginationRowModel: () => MRT_RowModel<TData>;
   getPreFilteredRowModel: () => MRT_RowModel<TData>;
   getPrePaginatedRowModel: () => MRT_RowModel<TData>;
-  getEndLeafColumns: () => Array<MRT_Column<TData>>;
   getRowModel: () => MRT_RowModel<TData>;
   getSelectedRowModel: () => MRT_RowModel<TData>;
+  getStartLeafColumns: () => Array<MRT_Column<TData>>;
   getState: () => MRT_TableState<TData>;
   getTopRows: () => Array<MRT_Row<TData>>;
   options: MRT_StatefulTableOptions<TData>;
@@ -345,12 +346,7 @@ export type MRT_TableInstance<TData extends MRT_RowData> = {
     tablePaperRef: MutableRefObject<HTMLDivElement | null>;
     topToolbarRef: MutableRefObject<HTMLDivElement | null>;
   };
-  /**
-   * The current full table state. Populated by useTable's `state => state` selector
-   * and enriched with MRT-only slices that v9's store doesn't track.
-   * Use this in place of v8's `table.getState()`.
-   */
-  state: MRT_TableState<TData>;
+  setColumnFilterFns: Dispatch<SetStateAction<MRT_ColumnFilterFnsState>>;
   /**
    * v9 calls this `setcolumnResizing` (lowercase 'c') on the underlying table —
    * we expose a normal camelCase alias here.
@@ -358,7 +354,6 @@ export type MRT_TableInstance<TData extends MRT_RowData> = {
   setColumnResizing: (
     updater: Updater<MRT_TableState<TData>['columnResizing']>,
   ) => void;
-  setColumnFilterFns: Dispatch<SetStateAction<MRT_ColumnFilterFnsState>>;
   setCreatingRow: Dispatch<SetStateAction<MRT_Row<TData> | null | true>>;
   setDensity: Dispatch<SetStateAction<MRT_DensityState>>;
   setDraggingColumn: Dispatch<SetStateAction<MRT_Column<TData> | null>>;
@@ -373,6 +368,12 @@ export type MRT_TableInstance<TData extends MRT_RowData> = {
   setShowColumnFilters: Dispatch<SetStateAction<boolean>>;
   setShowGlobalFilter: Dispatch<SetStateAction<boolean>>;
   setShowToolbarDropZone: Dispatch<SetStateAction<boolean>>;
+  /**
+   * The current full table state. Populated by useTable's `state => state` selector
+   * and enriched with MRT-only slices that v9's store doesn't track.
+   * Use this in place of v8's `table.getState()`.
+   */
+  state: MRT_TableState<TData>;
 } & Omit<
   Table<StockFeatures, TData>,
   | 'getAllColumns'
@@ -382,16 +383,16 @@ export type MRT_TableInstance<TData extends MRT_RowData> = {
   | 'getCenterLeafColumns'
   | 'getCenterRows'
   | 'getColumn'
+  | 'getEndLeafColumns'
   | 'getExpandedRowModel'
   | 'getFlatHeaders'
   | 'getHeaderGroups'
-  | 'getStartLeafColumns'
   | 'getPaginationRowModel'
   | 'getPreFilteredRowModel'
   | 'getPrePaginatedRowModel'
-  | 'getEndLeafColumns'
   | 'getRowModel'
   | 'getSelectedRowModel'
+  | 'getStartLeafColumns'
   | 'getState'
   | 'getTopRows'
   | 'options'
@@ -477,8 +478,8 @@ export type MRT_ColumnDef<TData extends MRT_RowData, TValue = unknown> = {
   }) => ReactNode;
   aggregationFn?:
     | Array<
-        | MRT_RowAggregationOption
         | { aggregationFn: MRT_RowAggregationFn<TData>; id: string }
+        | MRT_RowAggregationOption
       >
     | MRT_RowAggregationFn<TData>;
   Cell?: (props: {
@@ -739,9 +740,9 @@ export type MRT_IdentifiedColumnDef<
 export type MRT_AccessorFnColumnDef<
   TData extends MRT_RowData,
   TValue = unknown,
-> = MRT_DisplayColumnDef<TData, TValue> & {
+> = {
   accessorFn: (originalRow: TData) => TValue;
-};
+} & MRT_DisplayColumnDef<TData, TValue>;
 
 /**
  * The result type of `columnHelper.accessor(key, ...)`. Has a required
@@ -750,9 +751,9 @@ export type MRT_AccessorFnColumnDef<
 export type MRT_AccessorKeyColumnDef<
   TData extends MRT_RowData,
   TValue = unknown,
-> = MRT_DisplayColumnDef<TData, TValue> & {
+> = {
   accessorKey: MRT_ColumnAccessorKey<TData>;
-};
+} & MRT_DisplayColumnDef<TData, TValue>;
 
 /**
  * Union of `MRT_AccessorFnColumnDef` and `MRT_AccessorKeyColumnDef`.
@@ -768,9 +769,9 @@ export type MRT_AccessorColumnDef<
 export type MRT_GroupColumnDef<
   TData extends MRT_RowData,
   TValue = unknown,
-> = MRT_DisplayColumnDef<TData, TValue> & {
+> = {
   columns?: ReadonlyArray<MRT_ColumnDef<TData, any>>;
-};
+} & MRT_DisplayColumnDef<TData, TValue>;
 
 export type MRT_DefinedColumnDef<
   TData extends MRT_RowData,
@@ -878,18 +879,6 @@ export type MRT_TableOptions<TData extends MRT_RowData> = {
     string,
     AggregationFnDef<StockFeatures, TData, any, any>
   >;
-  /**
-   * Custom filter functions to apply to the table. These get merged with MRT's
-   * built-ins (`fuzzy`, `contains`, `between`, etc.) and passed into
-   * `createFilteredRowModel(...)`.
-   */
-  filterFns?: Record<string, FilterFn<StockFeatures, TData>>;
-  /**
-   * Custom sort functions to apply to the table. These get merged with MRT's
-   * built-ins (`alphanumeric`, `fuzzy`, etc.) and passed into
-   * `createSortedRowModel(...)`.
-   */
-  sortFns?: Record<string, SortFn<StockFeatures, TData>>;
   columnFilterDisplayMode?: 'custom' | 'popover' | 'subheader';
   columnFilterModeOptions?: Array<
     LiteralUnion<MRT_FilterOption & string>
@@ -966,6 +955,12 @@ export type MRT_TableOptions<TData extends MRT_RowData> = {
   enableToolbarInternalActions?: boolean;
   enableTopToolbar?: boolean;
   expandRowsFn?: (dataRow: TData) => Array<TData>;
+  /**
+   * Custom filter functions to apply to the table. These get merged with MRT's
+   * built-ins (`fuzzy`, `contains`, `between`, etc.) and passed into
+   * `createFilteredRowModel(...)`.
+   */
+  filterFns?: Record<string, FilterFn<StockFeatures, TData>>;
   getRowId?: (
     originalRow: TData,
     index: number,
@@ -1195,8 +1190,8 @@ export type MRT_TableOptions<TData extends MRT_RowData> = {
   mantineTableContainerProps?:
     | ((props: {
         table: MRT_TableInstance<TData>;
-      }) => BoxProps & HTMLPropsRef<HTMLDivElement>)
-    | (BoxProps & HTMLPropsRef<HTMLDivElement>);
+      }) => HTMLPropsRef<HTMLDivElement> & ScrollAreaAutosizeProps)
+    | (HTMLPropsRef<HTMLDivElement> & ScrollAreaAutosizeProps);
   mantineTableFooterCellProps?:
     | ((props: {
         column: MRT_Column<TData, MRT_CellValue>;
@@ -1387,6 +1382,12 @@ export type MRT_TableOptions<TData extends MRT_RowData> = {
     | Partial<VirtualizerOptions<HTMLDivElement, HTMLTableRowElement>>;
   selectAllMode?: 'all' | 'page';
   selectDisplayMode?: 'checkbox' | 'radio' | 'switch';
+  /**
+   * Custom sort functions to apply to the table. These get merged with MRT's
+   * built-ins (`alphanumeric`, `fuzzy`, etc.) and passed into
+   * `createSortedRowModel(...)`.
+   */
+  sortFns?: Record<string, SortFn<StockFeatures, TData>>;
   /**
    * Manage state externally any way you want, then pass it back into MRT.
    */

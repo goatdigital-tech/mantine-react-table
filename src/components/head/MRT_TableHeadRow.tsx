@@ -1,10 +1,12 @@
 import clsx from 'clsx'
 
-import { Box, TableTr } from '@mantine/core'
-
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_TableHeadCell } from './MRT_TableHeadCell'
 import classes from './MRT_TableHeadRow.module.css'
+
+import { Box, TableTr } from '@mantine/core'
+import type { TableTrProps } from '@mantine/core'
+
+import { MRT_TableHeadCell } from './MRT_TableHeadCell'
+
 import type {
   MRT_ColumnVirtualizer,
   MRT_Header,
@@ -13,7 +15,7 @@ import type {
   MRT_TableInstance,
   MRT_VirtualItem,
 } from '../../types'
-import type { TableTrProps } from '@mantine/core'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 interface Props<TData extends MRT_RowData> extends TableTrProps {
   columnVirtualizer?: MRT_ColumnVirtualizer
@@ -28,8 +30,8 @@ export const MRT_TableHeadRow = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: { enableStickyHeader, layoutMode, mantineTableHeadRowProps },
+    state,
   } = table
   const { isFullScreen } = state
 

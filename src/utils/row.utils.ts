@@ -1,8 +1,8 @@
-import { rankGlobalFuzzy } from '../fns/sortingFns'
-import { parseFromValuesOrFunc } from './utils'
 import type { ChangeEvent, MouseEvent } from 'react'
 
+import { rankGlobalFuzzy } from '../fns/sortingFns'
 import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../types'
+import { parseFromValuesOrFunc } from './utils'
 
 export const getMRT_Rows = <TData extends MRT_RowData>(
   table: MRT_TableInstance<TData>,
@@ -12,7 +12,6 @@ export const getMRT_Rows = <TData extends MRT_RowData>(
     getCenterRows,
     getPrePaginatedRowModel,
     getRowModel,
-    state,
     getTopRows,
     options: {
       createDisplayMode,
@@ -22,6 +21,7 @@ export const getMRT_Rows = <TData extends MRT_RowData>(
       positionCreatingRow,
       rowPinningDisplayMode,
     },
+    state,
   } = table
   const { creatingRow, pagination } = state
 
@@ -83,7 +83,6 @@ export const getCanRankRows = <TData extends MRT_RowData>(
   table: MRT_TableInstance<TData>,
 ) => {
   const {
-    state,
     options: {
       enableGlobalFilterRankedResults,
       manualExpanding,
@@ -91,6 +90,7 @@ export const getCanRankRows = <TData extends MRT_RowData>(
       manualGrouping,
       manualSorting,
     },
+    state,
   } = table
   const { expanded, globalFilterFn } = state
 
@@ -152,7 +152,6 @@ export const getMRT_RowSelectionHandler =
     value?: boolean,
   ) => {
     const {
-      state,
       options: {
         enableBatchRowSelection,
         enableMultiRowSelection,
@@ -161,6 +160,7 @@ export const getMRT_RowSelectionHandler =
         rowPinningDisplayMode,
       },
       refs: { lastSelectedRowId: lastSelectedRowId },
+      state,
     } = table
     const {
       pagination: { pageIndex, pageSize },

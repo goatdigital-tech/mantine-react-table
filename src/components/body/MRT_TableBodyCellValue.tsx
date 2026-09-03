@@ -1,5 +1,4 @@
 import { Highlight } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
 import type { HighlightProps } from '@mantine/core'
 
 import type {
@@ -8,6 +7,7 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 const allowedTypes = ['string', 'number']
 const allowedFilterVariants = ['text', 'autocomplete']
@@ -26,11 +26,11 @@ export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
   table,
 }: Props<TData>) => {
   const {
-    state,
     options: {
       enableFilterMatchHighlighting,
       mantineHighlightProps = { size: 'sm' },
     },
+    state,
   } = table
   const { column, row } = cell
   const { columnDef } = column
@@ -81,7 +81,7 @@ export const MRT_TableBodyCellValue = <TData extends MRT_RowData>({
         allowedTypes.includes(typeof globalFilter) &&
         column.getCanGlobalFilter()))
   ) {
-    let highlight: string | Array<string> = (
+    let highlight: Array<string> | string = (
       column.getFilterValue() ??
       globalFilter ??
       ''

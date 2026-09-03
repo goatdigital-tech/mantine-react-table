@@ -1,4 +1,3 @@
-import { getAllLeafColumnDefs, getColumnId } from './column.utils'
 import type {
   MRT_ColumnDef,
   MRT_DefinedTableOptions,
@@ -7,6 +6,7 @@ import type {
   MRT_RowData,
   MRT_StatefulTableOptions,
 } from '../types'
+import { getAllLeafColumnDefs, getColumnId } from './column.utils'
 
 export function defaultDisplayColumnProps<TData extends MRT_RowData>({
   header,

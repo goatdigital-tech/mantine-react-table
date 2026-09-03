@@ -1,6 +1,6 @@
-import { ActionIcon, Menu, Tooltip } from '@mantine/core'
 import type { MouseEvent } from 'react'
 
+import { ActionIcon, Menu, Tooltip } from '@mantine/core'
 import type { ActionIconProps } from '@mantine/core'
 
 import type { MRT_Row, MRT_RowData, MRT_TableInstance } from '../../types'

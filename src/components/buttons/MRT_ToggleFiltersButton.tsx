@@ -10,12 +10,12 @@ interface Props<TData extends MRT_RowData>
 
 export const MRT_ToggleFiltersButton = <TData extends MRT_RowData>({
   table: {
-    state,
     options: {
       icons: { IconFilter, IconFilterOff },
       localization: { showHideFilters },
     },
     setShowColumnFilters,
+    state,
   },
   title,
   ...rest

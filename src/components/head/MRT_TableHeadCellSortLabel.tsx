@@ -1,12 +1,14 @@
 import clsx from 'clsx'
 
-import { ActionIcon, Indicator, Tooltip } from '@mantine/core'
-import { Subscribe } from '@tanstack/react-table'
-import { dataVariable } from '../../utils/style.utils'
 import classes from './MRT_TableHeadCellSortLabel.module.css'
+
+import { Subscribe } from '@tanstack/react-table'
+
+import { ActionIcon, Indicator, Tooltip } from '@mantine/core'
 import type { ActionIconProps } from '@mantine/core'
 
 import type { MRT_Header, MRT_RowData, MRT_TableInstance } from '../../types'
+import { dataVariable } from '../../utils/style.utils'
 
 interface Props<TData extends MRT_RowData> extends ActionIconProps {
   header: MRT_Header<TData>

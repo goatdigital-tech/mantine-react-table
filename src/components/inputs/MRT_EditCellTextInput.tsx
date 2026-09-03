@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { MultiSelect, Select, TextInput } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
 import type { FocusEvent, KeyboardEvent } from 'react'
 
+import { MultiSelect, Select, TextInput } from '@mantine/core'
 import type {
   MultiSelectProps,
   SelectProps,
@@ -16,6 +15,7 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 interface PropsTextInput<
   TData extends MRT_RowData,
@@ -51,7 +51,6 @@ export const MRT_EditCellTextInput = <TData extends MRT_RowData>({
   ...rest
 }: PropsMultiSelect<TData> | PropsSelect<TData> | PropsTextInput<TData>) => {
   const {
-    state,
     options: {
       createDisplayMode,
       editDisplayMode,
@@ -62,6 +61,7 @@ export const MRT_EditCellTextInput = <TData extends MRT_RowData>({
     setCreatingRow,
     setEditingCell,
     setEditingRow,
+    state,
   } = table
   const { column, row } = cell
   const { columnDef } = column
@@ -144,7 +144,7 @@ export const MRT_EditCellTextInput = <TData extends MRT_RowData>({
         {...(selectProps as MRT_SelectProps)}
         onBlur={handleBlur}
         onChange={(value, option) => {
-          ;(selectProps as MRT_SelectProps).onChange?.(value, option)
+          (selectProps as MRT_SelectProps).onChange?.(value, option)
           setValue(value)
         }}
         onClick={(e) => {
@@ -172,7 +172,7 @@ export const MRT_EditCellTextInput = <TData extends MRT_RowData>({
         {...(selectProps as MRT_MultiSelectProps)}
         onBlur={handleBlur}
         onChange={(newValue) => {
-          ;(selectProps as MRT_MultiSelectProps).onChange?.(value)
+          (selectProps as MRT_MultiSelectProps).onChange?.(value)
           setValue(newValue)
           // Save if not in focus, otherwise it will be handled by onBlur
           if (document.activeElement === editInputRefs.current[cell.id]) return

@@ -1,7 +1,8 @@
 import clsx from 'clsx'
 
-import { Box } from '@mantine/core'
 import classes from './MRT_TableHeadCellResizeHandle.module.css'
+
+import { Box } from '@mantine/core'
 import type { BoxProps } from '@mantine/core'
 
 import type { MRT_Header, MRT_RowData, MRT_TableInstance } from '../../types'
@@ -17,9 +18,9 @@ export const MRT_TableHeadCellResizeHandle = <TData extends MRT_RowData>({
   ...rest
 }: Props<TData>) => {
   const {
-    state,
     options: { columnResizeDirection, columnResizeMode },
     setColumnResizing,
+    state,
   } = table
   const { density } = state
   const { column } = header

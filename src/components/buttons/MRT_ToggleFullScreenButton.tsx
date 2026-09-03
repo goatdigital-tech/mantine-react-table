@@ -12,12 +12,12 @@ interface Props<TData extends MRT_RowData>
 
 export const MRT_ToggleFullScreenButton = <TData extends MRT_RowData>({
   table: {
-    state,
     options: {
       icons: { IconMaximize, IconMinimize },
       localization: { toggleFullScreen },
     },
     setIsFullScreen,
+    state,
   },
   title,
   ...rest

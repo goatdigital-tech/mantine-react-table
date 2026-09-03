@@ -1,10 +1,10 @@
+import type { JSX, ReactNode } from 'react'
+
 import {
   constructRow as _createRow,
   flexRender as _flexRender,
 } from '@tanstack/react-table'
-import { getAllLeafColumnDefs, getColumnId } from './column.utils'
 import type { Renderable } from '@tanstack/react-table'
-import type { JSX, ReactNode } from 'react'
 
 import type {
   MRT_ColumnDef,
@@ -13,6 +13,7 @@ import type {
   MRT_RowData,
   MRT_TableInstance,
 } from '../types'
+import { getAllLeafColumnDefs, getColumnId } from './column.utils'
 
 export const flexRender = _flexRender as (
   Comp: Renderable<any>,
@@ -55,7 +56,7 @@ export function createMRTColumnHelper<
     },
     columns: <TColumns extends ReadonlyArray<MRT_ColumnDef<TData, any>>>(
       columns: [...TColumns],
-    ): Array<MRT_ColumnDef<TData, any>> & [...TColumns] => columns,
+    ): [...TColumns] & Array<MRT_ColumnDef<TData, any>> => columns,
     display: (column) => column,
     group: (column) => column,
   }

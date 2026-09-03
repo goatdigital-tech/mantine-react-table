@@ -1,11 +1,12 @@
 import clsx from 'clsx'
 
-import { ActionIcon, Box, Group, Pagination, Select, Text } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
 import classes from './MRT_TablePagination.module.css'
+
+import { ActionIcon, Box, Group, Pagination, Select, Text } from '@mantine/core'
 import type { PaginationProps } from '@mantine/core'
 
 import type { MRT_RowData, MRT_TableInstance } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100].map((x) =>
   x.toString(),
@@ -23,7 +24,6 @@ export const MRT_TablePagination = <TData extends MRT_RowData>({
 }: Props<TData>) => {
   const {
     getPrePaginatedRowModel,
-    state,
     options: {
       enableToolbarInternalActions,
       icons: {
@@ -39,6 +39,7 @@ export const MRT_TablePagination = <TData extends MRT_RowData>({
     },
     setPageIndex,
     setPageSize,
+    state,
   } = table
   const {
     pagination: { pageIndex = 0, pageSize = 10 },

@@ -1,28 +1,29 @@
 import clsx from 'clsx'
 
+import classes from './MRT_TableHeadCell.module.css'
+
 import { useMemo, useState } from 'react'
+import type { CSSProperties, DragEventHandler, ReactNode } from 'react'
 
 import { Flex, TableTh, useDirection } from '@mantine/core'
+import type { TableThProps } from '@mantine/core'
 import { useHover } from '@mantine/hooks'
 
-import { parseCSSVarId } from '../../utils/style.utils'
-import { parseFromValuesOrFunc } from '../../utils/utils'
-import { MRT_ColumnActionMenu } from '../menus/MRT_ColumnActionMenu'
 import { MRT_TableHeadCellFilterContainer } from './MRT_TableHeadCellFilterContainer'
 import { MRT_TableHeadCellFilterLabel } from './MRT_TableHeadCellFilterLabel'
 import { MRT_TableHeadCellGrabHandle } from './MRT_TableHeadCellGrabHandle'
 import { MRT_TableHeadCellResizeHandle } from './MRT_TableHeadCellResizeHandle'
 import { MRT_TableHeadCellSortLabel } from './MRT_TableHeadCellSortLabel'
 
-import classes from './MRT_TableHeadCell.module.css'
 import type {
   MRT_ColumnVirtualizer,
   MRT_Header,
   MRT_RowData,
   MRT_TableInstance,
 } from '../../types'
-import type { TableThProps } from '@mantine/core'
-import type { CSSProperties, DragEventHandler, ReactNode } from 'react'
+import { parseCSSVarId } from '../../utils/style.utils'
+import { parseFromValuesOrFunc } from '../../utils/utils'
+import { MRT_ColumnActionMenu } from '../menus/MRT_ColumnActionMenu'
 
 interface Props<TData extends MRT_RowData> extends TableThProps {
   columnVirtualizer?: MRT_ColumnVirtualizer
@@ -40,7 +41,6 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
 }: Props<TData>) => {
   const direction = useDirection()
   const {
-    state,
     options: {
       columnFilterDisplayMode,
       columnResizeDirection,
@@ -57,6 +57,7 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
     },
     refs: { tableHeadCellRefs },
     setHoveredColumn,
+    state,
   } = table
   const { columnResizing, draggingColumn, grouping, hoveredColumn } = state
   const { column } = header
@@ -171,13 +172,13 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
       }
       {...tableCellProps}
       __vars={{
-        '--mrt-table-cell-start':
-          isColumnPinned === 'start'
-            ? `${column.getStart(isColumnPinned)}`
-            : undefined,
         '--mrt-table-cell-end':
           isColumnPinned === 'end'
             ? `${column.getAfter(isColumnPinned)}`
+            : undefined,
+        '--mrt-table-cell-start':
+          isColumnPinned === 'start'
+            ? `${column.getStart(isColumnPinned)}`
             : undefined,
       }}
       align={

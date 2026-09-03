@@ -4,8 +4,8 @@ var jsxRuntime = require('react/jsx-runtime');
 var clsx = require('clsx');
 var react = require('react');
 var core = require('@mantine/core');
-var matchSorterUtils = require('@tanstack/match-sorter-utils');
 var reactTable = require('@tanstack/react-table');
+var matchSorterUtils = require('@tanstack/match-sorter-utils');
 var reactVirtual = require('@tanstack/react-virtual');
 var hooks = require('@mantine/hooks');
 var dates = require('@mantine/dates');
@@ -79,239 +79,124 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
-const fuzzy$1 = (rowA, rowB, columnId) => {
-    let dir = 0;
-    if (rowA.columnFiltersMeta[columnId]) {
-        dir = matchSorterUtils.compareItems(rowA.columnFiltersMeta[columnId], rowB.columnFiltersMeta[columnId]);
-    }
-    // Provide a fallback for when the item ranks are equal
-    return dir === 0
-        ? reactTable.sortFns.alphanumeric(rowA, rowB, columnId)
-        : dir;
-};
-const MRT_SortFns = Object.assign(Object.assign({}, reactTable.sortFns), { fuzzy: fuzzy$1 });
-const rankGlobalFuzzy = (rowA, rowB) => Math.max(...Object.values(rowB.columnFiltersMeta).map((v) => v.rank)) -
-    Math.max(...Object.values(rowA.columnFiltersMeta).map((v) => v.rank));
+var classes$C = {"root":"MRT_TableBody-module_root__kGhRy","root-grid":"MRT_TableBody-module_root-grid__WdOGg","root-no-rows":"MRT_TableBody-module_root-no-rows__iyi9K","root-virtualized":"MRT_TableBody-module_root-virtualized__TxPAi","empty-row-tr-grid":"MRT_TableBody-module_empty-row-tr-grid__LTgxw","empty-row-td-grid":"MRT_TableBody-module_empty-row-td-grid__pzlgG","empty-row-td-content":"MRT_TableBody-module_empty-row-td-content__Cc2XW","pinned":"MRT_TableBody-module_pinned__XHpcs"};
+
+var classes$B = {"root":"MRT_TableBodyRow-module_root__2c3D4","root-grid":"MRT_TableBodyRow-module_root-grid__AwXTe","root-virtualized":"MRT_TableBodyRow-module_root-virtualized__zYgxq"};
+
+var classes$A = {"root":"MRT_TableBodyCell-module_root__Wf-zi","root-grid":"MRT_TableBodyCell-module_root-grid__zIuC-","root-virtualized":"MRT_TableBodyCell-module_root-virtualized__jLl8R","root-data-col":"MRT_TableBodyCell-module_root-data-col__HHcxc","root-nowrap":"MRT_TableBodyCell-module_root-nowrap__-k1Jo","root-cursor-pointer":"MRT_TableBodyCell-module_root-cursor-pointer__4kw7J","root-editable-hover":"MRT_TableBodyCell-module_root-editable-hover__2DKSa","root-cell-hover-reveal":"MRT_TableBodyCell-module_root-cell-hover-reveal__T1fAH","cell-hover-reveal":"MRT_TableBodyCell-module_cell-hover-reveal__Q-1Xj","overflowing":"MRT_TableBodyCell-module_overflowing__QcXP4"};
 
 const parseFromValuesOrFunc = (fn, arg) => (fn instanceof Function ? fn(arg) : fn);
 
-const getMRT_Rows = (table, all) => {
-    const { getCenterRows, getPrePaginatedRowModel, getRowModel, state, getTopRows, options: { createDisplayMode, enablePagination, enableRowPinning, manualPagination, positionCreatingRow, rowPinningDisplayMode, }, } = table;
-    const { creatingRow, pagination } = state;
-    const isRankingRows = getIsRankingRows(table);
-    let rows = [];
-    if (!isRankingRows) {
-        rows =
-            !enableRowPinning || (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))
-                ? all
-                    ? getPrePaginatedRowModel().rows
-                    : getRowModel().rows
-                : getCenterRows();
-    }
-    else {
-        // fuzzy ranking adjustments
-        rows = getPrePaginatedRowModel().rows.sort((a, b) => rankGlobalFuzzy(a, b));
-        if (enablePagination && !manualPagination && !all) {
-            const start = pagination.pageIndex * pagination.pageSize;
-            rows = rows.slice(start, start + pagination.pageSize);
-        }
-        if (enableRowPinning && !(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
-            // "re-center-ize" the rows (no top or bottom pinned rows unless sticky)
-            rows = rows.filter((row) => !row.getIsPinned());
-        }
-    }
-    // row pinning adjustments
-    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
-        const centerPinnedRowIds = rows
-            .filter((row) => row.getIsPinned())
-            .map((r) => r.id);
-        rows = [
-            ...getTopRows().filter((row) => !centerPinnedRowIds.includes(row.id)),
-            ...rows,
-        ];
-    }
-    // blank inserted creating row adjustments
-    if (positionCreatingRow !== undefined &&
-        creatingRow &&
-        createDisplayMode === 'row') {
-        const creatingRowIndex = !isNaN(+positionCreatingRow)
-            ? +positionCreatingRow
-            : positionCreatingRow === 'top'
-                ? 0
-                : rows.length;
-        rows = [
-            ...rows.slice(0, creatingRowIndex),
-            creatingRow,
-            ...rows.slice(creatingRowIndex),
-        ];
-    }
-    return rows;
-};
-const getCanRankRows = (table) => {
-    const { state, options: { enableGlobalFilterRankedResults, manualExpanding, manualFiltering, manualGrouping, manualSorting, }, } = table;
-    const { expanded, globalFilterFn } = state;
-    return (!manualExpanding &&
-        !manualFiltering &&
-        !manualGrouping &&
-        !manualSorting &&
-        enableGlobalFilterRankedResults &&
-        globalFilterFn === 'fuzzy' &&
-        expanded !== true &&
-        !Object.values(expanded).some(Boolean));
-};
-const getIsRankingRows = (table) => {
-    const { globalFilter, sorting } = table.state;
-    return (getCanRankRows(table) &&
-        globalFilter &&
-        !Object.values(sorting).some(Boolean));
-};
-const getIsRowSelected = ({ row, table, }) => {
-    const { options: { enableRowSelection }, } = table;
-    return (row.getIsSelected() ||
-        (parseFromValuesOrFunc(enableRowSelection, row) &&
-            row.getCanSelectSubRows() &&
-            row.getIsAllSubRowsSelected()));
-};
-const getMRT_RowSelectionHandler = ({ renderedRowIndex = 0, row, table, }) => (event, value) => {
-    var _a;
-    const { state, options: { enableBatchRowSelection, enableMultiRowSelection, enableRowPinning, manualPagination, rowPinningDisplayMode, }, refs: { lastSelectedRowId: lastSelectedRowId }, } = table;
-    const { pagination: { pageIndex, pageSize }, } = state;
-    const paginationOffset = manualPagination ? 0 : pageSize * pageIndex;
-    const wasCurrentRowChecked = getIsRowSelected({ row, table });
-    // toggle selection of this row
-    row.toggleSelected(value !== null && value !== void 0 ? value : !wasCurrentRowChecked);
-    const changedRowIds = new Set([row.id]);
-    // if shift key is pressed, select all rows between last selected and this one
-    if (enableBatchRowSelection &&
-        enableMultiRowSelection &&
-        event.nativeEvent.shiftKey &&
-        lastSelectedRowId.current !== null) {
-        const rows = getMRT_Rows(table, true);
-        const lastIndex = rows.findIndex((r) => r.id === lastSelectedRowId.current);
-        if (lastIndex !== -1) {
-            const isLastIndexChecked = getIsRowSelected({
-                row: rows === null || rows === void 0 ? void 0 : rows[lastIndex],
-                table,
-            });
-            const currentIndex = renderedRowIndex + paginationOffset;
-            const [start, end] = lastIndex < currentIndex
-                ? [lastIndex, currentIndex]
-                : [currentIndex, lastIndex];
-            // toggle selection of all rows between last selected and this one
-            // but only if the last selected row is not the same as the current one
-            if (wasCurrentRowChecked !== isLastIndexChecked) {
-                for (let i = start; i <= end; i++) {
-                    rows[i].toggleSelected(!wasCurrentRowChecked);
-                    changedRowIds.add(rows[i].id);
-                }
-            }
-        }
-    }
-    // record the last selected row id
-    lastSelectedRowId.current = row.id;
-    // if all sub rows were selected, unselect them
-    if (row.getCanSelectSubRows() && row.getIsAllSubRowsSelected()) {
-        (_a = row.subRows) === null || _a === void 0 ? void 0 : _a.forEach((r) => r.toggleSelected(false));
-    }
-    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
-        changedRowIds.forEach((rowId) => {
-            const rowToTogglePin = table.getRow(rowId);
-            rowToTogglePin.pin(!wasCurrentRowChecked // was not previously pinned or selected
-                ? (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('bottom'))
-                    ? 'bottom'
-                    : 'top'
-                : false);
-        });
-    }
-};
-const getMRT_SelectAllHandler = ({ table }) => (event, value, forceAll) => {
-    const { options: { enableRowPinning, rowPinningDisplayMode, selectAllMode }, refs: { lastSelectedRowId }, } = table;
-    if (selectAllMode === 'all' || forceAll) {
-        table.toggleAllRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
-    }
-    else {
-        table.toggleAllPageRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
-    }
-    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
-        table.setRowPinning({ bottom: [], top: [] });
-    }
-    lastSelectedRowId.current = null;
-};
-
-const useMRT_Rows = (table) => {
-    const { getRowModel, state, options: { data, enableGlobalFilterRankedResults, positionCreatingRow }, } = table;
-    const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting, } = state;
-    const rows = react.useMemo(() => getMRT_Rows(table), [
-        creatingRow,
-        data,
-        enableGlobalFilterRankedResults,
-        expanded,
-        getRowModel().rows,
-        globalFilter,
-        pagination.pageIndex,
-        pagination.pageSize,
-        positionCreatingRow,
-        rowPinning,
-        sorting,
-    ]);
-    return rows;
-};
-
-const extraIndexRangeExtractor = (range, draggingIndex) => {
-    const newIndexes = reactVirtual.defaultRangeExtractor(range);
-    if (draggingIndex === undefined)
-        return newIndexes;
-    if (draggingIndex >= 0 &&
-        draggingIndex < Math.max(range.startIndex - range.overscan, 0)) {
-        newIndexes.unshift(draggingIndex);
-    }
-    if (draggingIndex >= 0 && draggingIndex > range.endIndex + range.overscan) {
-        newIndexes.push(draggingIndex);
-    }
-    return newIndexes;
-};
-
-const useMRT_RowVirtualizer = (table, rows) => {
+const allowedTypes = ['string', 'number'];
+const allowedFilterVariants = ['text', 'autocomplete'];
+const MRT_TableBodyCellValue = ({ cell, renderedColumnIndex = 0, renderedRowIndex = 0, table, }) => {
     var _a, _b;
-    const { getRowModel, state, options: { enableRowVirtualization, renderDetailPanel, rowVirtualizerInstanceRef, rowVirtualizerOptions, }, refs: { tableContainerRef }, } = table;
-    const { density, draggingRow, expanded } = state;
-    if (!enableRowVirtualization)
-        return undefined;
-    const rowVirtualizerProps = parseFromValuesOrFunc(rowVirtualizerOptions, {
+    const { options: { enableFilterMatchHighlighting, mantineHighlightProps = { size: 'sm' }, }, state, } = table;
+    const { column, row } = cell;
+    const { columnDef } = column;
+    const { globalFilter, globalFilterFn } = state;
+    const filterValue = column.getFilterValue();
+    const highlightProps = parseFromValuesOrFunc(mantineHighlightProps, {
+        cell,
+        column,
+        row,
         table,
     });
-    const rowCount = (_a = rows === null || rows === void 0 ? void 0 : rows.length) !== null && _a !== void 0 ? _a : getRowModel().rows.length;
-    const defaultRowHeightByDensity = {
-        lg: 62.7,
-        md: 54.7,
-        sm: 48.7,
-        xl: 70.7,
-        xs: 42.7,
-    };
-    const normalRowHeight = (_b = defaultRowHeightByDensity[density]) !== null && _b !== void 0 ? _b : defaultRowHeightByDensity['md'];
-    const rowVirtualizer = reactVirtual.useVirtualizer(Object.assign({ count: renderDetailPanel ? rowCount * 2 : rowCount, estimateSize: (index) => renderDetailPanel && index % 2 === 1
-            ? expanded === true
-                ? 100
-                : 0
-            : normalRowHeight, getScrollElement: () => tableContainerRef.current, measureElement: typeof window !== 'undefined' &&
-            navigator.userAgent.indexOf('Firefox') === -1
-            ? (element) => element === null || element === void 0 ? void 0 : element.getBoundingClientRect().height
-            : undefined, overscan: 4, rangeExtractor: react.useCallback((range) => {
-            const current_index = getRowModel().rows.findIndex((row) => row.id === (draggingRow === null || draggingRow === void 0 ? void 0 : draggingRow.id));
-            return extraIndexRangeExtractor(range, current_index >= 0 ? current_index : 0);
-        }, [draggingRow]) }, rowVirtualizerProps));
-    rowVirtualizer.virtualRows = rowVirtualizer.getVirtualItems();
-    if (rowVirtualizerInstanceRef) {
-        // @ts-ignore
-        rowVirtualizerInstanceRef.current = rowVirtualizer;
+    let renderedCellValue = cell.getIsAggregated() && columnDef.AggregatedCell
+        ? columnDef.AggregatedCell({
+            cell,
+            column,
+            row,
+            table,
+        })
+        : row.getIsGrouped() && !cell.getIsGrouped()
+            ? null
+            : cell.getIsGrouped() && columnDef.GroupedCell
+                ? columnDef.GroupedCell({
+                    cell,
+                    column,
+                    row,
+                    table,
+                })
+                : undefined;
+    const isGroupedValue = renderedCellValue !== undefined;
+    if (!isGroupedValue) {
+        renderedCellValue = cell.renderValue();
     }
-    return rowVirtualizer;
+    if (enableFilterMatchHighlighting &&
+        columnDef.enableFilterMatchHighlighting !== false &&
+        renderedCellValue &&
+        allowedTypes.includes(typeof renderedCellValue) &&
+        ((filterValue &&
+            allowedTypes.includes(typeof filterValue) &&
+            allowedFilterVariants.includes(columnDef.filterVariant)) ||
+            (globalFilter &&
+                allowedTypes.includes(typeof globalFilter) &&
+                column.getCanGlobalFilter()))) {
+        let highlight = ((_b = (_a = column.getFilterValue()) !== null && _a !== void 0 ? _a : globalFilter) !== null && _b !== void 0 ? _b : '').toString();
+        if ((filterValue ? columnDef._filterFn : globalFilterFn) === 'fuzzy') {
+            highlight = highlight.split(' ');
+        }
+        renderedCellValue = (jsxRuntime.jsx(core.Highlight, Object.assign({ color: "yellow.3", highlight: highlight }, highlightProps, { children: renderedCellValue === null || renderedCellValue === void 0 ? void 0 : renderedCellValue.toString() })));
+    }
+    if (columnDef.Cell && !isGroupedValue) {
+        renderedCellValue = columnDef.Cell({
+            cell,
+            column,
+            renderedCellValue,
+            renderedColumnIndex,
+            renderedRowIndex,
+            row,
+            table,
+        });
+    }
+    return renderedCellValue;
+};
+
+const parseCSSVarId = (id) => id.replace(/[^a-zA-Z0-9]/g, '_');
+const getPrimaryShade = (theme) => {
+    var _a, _b;
+    return typeof theme.primaryShade === 'number'
+        ? theme.primaryShade
+        : ((_b = (_a = theme.primaryShade) === null || _a === void 0 ? void 0 : _a.dark) !== null && _b !== void 0 ? _b : 7);
+};
+const getPrimaryColor = (theme, shade) => theme.colors[theme.primaryColor][shade !== null && shade !== void 0 ? shade : getPrimaryShade(theme)];
+function dataVariable(name, value) {
+    const key = `data-${name}`;
+    switch (typeof value) {
+        case 'boolean':
+            return value ? { [key]: '' } : null;
+        case 'number':
+            return { [key]: `${value}` };
+        case 'string':
+            return { [key]: value };
+        default:
+            return null;
+    }
+}
+
+var classes$z = {"root":"MRT_CopyButton-module_root__mkXy4"};
+
+const MRT_CopyButton = (_a) => {
+    var { cell, children, table } = _a, rest = __rest(_a, ["cell", "children", "table"]);
+    const { options: { localization: { clickToCopy, copiedToClipboard }, mantineCopyButtonProps, }, } = table;
+    const { column, row } = cell;
+    const { columnDef } = column;
+    const arg = { cell, column, row, table };
+    const buttonProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineCopyButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineCopyButtonProps, arg)), rest);
+    return (jsxRuntime.jsx(core.CopyButton, { value: cell.getValue(), children: ({ copied, copy }) => {
+            var _a;
+            return (jsxRuntime.jsx(core.Tooltip, { color: copied ? 'green' : undefined, label: (_a = buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.title) !== null && _a !== void 0 ? _a : (copied ? copiedToClipboard : clickToCopy), openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.UnstyledButton, Object.assign({}, buttonProps, { className: clsx('mrt-copy-button', classes$z.root, buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.className), onClick: (e) => {
+                        e.stopPropagation();
+                        copy();
+                    }, role: "presentation", title: undefined, children: children })) }));
+        } }));
 };
 
 const MRT_EditCellTextInput = (_a) => {
     var _b;
     var { cell, table } = _a, rest = __rest(_a, ["cell", "table"]);
-    const { state, options: { createDisplayMode, editDisplayMode, mantineEditSelectProps, mantineEditTextInputProps, }, refs: { editInputRefs }, setCreatingRow, setEditingCell, setEditingRow, } = table;
+    const { options: { createDisplayMode, editDisplayMode, mantineEditSelectProps, mantineEditTextInputProps, }, refs: { editInputRefs }, setCreatingRow, setEditingCell, setEditingRow, state, } = table;
     const { column, row } = cell;
     const { columnDef } = column;
     const { creatingRow, editingRow } = state;
@@ -424,156 +309,11 @@ const MRT_EditCellTextInput = (_a) => {
         } })));
 };
 
-var classes$C = {"root":"MRT_TableDetailPanel-module_root__vQAlM","root-grid":"MRT_TableDetailPanel-module_root-grid__7UMC6","root-virtual-row":"MRT_TableDetailPanel-module_root-virtual-row__r-X4Z","inner":"MRT_TableDetailPanel-module_inner__o-Fk-","inner-grid":"MRT_TableDetailPanel-module_inner-grid__WLZgF","inner-expanded":"MRT_TableDetailPanel-module_inner-expanded__6tg9T","inner-virtual":"MRT_TableDetailPanel-module_inner-virtual__TItRy"};
-
-const MRT_TableDetailPanel = (_a) => {
-    var _b, _c;
-    var { parentRowRef, renderedRowIndex = 0, row, rowVirtualizer, striped, table, virtualRow } = _a, rest = __rest(_a, ["parentRowRef", "renderedRowIndex", "row", "rowVirtualizer", "striped", "table", "virtualRow"]);
-    const { state, getVisibleLeafColumns, options: { layoutMode, mantineDetailPanelProps, mantineTableBodyRowProps, renderDetailPanel, }, } = table;
-    const { isLoading } = state;
-    const tableRowProps = parseFromValuesOrFunc(mantineTableBodyRowProps, {
-        isDetailPanel: true,
-        row,
-        table,
-    });
-    const tableCellProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineDetailPanelProps, {
-        row,
-        table,
-    })), rest);
-    const internalEditComponents = row
-        .getAllCells()
-        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
-        .map((cell) => (jsxRuntime.jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
-    const DetailPanel = !isLoading &&
-        row.getIsExpanded() &&
-        (renderDetailPanel === null || renderDetailPanel === void 0 ? void 0 : renderDetailPanel({ internalEditComponents, row, table }));
-    return (jsxRuntime.jsx(core.TableTr, Object.assign({ "data-index": renderDetailPanel ? renderedRowIndex * 2 + 1 : renderedRowIndex, "data-striped": striped, ref: (node) => {
-            var _a;
-            if (node) {
-                (_a = rowVirtualizer === null || rowVirtualizer === void 0 ? void 0 : rowVirtualizer.measureElement) === null || _a === void 0 ? void 0 : _a.call(rowVirtualizer, node);
-            }
-        } }, tableRowProps, { __vars: Object.assign({ '--mrt-parent-row-height': virtualRow
-                ? `${(_c = (_b = parentRowRef.current) === null || _b === void 0 ? void 0 : _b.getBoundingClientRect()) === null || _c === void 0 ? void 0 : _c.height}px`
-                : undefined, '--mrt-virtual-row-start': virtualRow
-                ? `${virtualRow.start}px`
-                : undefined }, tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.__vars), className: clsx('mantine-Table-tr-detail-panel', classes$C.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], virtualRow && classes$C['root-virtual-row'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: jsxRuntime.jsx(core.TableTd, Object.assign({ colSpan: getVisibleLeafColumns().length, component: "td" }, tableCellProps, { __vars: {
-                '--mrt-inner-width': `${table.getTotalSize()}px`,
-            }, className: clsx('mantine-Table-td-detail-panel', classes$C.inner, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['inner-grid'], row.getIsExpanded() && classes$C['inner-expanded'], virtualRow && classes$C['inner-virtual']), p: row.getIsExpanded() && DetailPanel ? 'md' : 0, children: rowVirtualizer ? (row.getIsExpanded() && DetailPanel) : (jsxRuntime.jsx(core.Collapse, { expanded: row.getIsExpanded(), children: DetailPanel })) })) })));
-};
-
-const parseCSSVarId = (id) => id.replace(/[^a-zA-Z0-9]/g, '_');
-const getPrimaryShade = (theme) => {
-    var _a, _b;
-    return typeof theme.primaryShade === 'number'
-        ? theme.primaryShade
-        : ((_b = (_a = theme.primaryShade) === null || _a === void 0 ? void 0 : _a.dark) !== null && _b !== void 0 ? _b : 7);
-};
-const getPrimaryColor = (theme, shade) => theme.colors[theme.primaryColor][shade !== null && shade !== void 0 ? shade : getPrimaryShade(theme)];
-function dataVariable(name, value) {
-    const key = `data-${name}`;
-    switch (typeof value) {
-        case 'boolean':
-            return value ? { [key]: '' } : null;
-        case 'number':
-            return { [key]: `${value}` };
-        case 'string':
-            return { [key]: value };
-        default:
-            return null;
-    }
-}
-
-var classes$B = {"root":"MRT_CopyButton-module_root__mkXy4"};
-
-const MRT_CopyButton = (_a) => {
-    var { cell, children, table } = _a, rest = __rest(_a, ["cell", "children", "table"]);
-    const { options: { localization: { clickToCopy, copiedToClipboard }, mantineCopyButtonProps, }, } = table;
-    const { column, row } = cell;
-    const { columnDef } = column;
-    const arg = { cell, column, row, table };
-    const buttonProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineCopyButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineCopyButtonProps, arg)), rest);
-    return (jsxRuntime.jsx(core.CopyButton, { value: cell.getValue(), children: ({ copied, copy }) => {
-            var _a;
-            return (jsxRuntime.jsx(core.Tooltip, { color: copied ? 'green' : undefined, label: (_a = buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.title) !== null && _a !== void 0 ? _a : (copied ? copiedToClipboard : clickToCopy), openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.UnstyledButton, Object.assign({}, buttonProps, { className: clsx('mrt-copy-button', classes$B.root, buttonProps === null || buttonProps === void 0 ? void 0 : buttonProps.className), onClick: (e) => {
-                        e.stopPropagation();
-                        copy();
-                    }, role: "presentation", title: undefined, children: children })) }));
-        } }));
-};
-
-const allowedTypes = ['string', 'number'];
-const allowedFilterVariants = ['text', 'autocomplete'];
-const MRT_TableBodyCellValue = ({ cell, renderedColumnIndex = 0, renderedRowIndex = 0, table, }) => {
-    var _a, _b;
-    const { state, options: { enableFilterMatchHighlighting, mantineHighlightProps = { size: 'sm' }, }, } = table;
-    const { column, row } = cell;
-    const { columnDef } = column;
-    const { globalFilter, globalFilterFn } = state;
-    const filterValue = column.getFilterValue();
-    const highlightProps = parseFromValuesOrFunc(mantineHighlightProps, {
-        cell,
-        column,
-        row,
-        table,
-    });
-    let renderedCellValue = cell.getIsAggregated() && columnDef.AggregatedCell
-        ? columnDef.AggregatedCell({
-            cell,
-            column,
-            row,
-            table,
-        })
-        : row.getIsGrouped() && !cell.getIsGrouped()
-            ? null
-            : cell.getIsGrouped() && columnDef.GroupedCell
-                ? columnDef.GroupedCell({
-                    cell,
-                    column,
-                    row,
-                    table,
-                })
-                : undefined;
-    const isGroupedValue = renderedCellValue !== undefined;
-    if (!isGroupedValue) {
-        renderedCellValue = cell.renderValue();
-    }
-    if (enableFilterMatchHighlighting &&
-        columnDef.enableFilterMatchHighlighting !== false &&
-        renderedCellValue &&
-        allowedTypes.includes(typeof renderedCellValue) &&
-        ((filterValue &&
-            allowedTypes.includes(typeof filterValue) &&
-            allowedFilterVariants.includes(columnDef.filterVariant)) ||
-            (globalFilter &&
-                allowedTypes.includes(typeof globalFilter) &&
-                column.getCanGlobalFilter()))) {
-        let highlight = ((_b = (_a = column.getFilterValue()) !== null && _a !== void 0 ? _a : globalFilter) !== null && _b !== void 0 ? _b : '').toString();
-        if ((filterValue ? columnDef._filterFn : globalFilterFn) === 'fuzzy') {
-            highlight = highlight.split(' ');
-        }
-        renderedCellValue = (jsxRuntime.jsx(core.Highlight, Object.assign({ color: "yellow.3", highlight: highlight }, highlightProps, { children: renderedCellValue === null || renderedCellValue === void 0 ? void 0 : renderedCellValue.toString() })));
-    }
-    if (columnDef.Cell && !isGroupedValue) {
-        renderedCellValue = columnDef.Cell({
-            cell,
-            column,
-            renderedCellValue,
-            renderedColumnIndex,
-            renderedRowIndex,
-            row,
-            table,
-        });
-    }
-    return renderedCellValue;
-};
-
-var classes$A = {"root":"MRT_TableBodyCell-module_root__Wf-zi","root-grid":"MRT_TableBodyCell-module_root-grid__zIuC-","root-virtualized":"MRT_TableBodyCell-module_root-virtualized__jLl8R","root-data-col":"MRT_TableBodyCell-module_root-data-col__HHcxc","root-nowrap":"MRT_TableBodyCell-module_root-nowrap__-k1Jo","root-cursor-pointer":"MRT_TableBodyCell-module_root-cursor-pointer__4kw7J","root-editable-hover":"MRT_TableBodyCell-module_root-editable-hover__2DKSa","root-cell-hover-reveal":"MRT_TableBodyCell-module_root-cell-hover-reveal__T1fAH","cell-hover-reveal":"MRT_TableBodyCell-module_cell-hover-reveal__Q-1Xj","overflowing":"MRT_TableBodyCell-module_overflowing__QcXP4"};
-
 const MRT_TableBodyCell = (_a) => {
     var _b, _c, _d, _e, _f;
     var { cell, numRows = 1, renderedColumnIndex = 0, renderedRowIndex = 0, rowRef, table, virtualCell } = _a, rest = __rest(_a, ["cell", "numRows", "renderedColumnIndex", "renderedRowIndex", "rowRef", "table", "virtualCell"]);
     const direction = core.useDirection();
-    const { state, options: { columnResizeDirection, columnResizeMode, createDisplayMode, editDisplayMode, enableClickToCopy, enableColumnOrdering, enableColumnPinning, enableEditing, enableGrouping, layoutMode, mantineSkeletonProps, mantineTableBodyCellProps, }, refs: { editInputRefs }, setEditingCell, setHoveredColumn, } = table;
+    const { options: { columnResizeDirection, columnResizeMode, createDisplayMode, editDisplayMode, enableClickToCopy, enableColumnOrdering, enableColumnPinning, enableEditing, enableGrouping, layoutMode, mantineSkeletonProps, mantineTableBodyCellProps, }, refs: { editInputRefs }, setEditingCell, setHoveredColumn, state, } = table;
     const { columnResizing, creatingRow, density, draggingColumn, editingCell, editingRow, hoveredColumn, isLoading, showSkeletons, } = state;
     const { column, row } = cell;
     const { columnDef } = column;
@@ -697,15 +437,15 @@ const MRT_TableBodyCell = (_a) => {
         return jsxRuntime.jsx(MRT_TableBodyCellValue, Object.assign({}, cellValueProps));
     };
     return (jsxRuntime.jsx(core.TableTd, Object.assign({ "data-column-pinned": isColumnPinned || undefined, "data-dragging-column": isDraggingColumn || undefined, "data-first-end-pinned": (isColumnPinned === 'end' && column.getIsFirstColumn(isColumnPinned)) ||
-            undefined, "data-hovered-column-target": isHoveredColumn || undefined, "data-index": renderedColumnIndex, "data-last-start-pinned": (isColumnPinned === 'start' &&
+            undefined, "data-hovered-column-target": isHoveredColumn || undefined, "data-index": renderedColumnIndex, "data-last-row": renderedRowIndex === numRows - 1 || undefined, "data-last-start-pinned": (isColumnPinned === 'start' &&
             column.getIsLastColumn(isColumnPinned)) ||
-            undefined, "data-last-row": renderedRowIndex === numRows - 1 || undefined, "data-resizing": (columnResizeMode === 'onChange' &&
+            undefined, "data-resizing": (columnResizeMode === 'onChange' &&
             (columnResizing === null || columnResizing === void 0 ? void 0 : columnResizing.isResizingColumn) === column.id &&
             columnResizeDirection) ||
-            undefined }, tableCellProps, { __vars: Object.assign({ '--mrt-cell-align': (_c = tableCellProps.align) !== null && _c !== void 0 ? _c : (direction.dir === 'rtl' ? 'right' : 'left'), '--mrt-table-cell-start': isColumnPinned === 'start'
-                ? `${column.getStart(isColumnPinned)}`
-                : undefined, '--mrt-table-cell-end': isColumnPinned === 'end'
+            undefined }, tableCellProps, { __vars: Object.assign({ '--mrt-cell-align': (_c = tableCellProps.align) !== null && _c !== void 0 ? _c : (direction.dir === 'rtl' ? 'right' : 'left'), '--mrt-table-cell-end': isColumnPinned === 'end'
                 ? `${column.getAfter(isColumnPinned)}`
+                : undefined, '--mrt-table-cell-start': isColumnPinned === 'start'
+                ? `${column.getStart(isColumnPinned)}`
                 : undefined }, tableCellProps.__vars), className: clsx(classes$A.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$A['root-grid'], virtualCell && classes$A['root-virtualized'], isEditable &&
             editDisplayMode === 'cell' &&
             classes$A['root-cursor-pointer'], isEditable &&
@@ -717,12 +457,204 @@ const MRT_TableBodyCell = (_a) => {
 };
 const Memo_MRT_TableBodyCell = react.memo(MRT_TableBodyCell, (prev, next) => next.cell === prev.cell);
 
-var classes$z = {"root":"MRT_TableBodyRow-module_root__2c3D4","root-grid":"MRT_TableBodyRow-module_root-grid__AwXTe","root-virtualized":"MRT_TableBodyRow-module_root-virtualized__zYgxq"};
+var classes$y = {"root":"MRT_TableDetailPanel-module_root__vQAlM","root-grid":"MRT_TableDetailPanel-module_root-grid__7UMC6","root-virtual-row":"MRT_TableDetailPanel-module_root-virtual-row__r-X4Z","inner":"MRT_TableDetailPanel-module_inner__o-Fk-","inner-grid":"MRT_TableDetailPanel-module_inner-grid__WLZgF","inner-expanded":"MRT_TableDetailPanel-module_inner-expanded__6tg9T","inner-virtual":"MRT_TableDetailPanel-module_inner-virtual__TItRy"};
+
+const MRT_TableDetailPanel = (_a) => {
+    var _b, _c;
+    var { parentRowRef, renderedRowIndex = 0, row, rowVirtualizer, striped, table, virtualRow } = _a, rest = __rest(_a, ["parentRowRef", "renderedRowIndex", "row", "rowVirtualizer", "striped", "table", "virtualRow"]);
+    const { getVisibleLeafColumns, options: { layoutMode, mantineDetailPanelProps, mantineTableBodyRowProps, renderDetailPanel, }, state, } = table;
+    const { isLoading } = state;
+    const tableRowProps = parseFromValuesOrFunc(mantineTableBodyRowProps, {
+        isDetailPanel: true,
+        row,
+        table,
+    });
+    const tableCellProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineDetailPanelProps, {
+        row,
+        table,
+    })), rest);
+    const internalEditComponents = row
+        .getAllCells()
+        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
+        .map((cell) => (jsxRuntime.jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
+    const DetailPanel = !isLoading &&
+        row.getIsExpanded() &&
+        (renderDetailPanel === null || renderDetailPanel === void 0 ? void 0 : renderDetailPanel({ internalEditComponents, row, table }));
+    return (jsxRuntime.jsx(core.TableTr, Object.assign({ "data-index": renderDetailPanel ? renderedRowIndex * 2 + 1 : renderedRowIndex, "data-striped": striped, ref: (node) => {
+            var _a;
+            if (node) {
+                (_a = rowVirtualizer === null || rowVirtualizer === void 0 ? void 0 : rowVirtualizer.measureElement) === null || _a === void 0 ? void 0 : _a.call(rowVirtualizer, node);
+            }
+        } }, tableRowProps, { __vars: Object.assign({ '--mrt-parent-row-height': virtualRow
+                ? `${(_c = (_b = parentRowRef.current) === null || _b === void 0 ? void 0 : _b.getBoundingClientRect()) === null || _c === void 0 ? void 0 : _c.height}px`
+                : undefined, '--mrt-virtual-row-start': virtualRow
+                ? `${virtualRow.start}px`
+                : undefined }, tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.__vars), className: clsx('mantine-Table-tr-detail-panel', classes$y.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$y['root-grid'], virtualRow && classes$y['root-virtual-row'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: jsxRuntime.jsx(core.TableTd, Object.assign({ colSpan: getVisibleLeafColumns().length, component: "td" }, tableCellProps, { __vars: {
+                '--mrt-inner-width': `${table.getTotalSize()}px`,
+            }, className: clsx('mantine-Table-td-detail-panel', classes$y.inner, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$y['inner-grid'], row.getIsExpanded() && classes$y['inner-expanded'], virtualRow && classes$y['inner-virtual']), p: row.getIsExpanded() && DetailPanel ? 'md' : 0, children: rowVirtualizer ? (row.getIsExpanded() && DetailPanel) : (jsxRuntime.jsx(core.Collapse, { expanded: row.getIsExpanded(), children: DetailPanel })) })) })));
+};
+
+const fuzzy$1 = (rowA, rowB, columnId) => {
+    let dir = 0;
+    if (rowA.columnFiltersMeta[columnId]) {
+        dir = matchSorterUtils.compareItems(rowA.columnFiltersMeta[columnId], rowB.columnFiltersMeta[columnId]);
+    }
+    // Provide a fallback for when the item ranks are equal
+    return dir === 0
+        ? reactTable.sortFns.alphanumeric(rowA, rowB, columnId)
+        : dir;
+};
+const MRT_SortFns = Object.assign(Object.assign({}, reactTable.sortFns), { fuzzy: fuzzy$1 });
+const rankGlobalFuzzy = (rowA, rowB) => Math.max(...Object.values(rowB.columnFiltersMeta).map((v) => v.rank)) -
+    Math.max(...Object.values(rowA.columnFiltersMeta).map((v) => v.rank));
+
+const getMRT_Rows = (table, all) => {
+    const { getCenterRows, getPrePaginatedRowModel, getRowModel, getTopRows, options: { createDisplayMode, enablePagination, enableRowPinning, manualPagination, positionCreatingRow, rowPinningDisplayMode, }, state, } = table;
+    const { creatingRow, pagination } = state;
+    const isRankingRows = getIsRankingRows(table);
+    let rows = [];
+    if (!isRankingRows) {
+        rows =
+            !enableRowPinning || (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))
+                ? all
+                    ? getPrePaginatedRowModel().rows
+                    : getRowModel().rows
+                : getCenterRows();
+    }
+    else {
+        // fuzzy ranking adjustments
+        rows = getPrePaginatedRowModel().rows.sort((a, b) => rankGlobalFuzzy(a, b));
+        if (enablePagination && !manualPagination && !all) {
+            const start = pagination.pageIndex * pagination.pageSize;
+            rows = rows.slice(start, start + pagination.pageSize);
+        }
+        if (enableRowPinning && !(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
+            // "re-center-ize" the rows (no top or bottom pinned rows unless sticky)
+            rows = rows.filter((row) => !row.getIsPinned());
+        }
+    }
+    // row pinning adjustments
+    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky'))) {
+        const centerPinnedRowIds = rows
+            .filter((row) => row.getIsPinned())
+            .map((r) => r.id);
+        rows = [
+            ...getTopRows().filter((row) => !centerPinnedRowIds.includes(row.id)),
+            ...rows,
+        ];
+    }
+    // blank inserted creating row adjustments
+    if (positionCreatingRow !== undefined &&
+        creatingRow &&
+        createDisplayMode === 'row') {
+        const creatingRowIndex = !isNaN(+positionCreatingRow)
+            ? +positionCreatingRow
+            : positionCreatingRow === 'top'
+                ? 0
+                : rows.length;
+        rows = [
+            ...rows.slice(0, creatingRowIndex),
+            creatingRow,
+            ...rows.slice(creatingRowIndex),
+        ];
+    }
+    return rows;
+};
+const getCanRankRows = (table) => {
+    const { options: { enableGlobalFilterRankedResults, manualExpanding, manualFiltering, manualGrouping, manualSorting, }, state, } = table;
+    const { expanded, globalFilterFn } = state;
+    return (!manualExpanding &&
+        !manualFiltering &&
+        !manualGrouping &&
+        !manualSorting &&
+        enableGlobalFilterRankedResults &&
+        globalFilterFn === 'fuzzy' &&
+        expanded !== true &&
+        !Object.values(expanded).some(Boolean));
+};
+const getIsRankingRows = (table) => {
+    const { globalFilter, sorting } = table.state;
+    return (getCanRankRows(table) &&
+        globalFilter &&
+        !Object.values(sorting).some(Boolean));
+};
+const getIsRowSelected = ({ row, table, }) => {
+    const { options: { enableRowSelection }, } = table;
+    return (row.getIsSelected() ||
+        (parseFromValuesOrFunc(enableRowSelection, row) &&
+            row.getCanSelectSubRows() &&
+            row.getIsAllSubRowsSelected()));
+};
+const getMRT_RowSelectionHandler = ({ renderedRowIndex = 0, row, table, }) => (event, value) => {
+    var _a;
+    const { options: { enableBatchRowSelection, enableMultiRowSelection, enableRowPinning, manualPagination, rowPinningDisplayMode, }, refs: { lastSelectedRowId: lastSelectedRowId }, state, } = table;
+    const { pagination: { pageIndex, pageSize }, } = state;
+    const paginationOffset = manualPagination ? 0 : pageSize * pageIndex;
+    const wasCurrentRowChecked = getIsRowSelected({ row, table });
+    // toggle selection of this row
+    row.toggleSelected(value !== null && value !== void 0 ? value : !wasCurrentRowChecked);
+    const changedRowIds = new Set([row.id]);
+    // if shift key is pressed, select all rows between last selected and this one
+    if (enableBatchRowSelection &&
+        enableMultiRowSelection &&
+        event.nativeEvent.shiftKey &&
+        lastSelectedRowId.current !== null) {
+        const rows = getMRT_Rows(table, true);
+        const lastIndex = rows.findIndex((r) => r.id === lastSelectedRowId.current);
+        if (lastIndex !== -1) {
+            const isLastIndexChecked = getIsRowSelected({
+                row: rows === null || rows === void 0 ? void 0 : rows[lastIndex],
+                table,
+            });
+            const currentIndex = renderedRowIndex + paginationOffset;
+            const [start, end] = lastIndex < currentIndex
+                ? [lastIndex, currentIndex]
+                : [currentIndex, lastIndex];
+            // toggle selection of all rows between last selected and this one
+            // but only if the last selected row is not the same as the current one
+            if (wasCurrentRowChecked !== isLastIndexChecked) {
+                for (let i = start; i <= end; i++) {
+                    rows[i].toggleSelected(!wasCurrentRowChecked);
+                    changedRowIds.add(rows[i].id);
+                }
+            }
+        }
+    }
+    // record the last selected row id
+    lastSelectedRowId.current = row.id;
+    // if all sub rows were selected, unselect them
+    if (row.getCanSelectSubRows() && row.getIsAllSubRowsSelected()) {
+        (_a = row.subRows) === null || _a === void 0 ? void 0 : _a.forEach((r) => r.toggleSelected(false));
+    }
+    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
+        changedRowIds.forEach((rowId) => {
+            const rowToTogglePin = table.getRow(rowId);
+            rowToTogglePin.pin(!wasCurrentRowChecked // was not previously pinned or selected
+                ? (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('bottom'))
+                    ? 'bottom'
+                    : 'top'
+                : false);
+        });
+    }
+};
+const getMRT_SelectAllHandler = ({ table }) => (event, value, forceAll) => {
+    const { options: { enableRowPinning, rowPinningDisplayMode, selectAllMode }, refs: { lastSelectedRowId }, } = table;
+    if (selectAllMode === 'all' || forceAll) {
+        table.toggleAllRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
+    }
+    else {
+        table.toggleAllPageRowsSelected(value !== null && value !== void 0 ? value : event.target.checked);
+    }
+    if (enableRowPinning && (rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('select'))) {
+        table.setRowPinning({ bottom: [], top: [] });
+    }
+    lastSelectedRowId.current = null;
+};
 
 const MRT_TableBodyRow = (_a) => {
     var _b, _c, _d, _f;
     var { children, columnVirtualizer, numRows, pinnedRowIds, renderedRowIndex = 0, row, rowVirtualizer, table, tableProps, virtualRow } = _a, rest = __rest(_a, ["children", "columnVirtualizer", "numRows", "pinnedRowIds", "renderedRowIndex", "row", "rowVirtualizer", "table", "tableProps", "virtualRow"]);
-    const { state, options: { enableRowOrdering, enableRowPinning, enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyRowProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, setHoveredRow, } = table;
+    const { options: { enableRowOrdering, enableRowPinning, enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyRowProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, setHoveredRow, state, } = table;
     const { density, draggingColumn, draggingRow, editingCell, editingRow, hoveredRow, isFullScreen, rowPinning, } = state;
     const visibleCells = row.getVisibleCells();
     const { virtualColumns, virtualPaddingLeft, virtualPaddingRight } = columnVirtualizer !== null && columnVirtualizer !== void 0 ? columnVirtualizer : {};
@@ -795,7 +727,7 @@ const MRT_TableBodyRow = (_a) => {
                                 (enableStickyHeader || isFullScreen ? tableHeadHeight - 1 : 0)}`
                             : undefined, '--mrt-virtual-row-start': virtualRow
                         ? `${virtualRow.start}`
-                        : undefined }), className: clsx(classes$z.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$z['root-grid'], virtualRow && classes$z['root-virtualized'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsxRuntime.jsx(core.Box, { component: "td", display: "flex", w: virtualPaddingLeft })) : null, children
+                        : undefined }), className: clsx(classes$B.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$B['root-grid'], virtualRow && classes$B['root-virtualized'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsxRuntime.jsx(core.Box, { component: "td", display: "flex", w: virtualPaddingLeft })) : null, children
                         ? children
                         : (virtualColumns !== null && virtualColumns !== void 0 ? virtualColumns : row.getVisibleCells()).map((cellOrVirtualCell, renderedColumnIndex) => {
                             let cell = cellOrVirtualCell;
@@ -825,7 +757,7 @@ const MRT_TableBodyRow = (_a) => {
 };
 const Memo_MRT_TableBodyRow = react.memo(MRT_TableBodyRow, (prev, next) => prev.row === next.row);
 
-var classes$y = {"root":"MRT_ExpandButton-module_root__IFYio","root-ltr":"MRT_ExpandButton-module_root-ltr__FHNnp","chevron":"MRT_ExpandButton-module_chevron__XzC5P","right":"MRT_ExpandButton-module_right__-pC-A","up":"MRT_ExpandButton-module_up__TZGBo","root-rtl":"MRT_ExpandButton-module_root-rtl__zoudS"};
+var classes$x = {"root":"MRT_ExpandButton-module_root__IFYio","root-ltr":"MRT_ExpandButton-module_root-ltr__FHNnp","chevron":"MRT_ExpandButton-module_chevron__XzC5P","right":"MRT_ExpandButton-module_right__-pC-A","up":"MRT_ExpandButton-module_up__TZGBo","root-rtl":"MRT_ExpandButton-module_root-rtl__zoudS"};
 
 const MRT_ExpandButton = (_a) => {
     var _b, _c;
@@ -856,33 +788,101 @@ const MRT_ExpandButton = (_a) => {
     const rtl = direction.dir === 'rtl' || positionExpandColumn === 'last';
     return (jsxRuntime.jsx(core.Tooltip, { disabled: !canExpand && !DetailPanel, label: (_b = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.title) !== null && _b !== void 0 ? _b : (isExpanded ? localization.collapse : localization.expand), openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": localization.expand, color: "gray", disabled: !canExpand && !DetailPanel, variant: "subtle" }, actionIconProps, { __vars: {
                 '--mrt-row-depth': `${row.depth}`,
-            }, className: clsx('mrt-expand-button', classes$y.root, classes$y[`root-${rtl ? 'rtl' : 'ltr'}`], actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.className), onClick: handleToggleExpand, title: undefined, children: (_c = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.children) !== null && _c !== void 0 ? _c : (jsxRuntime.jsx(IconChevronDown, { className: clsx('mrt-expand-button-chevron', classes$y.chevron, !canExpand && !renderDetailPanel
-                    ? classes$y.right
+            }, className: clsx('mrt-expand-button', classes$x.root, classes$x[`root-${rtl ? 'rtl' : 'ltr'}`], actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.className), onClick: handleToggleExpand, title: undefined, children: (_c = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.children) !== null && _c !== void 0 ? _c : (jsxRuntime.jsx(IconChevronDown, { className: clsx('mrt-expand-button-chevron', classes$x.chevron, !canExpand && !renderDetailPanel
+                    ? classes$x.right
                     : isExpanded
-                        ? classes$y.up
+                        ? classes$x.up
                         : undefined) })) })) }));
 };
-
-var classes$x = {"root":"MRT_TableBody-module_root__kGhRy","root-grid":"MRT_TableBody-module_root-grid__WdOGg","root-no-rows":"MRT_TableBody-module_root-no-rows__iyi9K","root-virtualized":"MRT_TableBody-module_root-virtualized__TxPAi","empty-row-tr-grid":"MRT_TableBody-module_empty-row-tr-grid__LTgxw","empty-row-td-grid":"MRT_TableBody-module_empty-row-td-grid__pzlgG","empty-row-td-content":"MRT_TableBody-module_empty-row-td-content__Cc2XW","pinned":"MRT_TableBody-module_pinned__XHpcs"};
 
 const MRT_TableBodyEmptyRow = (_a) => {
     var _b, _c;
     var { table, tableProps } = _a, commonRowProps = __rest(_a, ["table", "tableProps"]);
-    const { state, options: { layoutMode, localization, renderDetailPanel, renderEmptyRowsFallback, }, refs: { tablePaperRef }, } = table;
+    const { options: { layoutMode, localization, renderDetailPanel, renderEmptyRowsFallback, }, refs: { tablePaperRef }, state, } = table;
     const { columnFilters, globalFilter } = state;
     const emptyRow = react.useMemo(() => reactTable.constructRow(table, 'mrt-row-empty', {}, 0, 0), []);
     const emptyRowProps = Object.assign(Object.assign({}, commonRowProps), { renderedRowIndex: 0, row: emptyRow, virtualRow: undefined });
-    return (jsxRuntime.jsxs(MRT_TableBodyRow, Object.assign({ className: clsx('mrt-table-body-row', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['empty-row-tr-grid']), table: table, tableProps: tableProps }, emptyRowProps, { children: [renderDetailPanel && (jsxRuntime.jsx(core.TableTd, { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['empty-row-td-grid']), colSpan: 1, children: jsxRuntime.jsx(MRT_ExpandButton, { row: emptyRow, table: table }) })), jsxRuntime.jsx("td", { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['empty-row-td-grid']), colSpan: table.getVisibleLeafColumns().length, children: (_b = renderEmptyRowsFallback === null || renderEmptyRowsFallback === void 0 ? void 0 : renderEmptyRowsFallback({ table })) !== null && _b !== void 0 ? _b : (jsxRuntime.jsx(core.Text, { __vars: {
+    return (jsxRuntime.jsxs(MRT_TableBodyRow, Object.assign({ className: clsx('mrt-table-body-row', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['empty-row-tr-grid']), table: table, tableProps: tableProps }, emptyRowProps, { children: [renderDetailPanel && (jsxRuntime.jsx(core.TableTd, { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['empty-row-td-grid']), colSpan: 1, children: jsxRuntime.jsx(MRT_ExpandButton, { row: emptyRow, table: table }) })), jsxRuntime.jsx("td", { className: clsx('mrt-table-body-cell', (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['empty-row-td-grid']), colSpan: table.getVisibleLeafColumns().length, children: (_b = renderEmptyRowsFallback === null || renderEmptyRowsFallback === void 0 ? void 0 : renderEmptyRowsFallback({ table })) !== null && _b !== void 0 ? _b : (jsxRuntime.jsx(core.Text, { __vars: {
                         '--mrt-paper-width': `${(_c = tablePaperRef.current) === null || _c === void 0 ? void 0 : _c.clientWidth}`,
-                    }, className: clsx(classes$x['empty-row-td-content']), children: globalFilter || columnFilters.length
+                    }, className: clsx(classes$C['empty-row-td-content']), children: globalFilter || columnFilters.length
                         ? localization.noResultsFound
                         : localization.noRecordsToDisplay })) })] })));
+};
+
+const useMRT_Rows = (table) => {
+    const { getRowModel, options: { data, enableGlobalFilterRankedResults, positionCreatingRow }, state, } = table;
+    const { creatingRow, expanded, globalFilter, pagination, rowPinning, sorting, } = state;
+    const rows = react.useMemo(() => getMRT_Rows(table), [
+        creatingRow,
+        data,
+        enableGlobalFilterRankedResults,
+        expanded,
+        getRowModel().rows,
+        globalFilter,
+        pagination.pageIndex,
+        pagination.pageSize,
+        positionCreatingRow,
+        rowPinning,
+        sorting,
+    ]);
+    return rows;
+};
+
+const extraIndexRangeExtractor = (range, draggingIndex) => {
+    const newIndexes = reactVirtual.defaultRangeExtractor(range);
+    if (draggingIndex === undefined)
+        return newIndexes;
+    if (draggingIndex >= 0 &&
+        draggingIndex < Math.max(range.startIndex - range.overscan, 0)) {
+        newIndexes.unshift(draggingIndex);
+    }
+    if (draggingIndex >= 0 && draggingIndex > range.endIndex + range.overscan) {
+        newIndexes.push(draggingIndex);
+    }
+    return newIndexes;
+};
+
+const useMRT_RowVirtualizer = (table, rows) => {
+    var _a, _b;
+    const { getRowModel, options: { enableRowVirtualization, renderDetailPanel, rowVirtualizerInstanceRef, rowVirtualizerOptions, }, refs: { tableContainerRef }, state, } = table;
+    const { density, draggingRow, expanded } = state;
+    if (!enableRowVirtualization)
+        return undefined;
+    const rowVirtualizerProps = parseFromValuesOrFunc(rowVirtualizerOptions, {
+        table,
+    });
+    const rowCount = (_a = rows === null || rows === void 0 ? void 0 : rows.length) !== null && _a !== void 0 ? _a : getRowModel().rows.length;
+    const defaultRowHeightByDensity = {
+        lg: 62.7,
+        md: 54.7,
+        sm: 48.7,
+        xl: 70.7,
+        xs: 42.7,
+    };
+    const normalRowHeight = (_b = defaultRowHeightByDensity[density]) !== null && _b !== void 0 ? _b : defaultRowHeightByDensity['md'];
+    const rowVirtualizer = reactVirtual.useVirtualizer(Object.assign({ count: renderDetailPanel ? rowCount * 2 : rowCount, estimateSize: (index) => renderDetailPanel && index % 2 === 1
+            ? expanded === true
+                ? 100
+                : 0
+            : normalRowHeight, getScrollElement: () => tableContainerRef.current, measureElement: typeof window !== 'undefined' &&
+            navigator.userAgent.indexOf('Firefox') === -1
+            ? (element) => element === null || element === void 0 ? void 0 : element.getBoundingClientRect().height
+            : undefined, overscan: 4, rangeExtractor: react.useCallback((range) => {
+            const current_index = getRowModel().rows.findIndex((row) => row.id === (draggingRow === null || draggingRow === void 0 ? void 0 : draggingRow.id));
+            return extraIndexRangeExtractor(range, current_index >= 0 ? current_index : 0);
+        }, [draggingRow]) }, rowVirtualizerProps));
+    rowVirtualizer.virtualRows = rowVirtualizer.getVirtualItems();
+    if (rowVirtualizerInstanceRef) {
+        // @ts-ignore
+        rowVirtualizerInstanceRef.current = rowVirtualizer;
+    }
+    return rowVirtualizer;
 };
 
 const MRT_TableBody = (_a) => {
     var _b, _c, _d;
     var { columnVirtualizer, table, tableProps } = _a, rest = __rest(_a, ["columnVirtualizer", "table", "tableProps"]);
-    const { getBottomRows, getIsSomeRowsPinned, getRowModel, state, getTopRows, options: { enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, } = table;
+    const { getBottomRows, getIsSomeRowsPinned, getRowModel, getTopRows, options: { enableStickyFooter, enableStickyHeader, layoutMode, mantineTableBodyProps, memoMode, renderDetailPanel, rowPinningDisplayMode, }, refs: { tableFooterRef, tableHeadRef }, state, } = table;
     const { isFullScreen, rowPinning } = state;
     const tableBodyProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableBodyProps, { table })), rest);
     const tableHeadHeight = ((enableStickyHeader || isFullScreen) &&
@@ -907,13 +907,13 @@ const MRT_TableBody = (_a) => {
         tableProps,
     };
     return (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [!(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky')) &&
-                getIsSomeRowsPinned('top') && (jsxRuntime.jsx(core.TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-head-height': `${tableHeadHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$x.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getTopRows().map((row, renderedRowIndex) => {
+                getIsSomeRowsPinned('top') && (jsxRuntime.jsx(core.TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-head-height': `${tableHeadHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$C.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getTopRows().map((row, renderedRowIndex) => {
                     const rowProps = Object.assign(Object.assign({}, commonRowProps), { renderedRowIndex,
                         row });
                     return memoMode === 'rows' ? (jsxRuntime.jsx(Memo_MRT_TableBodyRow, Object.assign({}, rowProps), row.id)) : (jsxRuntime.jsx(MRT_TableBodyRow, Object.assign({}, rowProps), row.id));
                 }) }))), jsxRuntime.jsx(core.TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-body-height': rowVirtualizer
                         ? `${rowVirtualizer.getTotalSize()}px`
-                        : undefined }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$x.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['root-grid'], !rows.length && classes$x['root-no-rows'], rowVirtualizer && classes$x['root-virtualized'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: (_d = tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.children) !== null && _d !== void 0 ? _d : (!rows.length ? (jsxRuntime.jsx(MRT_TableBodyEmptyRow, Object.assign({}, commonRowProps))) : (jsxRuntime.jsx(jsxRuntime.Fragment, { children: (virtualRows !== null && virtualRows !== void 0 ? virtualRows : rows).map((rowOrVirtualRow, renderedRowIndex) => {
+                        : undefined }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$C.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], !rows.length && classes$C['root-no-rows'], rowVirtualizer && classes$C['root-virtualized'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: (_d = tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.children) !== null && _d !== void 0 ? _d : (!rows.length ? (jsxRuntime.jsx(MRT_TableBodyEmptyRow, Object.assign({}, commonRowProps))) : (jsxRuntime.jsx(jsxRuntime.Fragment, { children: (virtualRows !== null && virtualRows !== void 0 ? virtualRows : rows).map((rowOrVirtualRow, renderedRowIndex) => {
                         if (rowVirtualizer) {
                             if (renderDetailPanel) {
                                 if (rowOrVirtualRow.index % 2 === 1) {
@@ -939,7 +939,7 @@ const MRT_TableBody = (_a) => {
                         const key = `${row.id}-${row.index}`;
                         return memoMode === 'rows' ? (jsxRuntime.jsx(Memo_MRT_TableBodyRow, Object.assign({}, props), key)) : (jsxRuntime.jsx(MRT_TableBodyRow, Object.assign({}, props), key));
                     }) }))) })), !(rowPinningDisplayMode === null || rowPinningDisplayMode === void 0 ? void 0 : rowPinningDisplayMode.includes('sticky')) &&
-                getIsSomeRowsPinned('bottom') && (jsxRuntime.jsx(core.TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-footer-height': `${tableFooterHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$x.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$x['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getBottomRows().map((row, renderedRowIndex) => {
+                getIsSomeRowsPinned('bottom') && (jsxRuntime.jsx(core.TableTbody, Object.assign({}, tableBodyProps, { __vars: Object.assign({ '--mrt-table-footer-height': `${tableFooterHeight}` }, tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.__vars), className: clsx(classes$C.pinned, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$C['root-grid'], tableBodyProps === null || tableBodyProps === void 0 ? void 0 : tableBodyProps.className), children: getBottomRows().map((row, renderedRowIndex) => {
                     const props = Object.assign(Object.assign({}, commonRowProps), { renderedRowIndex,
                         row });
                     return memoMode === 'rows' ? (jsxRuntime.jsx(Memo_MRT_TableBodyRow, Object.assign({}, props), row.id)) : (jsxRuntime.jsx(MRT_TableBodyRow, Object.assign({}, props), row.id));
@@ -1004,7 +1004,7 @@ const MRT_RowPinButton = (_a) => {
 
 const MRT_TableBodyRowPinButton = (_a) => {
     var { row, table } = _a, rest = __rest(_a, ["row", "table"]);
-    const { state, options: { enableRowPinning, rowPinningDisplayMode }, } = table;
+    const { options: { enableRowPinning, rowPinningDisplayMode }, state, } = table;
     const { density } = state;
     const canPin = parseFromValuesOrFunc(enableRowPinning, row);
     if (!canPin)
@@ -1031,7 +1031,7 @@ var classes$u = {"root":"MRT_EditActionButtons-module_root__BfxVZ"};
 
 const MRT_EditActionButtons = (_a) => {
     var { row, table, variant = 'icon' } = _a, rest = __rest(_a, ["row", "table", "variant"]);
-    const { state, options: { icons: { IconCircleX, IconDeviceFloppy }, localization, onCreatingRowCancel, onCreatingRowSave, onEditingRowCancel, onEditingRowSave, }, refs: { editInputRefs }, setCreatingRow, setEditingRow, } = table;
+    const { options: { icons: { IconCircleX, IconDeviceFloppy }, localization, onCreatingRowCancel, onCreatingRowSave, onEditingRowCancel, onEditingRowSave, }, refs: { editInputRefs }, setCreatingRow, setEditingRow, state, } = table;
     const { creatingRow, editingRow, isSaving } = state;
     const isCreating = (creatingRow === null || creatingRow === void 0 ? void 0 : creatingRow.id) === row.id;
     const isEditing = (editingRow === null || editingRow === void 0 ? void 0 : editingRow.id) === row.id;
@@ -1081,7 +1081,7 @@ var classes$t = {"root":"MRT_ExpandAllButton-module_root__gkBZD","chevron":"MRT_
 const MRT_ExpandAllButton = (_a) => {
     var _b, _c;
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getCanSomeRowsExpand, getIsAllRowsExpanded, getIsSomeRowsExpanded, state, options: { icons: { IconChevronsDown }, localization, mantineExpandAllButtonProps, renderDetailPanel, }, toggleAllRowsExpanded, } = table;
+    const { getCanSomeRowsExpand, getIsAllRowsExpanded, getIsSomeRowsExpanded, options: { icons: { IconChevronsDown }, localization, mantineExpandAllButtonProps, renderDetailPanel, }, state, toggleAllRowsExpanded, } = table;
     const { density, isLoading } = state;
     const actionIconProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineExpandAllButtonProps, {
         table,
@@ -1095,6 +1095,10 @@ const MRT_ExpandAllButton = (_a) => {
                         ? classes$t.right
                         : undefined) })) })) }));
 };
+
+var classes$s = {"root":"MRT_ShowHideColumnsMenu-module_root__2UWak","content":"MRT_ShowHideColumnsMenu-module_content__ehkWQ"};
+
+var classes$r = {"root":"MRT_ShowHideColumnsMenuItems-module_root__wYgv-","menu":"MRT_ShowHideColumnsMenuItems-module_menu__CeATR","grab":"MRT_ShowHideColumnsMenuItems-module_grab__a-d-y","pin":"MRT_ShowHideColumnsMenuItems-module_pin__P437b","switch":"MRT_ShowHideColumnsMenuItems-module_switch__tMsdt","header":"MRT_ShowHideColumnsMenuItems-module_header__xVkKb"};
 
 const getColumnId = (columnDef) => { var _a, _b, _c, _d; return (_d = (_a = columnDef.id) !== null && _a !== void 0 ? _a : (_c = (_b = columnDef.accessorKey) === null || _b === void 0 ? void 0 : _b.toString) === null || _c === void 0 ? void 0 : _c.call(_b)) !== null && _d !== void 0 ? _d : columnDef.header; };
 const getAllLeafColumnDefs = (columns) => {
@@ -1168,6 +1172,58 @@ const getDefaultColumnFilterFn = (columnDef) => {
     return 'fuzzy';
 };
 
+const MRT_ShowHideColumnsMenuItems = ({ allColumns, column, hoveredColumn, setHoveredColumn, table, }) => {
+    var _a;
+    const theme = core.useMantineTheme();
+    const { options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, setColumnOrder, state, } = table;
+    const { columnOrder } = state;
+    const { columnDef } = column;
+    const { columnDefType } = columnDef;
+    const switchChecked = (columnDefType !== 'group' && column.getIsVisible()) ||
+        (columnDefType === 'group' &&
+            column.getLeafColumns().some((col) => col.getIsVisible()));
+    const handleToggleColumnHidden = (column) => {
+        var _a, _b;
+        if (columnDefType === 'group') {
+            (_b = (_a = column === null || column === void 0 ? void 0 : column.columns) === null || _a === void 0 ? void 0 : _a.forEach) === null || _b === void 0 ? void 0 : _b.call(_a, (childColumn) => {
+                childColumn.toggleVisibility(!switchChecked);
+            });
+        }
+        else {
+            column.toggleVisibility();
+        }
+    };
+    const menuItemRef = react.useRef(null);
+    const [isDragging, setIsDragging] = react.useState(false);
+    const handleDragStart = (e) => {
+        setIsDragging(true);
+        e.dataTransfer.setDragImage(menuItemRef.current, 0, 0);
+    };
+    const handleDragEnd = (_e) => {
+        setIsDragging(false);
+        setHoveredColumn(null);
+        if (hoveredColumn) {
+            setColumnOrder(reorderColumn(column, hoveredColumn, columnOrder));
+        }
+    };
+    const handleDragEnter = (_e) => {
+        if (!isDragging && columnDef.enableColumnOrdering !== false) {
+            setHoveredColumn(column);
+        }
+    };
+    if (!columnDef.header || columnDef.visibleInShowHideMenu === false) {
+        return null;
+    }
+    return (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, Object.assign({ className: classes$r.root, component: "span", onDragEnter: handleDragEnter, ref: menuItemRef, style: {
+                    '--_column-depth': `${(column.depth + 0.5) * 2}rem`,
+                    '--_hover-color': getPrimaryColor(theme),
+                } }, dataVariable('dragging', isDragging), dataVariable('order-hovered', (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === column.id), { children: jsxRuntime.jsxs(core.Box, { className: classes$r.menu, children: [columnDefType !== 'group' &&
+                            enableColumnOrdering &&
+                            !allColumns.some((col) => col.columnDef.columnDefType === 'group') &&
+                            (columnDef.enableColumnOrdering !== false ? (jsxRuntime.jsx(MRT_GrabHandleButton, { onDragEnd: handleDragEnd, onDragStart: handleDragStart, table: table })) : (jsxRuntime.jsx(core.Box, { className: classes$r.grab }))), enableColumnPinning &&
+                            (column.getCanPin() ? (jsxRuntime.jsx(MRT_ColumnPinningButtons, { column: column, table: table })) : (jsxRuntime.jsx(core.Box, { className: classes$r.pin }))), enableHiding ? (jsxRuntime.jsx(core.Tooltip, { label: localization.toggleVisibility, openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.Switch, { checked: switchChecked, className: classes$r.switch, disabled: !column.getCanHide(), label: columnDef.header, onChange: () => handleToggleColumnHidden(column) }) })) : (jsxRuntime.jsx(core.Text, { className: classes$r.header, children: columnDef.header }))] }) })), (_a = column.columns) === null || _a === void 0 ? void 0 : _a.map((c, i) => (jsxRuntime.jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: c, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${i}-${c.id}`)))] }));
+};
+
 function defaultDisplayColumnProps({ header, id, size, tableOptions, }) {
     const { defaultDisplayColumn, displayColumnDefOptions, localization } = tableOptions;
     return Object.assign(Object.assign(Object.assign(Object.assign({}, defaultDisplayColumn), { header: header ? localization[header] : '', size }), displayColumnDefOptions === null || displayColumnDefOptions === void 0 ? void 0 : displayColumnDefOptions[id]), { id });
@@ -1233,64 +1289,8 @@ const getDefaultColumnOrderIds = (tableOptions, reset = false) => {
     ];
 };
 
-var classes$s = {"root":"MRT_ShowHideColumnsMenuItems-module_root__wYgv-","menu":"MRT_ShowHideColumnsMenuItems-module_menu__CeATR","grab":"MRT_ShowHideColumnsMenuItems-module_grab__a-d-y","pin":"MRT_ShowHideColumnsMenuItems-module_pin__P437b","switch":"MRT_ShowHideColumnsMenuItems-module_switch__tMsdt","header":"MRT_ShowHideColumnsMenuItems-module_header__xVkKb"};
-
-const MRT_ShowHideColumnsMenuItems = ({ allColumns, column, hoveredColumn, setHoveredColumn, table, }) => {
-    var _a;
-    const theme = core.useMantineTheme();
-    const { state, options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, setColumnOrder, } = table;
-    const { columnOrder } = state;
-    const { columnDef } = column;
-    const { columnDefType } = columnDef;
-    const switchChecked = (columnDefType !== 'group' && column.getIsVisible()) ||
-        (columnDefType === 'group' &&
-            column.getLeafColumns().some((col) => col.getIsVisible()));
-    const handleToggleColumnHidden = (column) => {
-        var _a, _b;
-        if (columnDefType === 'group') {
-            (_b = (_a = column === null || column === void 0 ? void 0 : column.columns) === null || _a === void 0 ? void 0 : _a.forEach) === null || _b === void 0 ? void 0 : _b.call(_a, (childColumn) => {
-                childColumn.toggleVisibility(!switchChecked);
-            });
-        }
-        else {
-            column.toggleVisibility();
-        }
-    };
-    const menuItemRef = react.useRef(null);
-    const [isDragging, setIsDragging] = react.useState(false);
-    const handleDragStart = (e) => {
-        setIsDragging(true);
-        e.dataTransfer.setDragImage(menuItemRef.current, 0, 0);
-    };
-    const handleDragEnd = (_e) => {
-        setIsDragging(false);
-        setHoveredColumn(null);
-        if (hoveredColumn) {
-            setColumnOrder(reorderColumn(column, hoveredColumn, columnOrder));
-        }
-    };
-    const handleDragEnter = (_e) => {
-        if (!isDragging && columnDef.enableColumnOrdering !== false) {
-            setHoveredColumn(column);
-        }
-    };
-    if (!columnDef.header || columnDef.visibleInShowHideMenu === false) {
-        return null;
-    }
-    return (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, Object.assign({ className: classes$s.root, component: "span", onDragEnter: handleDragEnter, ref: menuItemRef, style: {
-                    '--_column-depth': `${(column.depth + 0.5) * 2}rem`,
-                    '--_hover-color': getPrimaryColor(theme),
-                } }, dataVariable('dragging', isDragging), dataVariable('order-hovered', (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === column.id), { children: jsxRuntime.jsxs(core.Box, { className: classes$s.menu, children: [columnDefType !== 'group' &&
-                            enableColumnOrdering &&
-                            !allColumns.some((col) => col.columnDef.columnDefType === 'group') &&
-                            (columnDef.enableColumnOrdering !== false ? (jsxRuntime.jsx(MRT_GrabHandleButton, { onDragEnd: handleDragEnd, onDragStart: handleDragStart, table: table })) : (jsxRuntime.jsx(core.Box, { className: classes$s.grab }))), enableColumnPinning &&
-                            (column.getCanPin() ? (jsxRuntime.jsx(MRT_ColumnPinningButtons, { column: column, table: table })) : (jsxRuntime.jsx(core.Box, { className: classes$s.pin }))), enableHiding ? (jsxRuntime.jsx(core.Tooltip, { label: localization.toggleVisibility, openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.Switch, { checked: switchChecked, className: classes$s.switch, disabled: !column.getCanHide(), label: columnDef.header, onChange: () => handleToggleColumnHidden(column) }) })) : (jsxRuntime.jsx(core.Text, { className: classes$s.header, children: columnDef.header }))] }) })), (_a = column.columns) === null || _a === void 0 ? void 0 : _a.map((c, i) => (jsxRuntime.jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: c, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${i}-${c.id}`)))] }));
-};
-
-var classes$r = {"root":"MRT_ShowHideColumnsMenu-module_root__2UWak","content":"MRT_ShowHideColumnsMenu-module_content__ehkWQ"};
-
 const MRT_ShowHideColumnsMenu = ({ table, }) => {
-    const { getAllColumns, getAllLeafColumns, getCenterLeafColumns, getIsAllColumnsVisible, getIsSomeColumnsPinned, getIsSomeColumnsVisible, getStartLeafColumns, getEndLeafColumns, state, options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, } = table;
+    const { getAllColumns, getAllLeafColumns, getCenterLeafColumns, getEndLeafColumns, getIsAllColumnsVisible, getIsSomeColumnsPinned, getIsSomeColumnsVisible, getStartLeafColumns, options: { enableColumnOrdering, enableColumnPinning, enableHiding, localization, }, state, } = table;
     const { columnOrder, columnPinning } = state;
     const handleToggleAllColumns = (value) => {
         getAllLeafColumns()
@@ -1317,7 +1317,7 @@ const MRT_ShowHideColumnsMenu = ({ table, }) => {
         getEndLeafColumns(),
     ]);
     const [hoveredColumn, setHoveredColumn] = react.useState(null);
-    return (jsxRuntime.jsxs(core.Menu.Dropdown, { className: clsx('mrt-show-hide-columns-menu', classes$r.root), children: [jsxRuntime.jsxs(core.Flex, { className: classes$r.content, children: [enableHiding && (jsxRuntime.jsx(core.Button, { disabled: !getIsSomeColumnsVisible(), onClick: () => handleToggleAllColumns(false), variant: "subtle", children: localization.hideAll })), enableColumnOrdering && (jsxRuntime.jsx(core.Button, { onClick: () => table.setColumnOrder(getDefaultColumnOrderIds(Object.assign(Object.assign({}, table.options), { state }), true)), variant: "subtle", children: localization.resetOrder })), enableColumnPinning && (jsxRuntime.jsx(core.Button, { disabled: !getIsSomeColumnsPinned(), onClick: () => table.resetColumnPinning(true), variant: "subtle", children: localization.unpinAll })), enableHiding && (jsxRuntime.jsx(core.Button, { disabled: getIsAllColumnsVisible(), onClick: () => handleToggleAllColumns(true), variant: "subtle", children: localization.showAll }))] }), jsxRuntime.jsx(core.Menu.Divider, {}), allColumns.map((column, index) => (jsxRuntime.jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: column, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${index}-${column.id}`)))] }));
+    return (jsxRuntime.jsxs(core.Menu.Dropdown, { className: clsx('mrt-show-hide-columns-menu', classes$s.root), children: [jsxRuntime.jsxs(core.Flex, { className: classes$s.content, children: [enableHiding && (jsxRuntime.jsx(core.Button, { disabled: !getIsSomeColumnsVisible(), onClick: () => handleToggleAllColumns(false), variant: "subtle", children: localization.hideAll })), enableColumnOrdering && (jsxRuntime.jsx(core.Button, { onClick: () => table.setColumnOrder(getDefaultColumnOrderIds(Object.assign(Object.assign({}, table.options), { state }), true)), variant: "subtle", children: localization.resetOrder })), enableColumnPinning && (jsxRuntime.jsx(core.Button, { disabled: !getIsSomeColumnsPinned(), onClick: () => table.resetColumnPinning(true), variant: "subtle", children: localization.unpinAll })), enableHiding && (jsxRuntime.jsx(core.Button, { disabled: getIsAllColumnsVisible(), onClick: () => handleToggleAllColumns(true), variant: "subtle", children: localization.showAll }))] }), jsxRuntime.jsx(core.Menu.Divider, {}), allColumns.map((column, index) => (jsxRuntime.jsx(MRT_ShowHideColumnsMenuItems, { allColumns: allColumns, column: column, hoveredColumn: hoveredColumn, setHoveredColumn: setHoveredColumn, table: table }, `${index}-${column.id}`)))] }));
 };
 
 const MRT_ShowHideColumnsButton = (_a) => {
@@ -1332,19 +1332,19 @@ const next = {
     xs: 'xl',
 };
 const MRT_ToggleDensePaddingButton = (_a) => {
-    var { table: { state, options: { icons: { IconBaselineDensityLarge, IconBaselineDensityMedium, IconBaselineDensitySmall, }, localization: { toggleDensity }, }, setDensity, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    var { table: { options: { icons: { IconBaselineDensityLarge, IconBaselineDensityMedium, IconBaselineDensitySmall, }, localization: { toggleDensity }, }, setDensity, state, }, title } = _a, rest = __rest(_a, ["table", "title"]);
     const { density } = state;
     return (jsxRuntime.jsx(core.Tooltip, { label: title !== null && title !== void 0 ? title : toggleDensity, withinPortal: true, children: jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": title !== null && title !== void 0 ? title : toggleDensity, color: "gray", onClick: () => setDensity((current) => next[current]), size: "lg", variant: "subtle" }, rest, { children: density === 'xs' ? (jsxRuntime.jsx(IconBaselineDensitySmall, {})) : density === 'md' ? (jsxRuntime.jsx(IconBaselineDensityMedium, {})) : (jsxRuntime.jsx(IconBaselineDensityLarge, {})) })) }));
 };
 
 const MRT_ToggleFiltersButton = (_a) => {
-    var { table: { state, options: { icons: { IconFilter, IconFilterOff }, localization: { showHideFilters }, }, setShowColumnFilters, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    var { table: { options: { icons: { IconFilter, IconFilterOff }, localization: { showHideFilters }, }, setShowColumnFilters, state, }, title } = _a, rest = __rest(_a, ["table", "title"]);
     const { showColumnFilters } = state;
     return (jsxRuntime.jsx(core.Tooltip, { label: title !== null && title !== void 0 ? title : showHideFilters, withinPortal: true, children: jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": title !== null && title !== void 0 ? title : showHideFilters, color: "gray", onClick: () => setShowColumnFilters((current) => !current), size: "lg", variant: "subtle" }, rest, { children: showColumnFilters ? jsxRuntime.jsx(IconFilterOff, {}) : jsxRuntime.jsx(IconFilter, {}) })) }));
 };
 
 const MRT_ToggleFullScreenButton = (_a) => {
-    var { table: { state, options: { icons: { IconMaximize, IconMinimize }, localization: { toggleFullScreen }, }, setIsFullScreen, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    var { table: { options: { icons: { IconMaximize, IconMinimize }, localization: { toggleFullScreen }, }, setIsFullScreen, state, }, title } = _a, rest = __rest(_a, ["table", "title"]);
     const { isFullScreen } = state;
     const [tooltipOpened, setTooltipOpened] = react.useState(false);
     const handleToggleFullScreen = () => {
@@ -1355,7 +1355,7 @@ const MRT_ToggleFullScreenButton = (_a) => {
 };
 
 const MRT_ToggleGlobalFilterButton = (_a) => {
-    var { table: { state, options: { icons: { IconSearch, IconSearchOff }, localization: { showHideSearch }, }, refs: { searchInputRef }, setShowGlobalFilter, }, title } = _a, rest = __rest(_a, ["table", "title"]);
+    var { table: { options: { icons: { IconSearch, IconSearchOff }, localization: { showHideSearch }, }, refs: { searchInputRef }, setShowGlobalFilter, state, }, title } = _a, rest = __rest(_a, ["table", "title"]);
     const { globalFilter, showGlobalFilter } = state;
     const handleToggleSearch = () => {
         setShowGlobalFilter(!showGlobalFilter);
@@ -1378,7 +1378,7 @@ const MRT_RowActionMenu = (_a) => {
 };
 
 const MRT_ToggleRowActionMenuButton = ({ cell, row, table, }) => {
-    const { state, options: { createDisplayMode, editDisplayMode, enableEditing, icons: { IconEdit }, localization: { edit }, renderRowActionMenuItems, renderRowActions, }, setEditingRow, } = table;
+    const { options: { createDisplayMode, editDisplayMode, enableEditing, icons: { IconEdit }, localization: { edit }, renderRowActionMenuItems, renderRowActions, }, setEditingRow, state, } = table;
     const { creatingRow, editingRow } = state;
     const isCreating = (creatingRow === null || creatingRow === void 0 ? void 0 : creatingRow.id) === row.id;
     const isEditing = (editingRow === null || editingRow === void 0 ? void 0 : editingRow.id) === row.id;
@@ -1392,7 +1392,11 @@ const MRT_ToggleRowActionMenuButton = ({ cell, row, table, }) => {
             parseFromValuesOrFunc(enableEditing, row) ? (jsxRuntime.jsx(core.Tooltip, { label: edit, openDelay: 1000, position: "right", withinPortal: true, children: jsxRuntime.jsx(core.ActionIcon, { "aria-label": edit, color: "gray", disabled: !!editingRow && editingRow.id !== row.id, onClick: handleStartEditMode, size: "md", variant: "subtle", children: jsxRuntime.jsx(IconEdit, {}) }) })) : renderRowActionMenuItems ? (jsxRuntime.jsx(MRT_RowActionMenu, { handleEdit: handleStartEditMode, row: row, table: table })) : null }));
 };
 
-var classes$q = {"root":"MRT_TableFooterCell-module_root__d8Scs","grid":"MRT_TableFooterCell-module_grid__H9jLk","group":"MRT_TableFooterCell-module_group__l3-p-"};
+var classes$q = {"root":"MRT_TableFooter-module_root__-JXpw","grid":"MRT_TableFooter-module_grid__J3Ga-","sticky":"MRT_TableFooter-module_sticky__GcoK6"};
+
+var classes$p = {"root":"MRT_TableFooterRow-module_root__EuoPr","layout-mode-grid":"MRT_TableFooterRow-module_layout-mode-grid__dUEMF"};
+
+var classes$o = {"root":"MRT_TableFooterCell-module_root__d8Scs","grid":"MRT_TableFooterCell-module_grid__H9jLk","group":"MRT_TableFooterCell-module_group__l3-p-"};
 
 const MRT_TableFooterCell = (_a) => {
     var _b, _c, _d, _e, _f;
@@ -1426,11 +1430,11 @@ const MRT_TableFooterCell = (_a) => {
                 ? 'center'
                 : direction.dir === 'rtl'
                     ? 'right'
-                    : 'left'), '--mrt-table-cell-start': isColumnPinned === 'start'
-                ? `${column.getStart(isColumnPinned)}`
-                : undefined, '--mrt-table-cell-end': isColumnPinned === 'end'
+                    : 'left'), '--mrt-table-cell-end': isColumnPinned === 'end'
                 ? `${column.getAfter(isColumnPinned)}`
-                : undefined }, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.__vars), className: clsx(classes$q.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$q.grid, columnDefType === 'group' && classes$q.group, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), style: (theme) => (Object.assign(Object.assign({}, widthStyles), parseFromValuesOrFunc(tableCellProps.style, theme))), children: (_d = tableCellProps.children) !== null && _d !== void 0 ? _d : (footer.isPlaceholder
+                : undefined, '--mrt-table-cell-start': isColumnPinned === 'start'
+                ? `${column.getStart(isColumnPinned)}`
+                : undefined }, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.__vars), className: clsx(classes$o.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$o.grid, columnDefType === 'group' && classes$o.group, tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), style: (theme) => (Object.assign(Object.assign({}, widthStyles), parseFromValuesOrFunc(tableCellProps.style, theme))), children: (_d = tableCellProps.children) !== null && _d !== void 0 ? _d : (footer.isPlaceholder
             ? null
             : ((_f = (_e = parseFromValuesOrFunc(columnDef.Footer, {
                 column,
@@ -1438,8 +1442,6 @@ const MRT_TableFooterCell = (_a) => {
                 table,
             })) !== null && _e !== void 0 ? _e : columnDef.footer) !== null && _f !== void 0 ? _f : null)) })));
 };
-
-var classes$p = {"root":"MRT_TableFooterRow-module_root__EuoPr","layout-mode-grid":"MRT_TableFooterRow-module_layout-mode-grid__dUEMF"};
 
 const MRT_TableFooterRow = (_a) => {
     var _b;
@@ -1467,17 +1469,15 @@ const MRT_TableFooterRow = (_a) => {
             }), virtualPaddingRight ? (jsxRuntime.jsx(core.Box, { component: "th", display: "flex", w: virtualPaddingRight })) : null] })));
 };
 
-var classes$o = {"root":"MRT_TableFooter-module_root__-JXpw","grid":"MRT_TableFooter-module_grid__J3Ga-","sticky":"MRT_TableFooter-module_sticky__GcoK6"};
-
 const MRT_TableFooter = (_a) => {
     var { columnVirtualizer, table } = _a, rest = __rest(_a, ["columnVirtualizer", "table"]);
-    const { getFooterGroups, state, options: { enableStickyFooter, layoutMode, mantineTableFooterProps }, refs: { tableFooterRef }, } = table;
+    const { getFooterGroups, options: { enableStickyFooter, layoutMode, mantineTableFooterProps }, refs: { tableFooterRef }, state, } = table;
     const { isFullScreen } = state;
     const tableFooterProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableFooterProps, {
         table,
     })), rest);
     const stickFooter = (isFullScreen || enableStickyFooter) && enableStickyFooter !== false;
-    return (jsxRuntime.jsx(core.TableTfoot, Object.assign({}, tableFooterProps, { className: clsx(classes$o.root, tableFooterProps === null || tableFooterProps === void 0 ? void 0 : tableFooterProps.className, stickFooter && classes$o.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$o.grid), ref: (ref) => {
+    return (jsxRuntime.jsx(core.TableTfoot, Object.assign({}, tableFooterProps, { className: clsx(classes$q.root, tableFooterProps === null || tableFooterProps === void 0 ? void 0 : tableFooterProps.className, stickFooter && classes$q.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$q.grid), ref: (ref) => {
             tableFooterRef.current = ref;
             if (tableFooterProps === null || tableFooterProps === void 0 ? void 0 : tableFooterProps.ref) {
                 // @ts-ignore
@@ -1486,146 +1486,13 @@ const MRT_TableFooter = (_a) => {
         }, children: getFooterGroups().map((footerGroup) => (jsxRuntime.jsx(MRT_TableFooterRow, { columnVirtualizer: columnVirtualizer, footerGroup: footerGroup, table: table }, footerGroup.id))) })));
 };
 
-const MRT_SelectCheckbox = (_a) => {
-    var _b;
-    var { renderedRowIndex = 0, row, table } = _a, rest = __rest(_a, ["renderedRowIndex", "row", "table"]);
-    const { state, options: { enableMultiRowSelection, localization, mantineSelectAllCheckboxProps, mantineSelectCheckboxProps, selectAllMode, selectDisplayMode, }, } = table;
-    const { density, isLoading } = state;
-    const selectAll = !row;
-    const allRowsSelected = selectAll
-        ? selectAllMode === 'page'
-            ? table.getIsAllPageRowsSelected()
-            : table.getIsAllRowsSelected()
-        : undefined;
-    const isChecked = selectAll
-        ? allRowsSelected
-        : getIsRowSelected({ row, table });
-    const checkboxProps = Object.assign(Object.assign({}, (selectAll
-        ? parseFromValuesOrFunc(mantineSelectAllCheckboxProps, { table })
-        : parseFromValuesOrFunc(mantineSelectCheckboxProps, {
-            row,
-            table,
-        }))), rest);
-    const onSelectionChange = row
-        ? getMRT_RowSelectionHandler({
-            renderedRowIndex,
-            row,
-            table,
-        })
-        : undefined;
-    const onSelectAllChange = getMRT_SelectAllHandler({ table });
-    const commonProps = Object.assign(Object.assign({ 'aria-label': selectAll
-            ? localization.toggleSelectAll
-            : localization.toggleSelectRow, checked: isChecked, disabled: isLoading || (row && !row.getCanSelect()) || (row === null || row === void 0 ? void 0 : row.id) === 'mrt-row-create', onChange: (event) => {
-            event.stopPropagation();
-            if (selectAll) {
-                onSelectAllChange(event);
-            }
-            else {
-                onSelectionChange(event);
-            }
-        }, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps), { onClick: (e) => {
-            var _a;
-            e.stopPropagation();
-            (_a = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.onClick) === null || _a === void 0 ? void 0 : _a.call(checkboxProps, e);
-        }, title: undefined });
-    return (jsxRuntime.jsx(core.Tooltip, { label: (_b = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _b !== void 0 ? _b : (selectAll
-            ? localization.toggleSelectAll
-            : localization.toggleSelectRow), openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx("span", { children: selectDisplayMode === 'switch' ? (jsxRuntime.jsx(core.Switch, Object.assign({}, commonProps))) : selectDisplayMode === 'radio' ||
-                enableMultiRowSelection === false ? (jsxRuntime.jsx(core.Radio, Object.assign({}, commonProps))) : (jsxRuntime.jsx(core.Checkbox, Object.assign({ indeterminate: !isChecked && selectAll
-                    ? table.getIsSomeRowsSelected()
-                    : (row === null || row === void 0 ? void 0 : row.getIsSomeSelected()) && row.getCanSelectSubRows() }, commonProps))) }) }));
-};
+var classes$n = {"root":"MRT_TableHead-module_root__j9NkO","root-grid":"MRT_TableHead-module_root-grid__c3aGl","root-table-row-group":"MRT_TableHead-module_root-table-row-group__d9FO4","root-sticky":"MRT_TableHead-module_root-sticky__0kuDE","banner-tr":"MRT_TableHead-module_banner-tr__EhT-x","banner-th":"MRT_TableHead-module_banner-th__KwM5a","grid":"MRT_TableHead-module_grid__OJ-td"};
 
-var classes$n = {"alert":"MRT_ToolbarAlertBanner-module_alert__PAhUK","alert-stacked":"MRT_ToolbarAlertBanner-module_alert-stacked__HR7Nq","alert-bottom":"MRT_ToolbarAlertBanner-module_alert-bottom__u9L-S","alert-badge":"MRT_ToolbarAlertBanner-module_alert-badge__GwDmX","toolbar-alert":"MRT_ToolbarAlertBanner-module_toolbar-alert__3sJGU","head-overlay":"MRT_ToolbarAlertBanner-module_head-overlay__Hw7jK"};
+var classes$m = {"root":"MRT_TableHeadRow-module_root__hUKv4","layout-mode-grid":"MRT_TableHeadRow-module_layout-mode-grid__4ZGri","sticky":"MRT_TableHeadRow-module_sticky__Ej7Ax"};
 
-const MRT_ToolbarAlertBanner = (_a) => {
-    var _b, _c, _d;
-    var { stackAlertBanner, table } = _a, rest = __rest(_a, ["stackAlertBanner", "table"]);
-    const { getFilteredSelectedRowModel, getPrePaginatedRowModel, state, options: { enableRowSelection, enableSelectAll, icons: { IconX }, localization, mantineToolbarAlertBannerBadgeProps, mantineToolbarAlertBannerProps, manualPagination, positionToolbarAlertBanner, renderToolbarAlertBannerContent, rowCount, }, } = table;
-    const { density, grouping, rowSelection, showAlertBanner } = state;
-    const alertProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineToolbarAlertBannerProps, {
-        table,
-    })), rest);
-    const badgeProps = parseFromValuesOrFunc(mantineToolbarAlertBannerBadgeProps, { table });
-    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().flatRows.length;
-    const selectedRowCount = react.useMemo(() => manualPagination
-        ? Object.values(rowSelection).filter(Boolean).length
-        : getFilteredSelectedRowModel().rows.length, [rowSelection, totalRowCount, manualPagination]);
-    const selectedAlert = selectedRowCount ? (jsxRuntime.jsxs(core.Flex, { align: "center", gap: "sm", children: [(_c = (_b = localization.selectedCountOfRowCountRowsSelected) === null || _b === void 0 ? void 0 : _b.replace('{selectedCount}', selectedRowCount.toString())) === null || _c === void 0 ? void 0 : _c.replace('{rowCount}', totalRowCount.toString()), jsxRuntime.jsx(core.Button, { onClick: (event) => getMRT_SelectAllHandler({ table })(event, false, true), size: "compact-xs", variant: "subtle", children: localization.clearSelection })] })) : null;
-    const groupedAlert = grouping.length > 0 ? (jsxRuntime.jsxs(core.Flex, { children: [localization.groupedBy, ' ', grouping.map((columnId, index) => (jsxRuntime.jsxs(react.Fragment, { children: [index > 0 ? localization.thenBy : '', jsxRuntime.jsxs(core.Badge, Object.assign({ className: classes$n['alert-badge'], rightSection: jsxRuntime.jsx(core.ActionIcon, { color: "white", onClick: () => table.getColumn(columnId).toggleGrouping(), size: "xs", variant: "subtle", children: jsxRuntime.jsx(IconX, { style: { transform: 'scale(0.8)' } }) }), variant: "filled" }, badgeProps, { children: [table.getColumn(columnId).columnDef.header, ' '] }))] }, `${index}-${columnId}`)))] })) : null;
-    return (jsxRuntime.jsx(core.Collapse, { expanded: showAlertBanner || !!selectedAlert || !!groupedAlert, transitionDuration: stackAlertBanner ? 200 : 0, children: jsxRuntime.jsx(core.Alert, Object.assign({ color: "blue", icon: false }, alertProps, { className: clsx(classes$n.alert, stackAlertBanner &&
-                !positionToolbarAlertBanner &&
-                classes$n['alert-stacked'], !stackAlertBanner &&
-                positionToolbarAlertBanner === 'bottom' &&
-                classes$n['alert-bottom'], alertProps === null || alertProps === void 0 ? void 0 : alertProps.className), children: (_d = renderToolbarAlertBannerContent === null || renderToolbarAlertBannerContent === void 0 ? void 0 : renderToolbarAlertBannerContent({
-                groupedAlert,
-                selectedAlert,
-                table,
-            })) !== null && _d !== void 0 ? _d : (jsxRuntime.jsxs(core.Flex, { className: clsx(classes$n['toolbar-alert'], positionToolbarAlertBanner === 'head-overlay' &&
-                    classes$n['head-overlay'], density), children: [enableRowSelection &&
-                        enableSelectAll &&
-                        positionToolbarAlertBanner === 'head-overlay' && (jsxRuntime.jsx(MRT_SelectCheckbox, { table: table })), jsxRuntime.jsxs(core.Stack, { children: [alertProps === null || alertProps === void 0 ? void 0 : alertProps.children, selectedAlert, groupedAlert] })] })) })) }));
-};
+var classes$l = {"root":"MRT_TableHeadCell-module_root__6y50a","root-grid":"MRT_TableHeadCell-module_root-grid__bAf1d","root-virtualized":"MRT_TableHeadCell-module_root-virtualized__CWLit","root-no-select":"MRT_TableHeadCell-module_root-no-select__BEOVU","content":"MRT_TableHeadCell-module_content__-pzSK","content-spaced":"MRT_TableHeadCell-module_content-spaced__S85Aa","content-center":"MRT_TableHeadCell-module_content-center__c-17L","content-right":"MRT_TableHeadCell-module_content-right__NSRZU","content-wrapper":"MRT_TableHeadCell-module_content-wrapper__py6aJ","content-wrapper-hidden-overflow":"MRT_TableHeadCell-module_content-wrapper-hidden-overflow__QY40r","content-wrapper-nowrap":"MRT_TableHeadCell-module_content-wrapper-nowrap__-4aIg","labels":"MRT_TableHeadCell-module_labels__oiMSr","labels-right":"MRT_TableHeadCell-module_labels-right__6ZJp-","labels-center":"MRT_TableHeadCell-module_labels-center__MM9q8","labels-sortable":"MRT_TableHeadCell-module_labels-sortable__tyuLr","labels-data":"MRT_TableHeadCell-module_labels-data__PvFGO","content-actions":"MRT_TableHeadCell-module_content-actions__utxbm"};
 
-var classes$m = {"left":"MRT_ColumnActionMenu-module_left__cfNmY","right":"MRT_ColumnActionMenu-module_right__-nK56"};
-
-const MRT_ColumnActionMenu = (_a) => {
-    var _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-    var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    const { state, options: { columnFilterDisplayMode, enableColumnFilters, enableColumnPinning, enableColumnResizing, enableGrouping, enableHiding, enableSorting, enableSortingRemoval, icons: { IconArrowAutofitContent, IconBoxMultiple, IconClearAll, IconColumns, IconDotsVertical, IconEyeOff, IconFilter, IconFilterOff, IconPinned, IconPinnedOff, IconSortAscending, IconSortDescending, }, localization, mantineColumnActionsButtonProps, renderColumnActionsMenuItems, }, refs: { filterInputRefs }, setColumnOrder, setColumnResizing, setShowColumnFilters, toggleAllColumnsVisible, } = table;
-    const { column } = header;
-    const { columnDef } = column;
-    const { columnSizing, columnVisibility } = state;
-    const arg = { column, table };
-    const actionIconProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineColumnActionsButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineColumnActionsButtonProps, arg));
-    const handleClearSort = () => {
-        column.clearSorting();
-    };
-    const handleSortAsc = () => {
-        column.toggleSorting(false);
-    };
-    const handleSortDesc = () => {
-        column.toggleSorting(true);
-    };
-    const handleResetColumnSize = () => {
-        setColumnResizing((old) => (Object.assign(Object.assign({}, old), { isResizingColumn: false })));
-        column.resetSize();
-    };
-    const handleHideColumn = () => {
-        column.toggleVisibility(false);
-    };
-    const handlePinColumn = (pinDirection) => {
-        column.pin(pinDirection);
-    };
-    const handleGroupByColumn = () => {
-        column.toggleGrouping();
-        setColumnOrder((old) => ['mrt-row-expand', ...old]);
-    };
-    const handleClearFilter = () => {
-        column.setFilterValue('');
-    };
-    const handleFilterByColumn = () => {
-        setShowColumnFilters(true);
-        setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100);
-    };
-    const handleShowAllColumns = () => {
-        toggleAllColumnsVisible(true);
-    };
-    const internalColumnMenuItems = (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [enableSorting && column.getCanSort() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [enableSortingRemoval !== false && (jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getIsSorted(), leftSection: jsxRuntime.jsx(IconClearAll, {}), onClick: handleClearSort, children: localization.clearSort })), jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsSorted() === 'asc', leftSection: jsxRuntime.jsx(IconSortAscending, {}), onClick: handleSortAsc, children: (_b = localization.sortByColumnAsc) === null || _b === void 0 ? void 0 : _b.replace('{column}', String(columnDef.header)) }), jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsSorted() === 'desc', leftSection: jsxRuntime.jsx(IconSortDescending, {}), onClick: handleSortDesc, children: (_c = localization.sortByColumnDesc) === null || _c === void 0 ? void 0 : _c.replace('{column}', String(columnDef.header)) }), (enableColumnFilters || enableGrouping || enableHiding) && (jsxRuntime.jsx(core.Menu.Divider, {}, 3))] })), enableColumnFilters &&
-                columnFilterDisplayMode !== 'popover' &&
-                column.getCanFilter() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getFilterValue(), leftSection: jsxRuntime.jsx(IconFilterOff, {}), onClick: handleClearFilter, children: localization.clearFilter }), jsxRuntime.jsx(core.Menu.Item, { leftSection: jsxRuntime.jsx(IconFilter, {}), onClick: handleFilterByColumn, children: (_d = localization.filterByColumn) === null || _d === void 0 ? void 0 : _d.replace('{column}', String(columnDef.header)) }), (enableGrouping || enableHiding) && jsxRuntime.jsx(core.Menu.Divider, {}, 2)] })), enableGrouping && column.getCanGroup() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { leftSection: jsxRuntime.jsx(IconBoxMultiple, {}), onClick: handleGroupByColumn, children: (_e = localization[column.getIsGrouped() ? 'ungroupByColumn' : 'groupByColumn']) === null || _e === void 0 ? void 0 : _e.replace('{column}', String(columnDef.header)) }), enableColumnPinning && jsxRuntime.jsx(core.Menu.Divider, {})] })), enableColumnPinning && column.getCanPin() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsPinned() === 'start' || !column.getCanPin(), leftSection: jsxRuntime.jsx(IconPinned, { className: classes$m.left }), onClick: () => handlePinColumn('start'), children: localization.pinToLeft }), jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsPinned() === 'end' || !column.getCanPin(), leftSection: jsxRuntime.jsx(IconPinned, { className: classes$m.right }), onClick: () => handlePinColumn('end'), children: localization.pinToRight }), jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getIsPinned(), leftSection: jsxRuntime.jsx(IconPinnedOff, {}), onClick: () => handlePinColumn(false), children: localization.unpin }), enableHiding && jsxRuntime.jsx(core.Menu.Divider, {})] })), enableColumnResizing && column.getCanResize() && (jsxRuntime.jsx(core.Menu.Item, { disabled: !columnSizing[column.id], leftSection: jsxRuntime.jsx(IconArrowAutofitContent, {}), onClick: handleResetColumnSize, children: localization.resetColumnSize }, 0)), enableHiding && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getCanHide(), leftSection: jsxRuntime.jsx(IconEyeOff, {}), onClick: handleHideColumn, children: (_f = localization.hideColumn) === null || _f === void 0 ? void 0 : _f.replace('{column}', String(columnDef.header)) }, 0), jsxRuntime.jsx(core.Menu.Item, { disabled: !Object.values(columnVisibility).filter((visible) => !visible)
-                            .length, leftSection: jsxRuntime.jsx(IconColumns, {}), onClick: handleShowAllColumns, children: (_g = localization.showAllColumns) === null || _g === void 0 ? void 0 : _g.replace('{column}', String(columnDef.header)) }, 1)] }))] }));
-    return (jsxRuntime.jsxs(core.Menu, Object.assign({ closeOnItemClick: true, position: "bottom-start", withinPortal: true }, rest, { children: [jsxRuntime.jsx(core.Tooltip, { label: (_h = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.title) !== null && _h !== void 0 ? _h : localization.columnActions, openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.Menu.Target, { children: jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": localization.columnActions, color: "gray", size: "sm", variant: "subtle" }, actionIconProps, { children: jsxRuntime.jsx(IconDotsVertical, { size: "100%" }) })) }) }), jsxRuntime.jsx(core.Menu.Dropdown, { children: (_l = (_k = (_j = columnDef.renderColumnActionsMenuItems) === null || _j === void 0 ? void 0 : _j.call(columnDef, {
-                    column,
-                    internalColumnMenuItems,
-                    table,
-                })) !== null && _k !== void 0 ? _k : renderColumnActionsMenuItems === null || renderColumnActionsMenuItems === void 0 ? void 0 : renderColumnActionsMenuItems({
-                    column,
-                    internalColumnMenuItems,
-                    table,
-                })) !== null && _l !== void 0 ? _l : internalColumnMenuItems })] })));
-};
+var classes$k = {"filter-mode-label":"MRT_TableHeadCellFilterContainer-module_filter-mode-label__8reK-"};
 
 const fuzzy = (row, columnId, filterValue, addMeta) => {
     const itemRank = matchSorterUtils.rankItem(row.getValue(columnId), filterValue, {
@@ -1728,19 +1595,19 @@ function localizedFilterOption(localization, option) {
     return (_a = localization[key]) !== null && _a !== void 0 ? _a : '';
 }
 
-var classes$l = {"root":"MRT_FilterCheckBox-module_root__59h9r"};
+var classes$j = {"root":"MRT_FilterCheckBox-module_root__59h9r"};
 
 const MRT_FilterCheckbox = (_a) => {
     var _b, _c, _d;
     var { column, table } = _a, rest = __rest(_a, ["column", "table"]);
-    const { state, options: { localization, mantineFilterCheckboxProps }, } = table;
+    const { options: { localization, mantineFilterCheckboxProps }, state, } = table;
     const { density } = state;
     const { columnDef } = column;
     const arg = { column, table };
     const checkboxProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineFilterCheckboxProps, arg)), parseFromValuesOrFunc(columnDef.mantineFilterCheckboxProps, arg)), rest);
     const filterLabel = (_b = localization.filterByColumn) === null || _b === void 0 ? void 0 : _b.replace('{column}', columnDef.header);
     const value = column.getFilterValue();
-    return (jsxRuntime.jsx(core.Tooltip, { label: (_c = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _c !== void 0 ? _c : filterLabel, openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.Checkbox, Object.assign({ checked: value === 'true', className: clsx('mrt-filter-checkbox', classes$l.root), indeterminate: value === undefined, label: (_d = checkboxProps.title) !== null && _d !== void 0 ? _d : filterLabel, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps, { onChange: (e) => {
+    return (jsxRuntime.jsx(core.Tooltip, { label: (_c = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _c !== void 0 ? _c : filterLabel, openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.Checkbox, Object.assign({ checked: value === 'true', className: clsx('mrt-filter-checkbox', classes$j.root), indeterminate: value === undefined, label: (_d = checkboxProps.title) !== null && _d !== void 0 ? _d : filterLabel, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps, { onChange: (e) => {
                 var _a;
                 column.setFilterValue(column.getFilterValue() === undefined
                     ? 'true'
@@ -1755,9 +1622,9 @@ const MRT_FilterCheckbox = (_a) => {
             }, title: undefined })) }));
 };
 
-var classes$k = {"root":"MRT_FilterRangeFields-module_root__KfCcg"};
+var classes$i = {"root":"MRT_FilterRangeFields-module_root__KfCcg"};
 
-var classes$j = {"root":"MRT_FilterTextInput-module_root__Ss8Ql","date-filter":"MRT_FilterTextInput-module_date-filter__jOBLB","range-filter":"MRT_FilterTextInput-module_range-filter__JQHAL","not-filter-chip":"MRT_FilterTextInput-module_not-filter-chip__u8b1y","filter-chip-badge":"MRT_FilterTextInput-module_filter-chip-badge__Sel2k"};
+var classes$h = {"root":"MRT_FilterTextInput-module_root__Ss8Ql","date-filter":"MRT_FilterTextInput-module_date-filter__jOBLB","range-filter":"MRT_FilterTextInput-module_range-filter__JQHAL","not-filter-chip":"MRT_FilterTextInput-module_not-filter-chip__u8b1y","filter-chip-badge":"MRT_FilterTextInput-module_filter-chip-badge__Sel2k"};
 
 const MRT_FilterTextInput = (_a) => {
     var _b, _c, _d, _e, _f, _g, _h, _j;
@@ -1896,11 +1763,11 @@ const MRT_FilterTextInput = (_a) => {
     };
     const _k = {
         'aria-label': filterPlaceholder,
-        className: clsx('mrt-filter-text-input', classes$j.root, isDateFilter
-            ? classes$j['date-filter']
+        className: clsx('mrt-filter-text-input', classes$h.root, isDateFilter
+            ? classes$h['date-filter']
             : isRangeFilter
-                ? classes$j['range-filter']
-                : !filterChipLabel && classes$j['not-filter-chip']),
+                ? classes$h['range-filter']
+                : !filterChipLabel && classes$h['not-filter-chip']),
         disabled: !!filterChipLabel,
         onChange: setFilterValue,
         onClick: (event) => event.stopPropagation(),
@@ -1921,7 +1788,7 @@ const MRT_FilterTextInput = (_a) => {
         return (jsxRuntime.jsx(jsxRuntime.Fragment, { children: (_f = columnDef.Filter) === null || _f === void 0 ? void 0 : _f.call(columnDef, { column, header, rangeFilterIndex, table }) }));
     }
     if (filterChipLabel) {
-        return (jsxRuntime.jsx(core.Box, { style: commonProps.style, children: jsxRuntime.jsx(core.Badge, { className: classes$j['filter-chip-badge'], onClick: handleClearEmptyFilterChip, rightSection: ClearButton, size: "lg", children: filterChipLabel }) }));
+        return (jsxRuntime.jsx(core.Box, { style: commonProps.style, children: jsxRuntime.jsx(core.Badge, { className: classes$h['filter-chip-badge'], onClick: handleClearEmptyFilterChip, rightSection: ClearButton, size: "lg", children: filterChipLabel }) }));
     }
     if (isMultiSelectFilter) {
         return (jsxRuntime.jsx(core.MultiSelect, Object.assign({}, commonProps, { searchable: true }, multiSelectProps, { className: clsx(className, multiSelectProps.className), data: filterSelectOptions, onChange: (value) => setFilterValue(value), ref: (node) => {
@@ -1984,10 +1851,10 @@ const MRT_FilterTextInput = (_a) => {
 
 const MRT_FilterRangeFields = (_a) => {
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    return (jsxRuntime.jsxs(core.Box, Object.assign({}, rest, { className: clsx('mrt-filter-range-fields', classes$k.root, rest.className), children: [jsxRuntime.jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 0, table: table }), jsxRuntime.jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 1, table: table })] })));
+    return (jsxRuntime.jsxs(core.Box, Object.assign({}, rest, { className: clsx('mrt-filter-range-fields', classes$i.root, rest.className), children: [jsxRuntime.jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 0, table: table }), jsxRuntime.jsx(MRT_FilterTextInput, { header: header, rangeFilterIndex: 1, table: table })] })));
 };
 
-var classes$i = {"root":"MRT_FilterRangeSlider-module_root__uwYEk"};
+var classes$g = {"root":"MRT_FilterRangeSlider-module_root__uwYEk"};
 
 const MRT_FilterRangeSlider = (_a) => {
     var _b;
@@ -2023,7 +1890,7 @@ const MRT_FilterRangeSlider = (_a) => {
         }
         isMounted.current = true;
     }, [columnFilterValue, min, max]);
-    return (jsxRuntime.jsx(core.RangeSlider, Object.assign({ className: clsx('mrt-filter-range-slider', classes$i.root), max: max, min: min, onChange: (values) => {
+    return (jsxRuntime.jsx(core.RangeSlider, Object.assign({ className: clsx('mrt-filter-range-slider', classes$g.root), max: max, min: min, onChange: (values) => {
             setFilterValues(values);
         }, onChangeEnd: (values) => {
             if (Array.isArray(values)) {
@@ -2048,7 +1915,7 @@ const MRT_FilterRangeSlider = (_a) => {
         } })));
 };
 
-var classes$h = {"symbol":"MRT_FilterOptionMenu-module_symbol__a1Bsy"};
+var classes$f = {"symbol":"MRT_FilterOptionMenu-module_symbol__a1Bsy"};
 
 const mrtFilterOptions = (localization) => [
     {
@@ -2142,7 +2009,7 @@ const arrModes = ['arrIncludesSome', 'arrIncludesAll', 'arrIncludes'];
 const rangeVariants = ['range-slider', 'date-range', 'range'];
 const MRT_FilterOptionMenu = ({ header, onSelect, table, }) => {
     var _a, _b, _c, _d;
-    const { state, options: { columnFilterModeOptions, globalFilterModeOptions, localization, renderColumnFilterModeMenuItems, renderGlobalFilterModeMenuItems, }, setColumnFilterFns, setGlobalFilterFn, } = table;
+    const { options: { columnFilterModeOptions, globalFilterModeOptions, localization, renderColumnFilterModeMenuItems, renderGlobalFilterModeMenuItems, }, setColumnFilterFns, setGlobalFilterFn, state, } = table;
     const { globalFilterFn } = state;
     const { column } = header !== null && header !== void 0 ? header : {};
     const { columnDef } = column !== null && column !== void 0 ? column : {};
@@ -2243,15 +2110,13 @@ const MRT_FilterOptionMenu = ({ header, onSelect, table, }) => {
                 internalFilterOptions,
                 onSelectFilterMode: handleSelectFilterMode,
                 table,
-            }))) !== null && _d !== void 0 ? _d : internalFilterOptions.map(({ divider, label, option, symbol }, index) => (jsxRuntime.jsxs(react.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { color: option === filterOption ? 'blue' : undefined, leftSection: jsxRuntime.jsx("span", { className: classes$h.symbol, children: symbol }), onClick: () => handleSelectFilterMode(option), value: option, children: label }), divider && jsxRuntime.jsx(core.Menu.Divider, {})] }, index))) }));
+            }))) !== null && _d !== void 0 ? _d : internalFilterOptions.map(({ divider, label, option, symbol }, index) => (jsxRuntime.jsxs(react.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { color: option === filterOption ? 'blue' : undefined, leftSection: jsxRuntime.jsx("span", { className: classes$f.symbol, children: symbol }), onClick: () => handleSelectFilterMode(option), value: option, children: label }), divider && jsxRuntime.jsx(core.Menu.Divider, {})] }, index))) }));
 };
-
-var classes$g = {"filter-mode-label":"MRT_TableHeadCellFilterContainer-module_filter-mode-label__8reK-"};
 
 const MRT_TableHeadCellFilterContainer = (_a) => {
     var _b, _c;
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    const { state, options: { columnFilterDisplayMode, columnFilterModeOptions, enableColumnFilterModes, icons: { IconFilterCog }, localization, }, refs: { filterInputRefs }, } = table;
+    const { options: { columnFilterDisplayMode, columnFilterModeOptions, enableColumnFilterModes, icons: { IconFilterCog }, localization, }, refs: { filterInputRefs }, state, } = table;
     const { showColumnFilters } = state;
     const { column } = header;
     const { columnDef } = column;
@@ -2262,10 +2127,10 @@ const MRT_TableHeadCellFilterContainer = (_a) => {
         (allowedColumnFilterOptions === undefined ||
             !!(allowedColumnFilterOptions === null || allowedColumnFilterOptions === void 0 ? void 0 : allowedColumnFilterOptions.length));
     return (jsxRuntime.jsx(core.Collapse, { expanded: showColumnFilters || columnFilterDisplayMode === 'popover', children: jsxRuntime.jsxs(core.Flex, Object.assign({ direction: "column" }, rest, { children: [jsxRuntime.jsxs(core.Flex, { align: "flex-end", children: [columnDef.filterVariant === 'checkbox' ? (jsxRuntime.jsx(MRT_FilterCheckbox, { column: column, table: table })) : columnDef.filterVariant === 'range-slider' ? (jsxRuntime.jsx(MRT_FilterRangeSlider, { header: header, table: table })) : ['date-range', 'range'].includes((_c = columnDef.filterVariant) !== null && _c !== void 0 ? _c : '') ||
-                            ['between', 'betweenInclusive', 'inNumberRange'].includes(columnDef._filterFn) ? (jsxRuntime.jsx(MRT_FilterRangeFields, { header: header, table: table })) : (jsxRuntime.jsx(MRT_FilterTextInput, { header: header, table: table })), showChangeModeButton && (jsxRuntime.jsxs(core.Menu, { withinPortal: columnFilterDisplayMode !== 'popover', children: [jsxRuntime.jsx(core.Tooltip, { label: localization.changeFilterMode, position: "bottom-start", withinPortal: true, children: jsxRuntime.jsx(core.Menu.Target, { children: jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.changeFilterMode, color: "gray", size: "md", variant: "subtle", children: jsxRuntime.jsx(IconFilterCog, {}) }) }) }), jsxRuntime.jsx(MRT_FilterOptionMenu, { header: header, onSelect: () => setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100), table: table })] }))] }), showChangeModeButton ? (jsxRuntime.jsx(core.Text, { c: "dimmed", className: classes$g['filter-mode-label'], component: "label", children: localization.filterMode.replace('{filterType}', localizedFilterOption(localization, currentFilterOption)) })) : null] })) }));
+                            ['between', 'betweenInclusive', 'inNumberRange'].includes(columnDef._filterFn) ? (jsxRuntime.jsx(MRT_FilterRangeFields, { header: header, table: table })) : (jsxRuntime.jsx(MRT_FilterTextInput, { header: header, table: table })), showChangeModeButton && (jsxRuntime.jsxs(core.Menu, { withinPortal: columnFilterDisplayMode !== 'popover', children: [jsxRuntime.jsx(core.Tooltip, { label: localization.changeFilterMode, position: "bottom-start", withinPortal: true, children: jsxRuntime.jsx(core.Menu.Target, { children: jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.changeFilterMode, color: "gray", size: "md", variant: "subtle", children: jsxRuntime.jsx(IconFilterCog, {}) }) }) }), jsxRuntime.jsx(MRT_FilterOptionMenu, { header: header, onSelect: () => setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100), table: table })] }))] }), showChangeModeButton ? (jsxRuntime.jsx(core.Text, { c: "dimmed", className: classes$k['filter-mode-label'], component: "label", children: localization.filterMode.replace('{filterType}', localizedFilterOption(localization, currentFilterOption)) })) : null] })) }));
 };
 
-var classes$f = {"root":"MRT_TableHeadCellFilterLabel-module_root__Rur2R"};
+var classes$e = {"root":"MRT_TableHeadCellFilterLabel-module_root__Rur2R"};
 
 const MRT_TableHeadCellFilterLabel = (_a) => {
     var _b, _c, _d;
@@ -2297,7 +2162,7 @@ const MRT_TableHeadCellFilterLabel = (_a) => {
                         (!!column.getFilterValue() && !isRangeFilter) ||
                         (isRangeFilter &&
                             (!!((_c = column.getFilterValue()) === null || _c === void 0 ? void 0 : _c[0]) ||
-                                !!((_d = column.getFilterValue()) === null || _d === void 0 ? void 0 : _d[1]))), transition: "scale", children: () => (jsxRuntime.jsx(core.Popover.Target, { children: jsxRuntime.jsx(core.Tooltip, { disabled: popoverOpened, label: filterTooltip, multiline: true, w: filterTooltip.length > 40 ? 300 : undefined, withinPortal: true, children: jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": filterTooltip, className: clsx('mrt-table-head-cell-filter-label-icon', classes$f.root), size: 18 }, dataVariable('active', isFilterActive), { onClick: (event) => {
+                                !!((_d = column.getFilterValue()) === null || _d === void 0 ? void 0 : _d[1]))), transition: "scale", children: () => (jsxRuntime.jsx(core.Popover.Target, { children: jsxRuntime.jsx(core.Tooltip, { disabled: popoverOpened, label: filterTooltip, multiline: true, w: filterTooltip.length > 40 ? 300 : undefined, withinPortal: true, children: jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": filterTooltip, className: clsx('mrt-table-head-cell-filter-label-icon', classes$e.root), size: 18 }, dataVariable('active', isFilterActive), { onClick: (event) => {
                                     event.stopPropagation();
                                     if (columnFilterDisplayMode === 'popover') {
                                         setPopoverOpened((opened) => !opened);
@@ -2315,7 +2180,7 @@ const MRT_TableHeadCellFilterLabel = (_a) => {
 
 const MRT_TableHeadCellGrabHandle = (_a) => {
     var { column, table, tableHeadCellRef } = _a, rest = __rest(_a, ["column", "table", "tableHeadCellRef"]);
-    const { state, options: { enableColumnOrdering, mantineColumnDragHandleProps }, setColumnOrder, setDraggingColumn, setHoveredColumn, } = table;
+    const { options: { enableColumnOrdering, mantineColumnDragHandleProps }, setColumnOrder, setDraggingColumn, setHoveredColumn, state, } = table;
     const { columnDef } = column;
     const { columnOrder, draggingColumn, hoveredColumn } = state;
     const arg = { column, table };
@@ -2343,12 +2208,12 @@ const MRT_TableHeadCellGrabHandle = (_a) => {
     return (jsxRuntime.jsx(MRT_GrabHandleButton, { actionIconProps: actionIconProps, onDragEnd: handleDragEnd, onDragStart: handleDragStart, table: table }));
 };
 
-var classes$e = {"root":"MRT_TableHeadCellResizeHandle-module_root__paufe","root-ltr":"MRT_TableHeadCellResizeHandle-module_root-ltr__652AZ","root-rtl":"MRT_TableHeadCellResizeHandle-module_root-rtl__5VlSo","root-hide":"MRT_TableHeadCellResizeHandle-module_root-hide__-ILlD"};
+var classes$d = {"root":"MRT_TableHeadCellResizeHandle-module_root__paufe","root-ltr":"MRT_TableHeadCellResizeHandle-module_root-ltr__652AZ","root-rtl":"MRT_TableHeadCellResizeHandle-module_root-rtl__5VlSo","root-hide":"MRT_TableHeadCellResizeHandle-module_root-hide__-ILlD"};
 
 const MRT_TableHeadCellResizeHandle = (_a) => {
     var _b;
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
-    const { state, options: { columnResizeDirection, columnResizeMode }, setColumnResizing, } = table;
+    const { options: { columnResizeDirection, columnResizeMode }, setColumnResizing, state, } = table;
     const { density } = state;
     const { column } = header;
     const handler = header.getResizeHandler();
@@ -2359,12 +2224,12 @@ const MRT_TableHeadCellResizeHandle = (_a) => {
     return (jsxRuntime.jsx(core.Box, Object.assign({ onDoubleClick: () => {
             setColumnResizing((old) => (Object.assign(Object.assign({}, old), { isResizingColumn: false })));
             column.resetSize();
-        }, onMouseDown: handler, onTouchStart: handler, role: "separator" }, rest, { __vars: Object.assign({ '--mrt-transform': offset }, rest.__vars), className: clsx('mrt-table-head-cell-resize-handle', classes$e.root, classes$e[`root-${columnResizeDirection}`], !header.subHeaders.length &&
+        }, onMouseDown: handler, onTouchStart: handler, role: "separator" }, rest, { __vars: Object.assign({ '--mrt-transform': offset }, rest.__vars), className: clsx('mrt-table-head-cell-resize-handle', classes$d.root, classes$d[`root-${columnResizeDirection}`], !header.subHeaders.length &&
             columnResizeMode === 'onChange' &&
-            classes$e['root-hide'], density, rest.className) })));
+            classes$d['root-hide'], density, rest.className) })));
 };
 
-var classes$d = {"sort-icon":"MRT_TableHeadCellSortLabel-module_sort-icon__zs1xA","multi-sort-indicator":"MRT_TableHeadCellSortLabel-module_multi-sort-indicator__MGBj2"};
+var classes$c = {"sort-icon":"MRT_TableHeadCellSortLabel-module_sort-icon__zs1xA","multi-sort-indicator":"MRT_TableHeadCellSortLabel-module_multi-sort-indicator__MGBj2"};
 
 const MRT_TableHeadCellSortLabel = (_a) => {
     var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
@@ -2381,20 +2246,77 @@ const MRT_TableHeadCellSortLabel = (_a) => {
                 : column.getNextSortingOrder() === 'desc'
                     ? localization.sortByColumnDesc.replace('{column}', columnDef.header)
                     : localization.sortByColumnAsc.replace('{column}', columnDef.header);
-            const SortActionButton = (jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": sortTooltip }, dataVariable('sorted', sorted), rest, { className: clsx('mrt-table-head-sort-button', classes$d['sort-icon'], rest.className), children: sorted === 'desc' ? (jsxRuntime.jsx(IconSortDescending, { size: "100%" })) : sorted === 'asc' ? (jsxRuntime.jsx(IconSortAscending, { size: "100%" })) : (jsxRuntime.jsx(IconArrowsSort, { size: "100%" })) })));
+            const SortActionButton = (jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": sortTooltip }, dataVariable('sorted', sorted), rest, { className: clsx('mrt-table-head-sort-button', classes$c['sort-icon'], rest.className), children: sorted === 'desc' ? (jsxRuntime.jsx(IconSortDescending, { size: "100%" })) : sorted === 'asc' ? (jsxRuntime.jsx(IconSortAscending, { size: "100%" })) : (jsxRuntime.jsx(IconArrowsSort, { size: "100%" })) })));
             return (jsxRuntime.jsx(core.Tooltip, { label: sortTooltip, openDelay: 1000, withinPortal: true, children: sorting.length < 2 || sortIndex === -1 ? (SortActionButton) : (jsxRuntime.jsx(core.Indicator, { classNames: {
-                        root: clsx('mrt-table-head-multi-sort-indicator', classes$d['multi-sort-indicator']),
+                        root: clsx('mrt-table-head-multi-sort-indicator', classes$c['multi-sort-indicator']),
                     }, inline: true, label: sortIndex + 1, offset: 4, children: SortActionButton })) }));
         } }));
 };
 
-var classes$c = {"root":"MRT_TableHeadCell-module_root__6y50a","root-grid":"MRT_TableHeadCell-module_root-grid__bAf1d","root-virtualized":"MRT_TableHeadCell-module_root-virtualized__CWLit","root-no-select":"MRT_TableHeadCell-module_root-no-select__BEOVU","content":"MRT_TableHeadCell-module_content__-pzSK","content-spaced":"MRT_TableHeadCell-module_content-spaced__S85Aa","content-center":"MRT_TableHeadCell-module_content-center__c-17L","content-right":"MRT_TableHeadCell-module_content-right__NSRZU","content-wrapper":"MRT_TableHeadCell-module_content-wrapper__py6aJ","content-wrapper-hidden-overflow":"MRT_TableHeadCell-module_content-wrapper-hidden-overflow__QY40r","content-wrapper-nowrap":"MRT_TableHeadCell-module_content-wrapper-nowrap__-4aIg","labels":"MRT_TableHeadCell-module_labels__oiMSr","labels-right":"MRT_TableHeadCell-module_labels-right__6ZJp-","labels-center":"MRT_TableHeadCell-module_labels-center__MM9q8","labels-sortable":"MRT_TableHeadCell-module_labels-sortable__tyuLr","labels-data":"MRT_TableHeadCell-module_labels-data__PvFGO","content-actions":"MRT_TableHeadCell-module_content-actions__utxbm"};
+var classes$b = {"left":"MRT_ColumnActionMenu-module_left__cfNmY","right":"MRT_ColumnActionMenu-module_right__-nK56"};
+
+const MRT_ColumnActionMenu = (_a) => {
+    var _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    var { header, table } = _a, rest = __rest(_a, ["header", "table"]);
+    const { options: { columnFilterDisplayMode, enableColumnFilters, enableColumnPinning, enableColumnResizing, enableGrouping, enableHiding, enableSorting, enableSortingRemoval, icons: { IconArrowAutofitContent, IconBoxMultiple, IconClearAll, IconColumns, IconDotsVertical, IconEyeOff, IconFilter, IconFilterOff, IconPinned, IconPinnedOff, IconSortAscending, IconSortDescending, }, localization, mantineColumnActionsButtonProps, renderColumnActionsMenuItems, }, refs: { filterInputRefs }, setColumnOrder, setColumnResizing, setShowColumnFilters, state, toggleAllColumnsVisible, } = table;
+    const { column } = header;
+    const { columnDef } = column;
+    const { columnSizing, columnVisibility } = state;
+    const arg = { column, table };
+    const actionIconProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineColumnActionsButtonProps, arg)), parseFromValuesOrFunc(columnDef.mantineColumnActionsButtonProps, arg));
+    const handleClearSort = () => {
+        column.clearSorting();
+    };
+    const handleSortAsc = () => {
+        column.toggleSorting(false);
+    };
+    const handleSortDesc = () => {
+        column.toggleSorting(true);
+    };
+    const handleResetColumnSize = () => {
+        setColumnResizing((old) => (Object.assign(Object.assign({}, old), { isResizingColumn: false })));
+        column.resetSize();
+    };
+    const handleHideColumn = () => {
+        column.toggleVisibility(false);
+    };
+    const handlePinColumn = (pinDirection) => {
+        column.pin(pinDirection);
+    };
+    const handleGroupByColumn = () => {
+        column.toggleGrouping();
+        setColumnOrder((old) => ['mrt-row-expand', ...old]);
+    };
+    const handleClearFilter = () => {
+        column.setFilterValue('');
+    };
+    const handleFilterByColumn = () => {
+        setShowColumnFilters(true);
+        setTimeout(() => { var _a; return (_a = filterInputRefs.current[`${column.id}-0`]) === null || _a === void 0 ? void 0 : _a.focus(); }, 100);
+    };
+    const handleShowAllColumns = () => {
+        toggleAllColumnsVisible(true);
+    };
+    const internalColumnMenuItems = (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [enableSorting && column.getCanSort() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [enableSortingRemoval !== false && (jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getIsSorted(), leftSection: jsxRuntime.jsx(IconClearAll, {}), onClick: handleClearSort, children: localization.clearSort })), jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsSorted() === 'asc', leftSection: jsxRuntime.jsx(IconSortAscending, {}), onClick: handleSortAsc, children: (_b = localization.sortByColumnAsc) === null || _b === void 0 ? void 0 : _b.replace('{column}', String(columnDef.header)) }), jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsSorted() === 'desc', leftSection: jsxRuntime.jsx(IconSortDescending, {}), onClick: handleSortDesc, children: (_c = localization.sortByColumnDesc) === null || _c === void 0 ? void 0 : _c.replace('{column}', String(columnDef.header)) }), (enableColumnFilters || enableGrouping || enableHiding) && (jsxRuntime.jsx(core.Menu.Divider, {}, 3))] })), enableColumnFilters &&
+                columnFilterDisplayMode !== 'popover' &&
+                column.getCanFilter() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getFilterValue(), leftSection: jsxRuntime.jsx(IconFilterOff, {}), onClick: handleClearFilter, children: localization.clearFilter }), jsxRuntime.jsx(core.Menu.Item, { leftSection: jsxRuntime.jsx(IconFilter, {}), onClick: handleFilterByColumn, children: (_d = localization.filterByColumn) === null || _d === void 0 ? void 0 : _d.replace('{column}', String(columnDef.header)) }), (enableGrouping || enableHiding) && jsxRuntime.jsx(core.Menu.Divider, {}, 2)] })), enableGrouping && column.getCanGroup() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { leftSection: jsxRuntime.jsx(IconBoxMultiple, {}), onClick: handleGroupByColumn, children: (_e = localization[column.getIsGrouped() ? 'ungroupByColumn' : 'groupByColumn']) === null || _e === void 0 ? void 0 : _e.replace('{column}', String(columnDef.header)) }), enableColumnPinning && jsxRuntime.jsx(core.Menu.Divider, {})] })), enableColumnPinning && column.getCanPin() && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsPinned() === 'start' || !column.getCanPin(), leftSection: jsxRuntime.jsx(IconPinned, { className: classes$b.left }), onClick: () => handlePinColumn('start'), children: localization.pinToLeft }), jsxRuntime.jsx(core.Menu.Item, { disabled: column.getIsPinned() === 'end' || !column.getCanPin(), leftSection: jsxRuntime.jsx(IconPinned, { className: classes$b.right }), onClick: () => handlePinColumn('end'), children: localization.pinToRight }), jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getIsPinned(), leftSection: jsxRuntime.jsx(IconPinnedOff, {}), onClick: () => handlePinColumn(false), children: localization.unpin }), enableHiding && jsxRuntime.jsx(core.Menu.Divider, {})] })), enableColumnResizing && column.getCanResize() && (jsxRuntime.jsx(core.Menu.Item, { disabled: !columnSizing[column.id], leftSection: jsxRuntime.jsx(IconArrowAutofitContent, {}), onClick: handleResetColumnSize, children: localization.resetColumnSize }, 0)), enableHiding && (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Menu.Item, { disabled: !column.getCanHide(), leftSection: jsxRuntime.jsx(IconEyeOff, {}), onClick: handleHideColumn, children: (_f = localization.hideColumn) === null || _f === void 0 ? void 0 : _f.replace('{column}', String(columnDef.header)) }, 0), jsxRuntime.jsx(core.Menu.Item, { disabled: !Object.values(columnVisibility).filter((visible) => !visible)
+                            .length, leftSection: jsxRuntime.jsx(IconColumns, {}), onClick: handleShowAllColumns, children: (_g = localization.showAllColumns) === null || _g === void 0 ? void 0 : _g.replace('{column}', String(columnDef.header)) }, 1)] }))] }));
+    return (jsxRuntime.jsxs(core.Menu, Object.assign({ closeOnItemClick: true, position: "bottom-start", withinPortal: true }, rest, { children: [jsxRuntime.jsx(core.Tooltip, { label: (_h = actionIconProps === null || actionIconProps === void 0 ? void 0 : actionIconProps.title) !== null && _h !== void 0 ? _h : localization.columnActions, openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx(core.Menu.Target, { children: jsxRuntime.jsx(core.ActionIcon, Object.assign({ "aria-label": localization.columnActions, color: "gray", size: "sm", variant: "subtle" }, actionIconProps, { children: jsxRuntime.jsx(IconDotsVertical, { size: "100%" }) })) }) }), jsxRuntime.jsx(core.Menu.Dropdown, { children: (_l = (_k = (_j = columnDef.renderColumnActionsMenuItems) === null || _j === void 0 ? void 0 : _j.call(columnDef, {
+                    column,
+                    internalColumnMenuItems,
+                    table,
+                })) !== null && _k !== void 0 ? _k : renderColumnActionsMenuItems === null || renderColumnActionsMenuItems === void 0 ? void 0 : renderColumnActionsMenuItems({
+                    column,
+                    internalColumnMenuItems,
+                    table,
+                })) !== null && _l !== void 0 ? _l : internalColumnMenuItems })] })));
+};
 
 const MRT_TableHeadCell = (_a) => {
     var _b, _c, _d, _f, _g, _h;
     var { columnVirtualizer, header, renderedHeaderIndex = 0, table } = _a, rest = __rest(_a, ["columnVirtualizer", "header", "renderedHeaderIndex", "table"]);
     const direction = core.useDirection();
-    const { state, options: { columnFilterDisplayMode, columnResizeDirection, columnResizeMode, enableColumnActions, enableColumnDragging, enableColumnOrdering, enableColumnPinning, enableGrouping, enableHeaderActionsHoverReveal, enableMultiSort, layoutMode, mantineTableHeadCellProps, }, refs: { tableHeadCellRefs }, setHoveredColumn, } = table;
+    const { options: { columnFilterDisplayMode, columnResizeDirection, columnResizeMode, enableColumnActions, enableColumnDragging, enableColumnOrdering, enableColumnPinning, enableGrouping, enableHeaderActionsHoverReveal, enableMultiSort, layoutMode, mantineTableHeadCellProps, }, refs: { tableHeadCellRefs }, setHoveredColumn, state, } = table;
     const { columnResizing, draggingColumn, grouping, hoveredColumn } = state;
     const { column } = header;
     const { columnDef } = column;
@@ -2467,17 +2389,17 @@ const MRT_TableHeadCell = (_a) => {
             (columnResizing === null || columnResizing === void 0 ? void 0 : columnResizing.isResizingColumn) === column.id &&
             columnResizeDirection) ||
             undefined }, tableCellProps, { __vars: {
-            '--mrt-table-cell-start': isColumnPinned === 'start'
-                ? `${column.getStart(isColumnPinned)}`
-                : undefined,
             '--mrt-table-cell-end': isColumnPinned === 'end'
                 ? `${column.getAfter(isColumnPinned)}`
+                : undefined,
+            '--mrt-table-cell-start': isColumnPinned === 'start'
+                ? `${column.getStart(isColumnPinned)}`
                 : undefined,
         }, align: columnDefType === 'group'
             ? 'center'
             : direction.dir === 'rtl'
                 ? 'right'
-                : 'left', className: clsx(classes$c.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$c['root-grid'], enableMultiSort && column.getCanSort() && classes$c['root-no-select'], columnVirtualizer && classes$c['root-virtualized'], tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), onDragEnter: handleDragEnter, ref: (node) => {
+                : 'left', className: clsx(classes$l.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$l['root-grid'], enableMultiSort && column.getCanSort() && classes$l['root-no-select'], columnVirtualizer && classes$l['root-virtualized'], tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.className), onDragEnter: handleDragEnter, ref: (node) => {
             var _a;
             if (node) {
                 tableHeadCellRefs.current[column.id] = node;
@@ -2488,36 +2410,34 @@ const MRT_TableHeadCell = (_a) => {
             }
         }, style: (theme) => (Object.assign(Object.assign({}, widthStyles), parseFromValuesOrFunc(tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.style, theme))), children: [header.isPlaceholder
                 ? null
-                : ((_f = tableCellProps.children) !== null && _f !== void 0 ? _f : (jsxRuntime.jsxs(core.Flex, { className: clsx('mrt-table-head-cell-content', classes$c.content, (columnDefType === 'group' ||
+                : ((_f = tableCellProps.children) !== null && _f !== void 0 ? _f : (jsxRuntime.jsxs(core.Flex, { className: clsx('mrt-table-head-cell-content', classes$l.content, (columnDefType === 'group' ||
                         (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'center') &&
-                        classes$c['content-center'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right' && classes$c['content-right'], column.getCanResize() && classes$c['content-spaced']), children: [jsxRuntime.jsxs(core.Flex, { __vars: {
+                        classes$l['content-center'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right' && classes$l['content-right'], column.getCanResize() && classes$l['content-spaced']), children: [jsxRuntime.jsxs(core.Flex, { __vars: {
                                 '--mrt-table-head-cell-labels-padding-left': `${headerPL}`,
-                            }, className: clsx('mrt-table-head-cell-labels', classes$c.labels, column.getCanSort() &&
+                            }, className: clsx('mrt-table-head-cell-labels', classes$l.labels, column.getCanSort() &&
                                 columnDefType !== 'group' &&
-                                classes$c['labels-sortable'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right'
-                                ? classes$c['labels-right']
+                                classes$l['labels-sortable'], (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'right'
+                                ? classes$l['labels-right']
                                 : (tableCellProps === null || tableCellProps === void 0 ? void 0 : tableCellProps.align) === 'center' &&
-                                    classes$c['labels-center'], columnDefType === 'data' && classes$c['labels-data']), onClick: column.getToggleSortingHandler(), children: [jsxRuntime.jsx(core.Flex, { className: clsx('mrt-table-head-cell-content-wrapper', classes$c['content-wrapper'], columnDefType === 'data' &&
-                                        classes$c['content-wrapper-hidden-overflow'], ((_h = (_g = columnDef.header) === null || _g === void 0 ? void 0 : _g.length) !== null && _h !== void 0 ? _h : 0) < 20 &&
-                                        classes$c['content-wrapper-nowrap']), children: headerElement }), column.getCanFilter() &&
+                                    classes$l['labels-center'], columnDefType === 'data' && classes$l['labels-data']), onClick: column.getToggleSortingHandler(), children: [jsxRuntime.jsx(core.Flex, { className: clsx('mrt-table-head-cell-content-wrapper', classes$l['content-wrapper'], columnDefType === 'data' &&
+                                        classes$l['content-wrapper-hidden-overflow'], ((_h = (_g = columnDef.header) === null || _g === void 0 ? void 0 : _g.length) !== null && _h !== void 0 ? _h : 0) < 20 &&
+                                        classes$l['content-wrapper-nowrap']), children: headerElement }), column.getCanFilter() &&
                                     (column.getIsFiltered() || showColumnButtons) && (jsxRuntime.jsx(MRT_TableHeadCellFilterLabel, { header: header, table: table })), column.getCanSort() &&
-                                    (column.getIsSorted() || showColumnButtons) && (jsxRuntime.jsx(MRT_TableHeadCellSortLabel, { header: header, table: table }))] }), columnDefType !== 'group' && (jsxRuntime.jsxs(core.Flex, { className: clsx('mrt-table-head-cell-content-actions', classes$c['content-actions']), children: [showDragHandle && (jsxRuntime.jsx(MRT_TableHeadCellGrabHandle, { column: column, table: table, tableHeadCellRef: {
+                                    (column.getIsSorted() || showColumnButtons) && (jsxRuntime.jsx(MRT_TableHeadCellSortLabel, { header: header, table: table }))] }), columnDefType !== 'group' && (jsxRuntime.jsxs(core.Flex, { className: clsx('mrt-table-head-cell-content-actions', classes$l['content-actions']), children: [showDragHandle && (jsxRuntime.jsx(MRT_TableHeadCellGrabHandle, { column: column, table: table, tableHeadCellRef: {
                                         current: tableHeadCellRefs.current[column.id],
                                     } })), columnActionsEnabled && showColumnButtons && (jsxRuntime.jsx(MRT_ColumnActionMenu, { header: header, onChange: setIsOpenedColumnActions, opened: isOpenedColumnActions, table: table }))] })), column.getCanResize() && (jsxRuntime.jsx(MRT_TableHeadCellResizeHandle, { header: header, table: table }))] }))), columnFilterDisplayMode === 'subheader' && column.getCanFilter() && (jsxRuntime.jsx(MRT_TableHeadCellFilterContainer, { header: header, table: table }))] })));
 };
 
-var classes$b = {"root":"MRT_TableHeadRow-module_root__hUKv4","layout-mode-grid":"MRT_TableHeadRow-module_layout-mode-grid__4ZGri","sticky":"MRT_TableHeadRow-module_sticky__Ej7Ax"};
-
 const MRT_TableHeadRow = (_a) => {
     var { columnVirtualizer, headerGroup, table } = _a, rest = __rest(_a, ["columnVirtualizer", "headerGroup", "table"]);
-    const { state, options: { enableStickyHeader, layoutMode, mantineTableHeadRowProps }, } = table;
+    const { options: { enableStickyHeader, layoutMode, mantineTableHeadRowProps }, state, } = table;
     const { isFullScreen } = state;
     const { virtualColumns, virtualPaddingLeft, virtualPaddingRight } = columnVirtualizer !== null && columnVirtualizer !== void 0 ? columnVirtualizer : {};
     const tableRowProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableHeadRowProps, {
         headerGroup,
         table,
     })), rest);
-    return (jsxRuntime.jsxs(core.TableTr, Object.assign({}, tableRowProps, { className: clsx(classes$b.root, (enableStickyHeader || isFullScreen) && classes$b.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$b['layout-mode-grid'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsxRuntime.jsx(core.Box, { component: "th", display: "flex", w: virtualPaddingLeft })) : null, (virtualColumns !== null && virtualColumns !== void 0 ? virtualColumns : headerGroup.headers).map((headerOrVirtualHeader, renderedHeaderIndex) => {
+    return (jsxRuntime.jsxs(core.TableTr, Object.assign({}, tableRowProps, { className: clsx(classes$m.root, (enableStickyHeader || isFullScreen) && classes$m.sticky, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$m['layout-mode-grid'], tableRowProps === null || tableRowProps === void 0 ? void 0 : tableRowProps.className), children: [virtualPaddingLeft ? (jsxRuntime.jsx(core.Box, { component: "th", display: "flex", w: virtualPaddingLeft })) : null, (virtualColumns !== null && virtualColumns !== void 0 ? virtualColumns : headerGroup.headers).map((headerOrVirtualHeader, renderedHeaderIndex) => {
                 let header = headerOrVirtualHeader;
                 if (columnVirtualizer) {
                     renderedHeaderIndex = headerOrVirtualHeader
@@ -2528,33 +2448,113 @@ const MRT_TableHeadRow = (_a) => {
             }), virtualPaddingRight ? (jsxRuntime.jsx(core.Box, { component: "th", display: "flex", w: virtualPaddingRight })) : null] })));
 };
 
-var classes$a = {"root":"MRT_TableHead-module_root__j9NkO","root-grid":"MRT_TableHead-module_root-grid__c3aGl","root-table-row-group":"MRT_TableHead-module_root-table-row-group__d9FO4","root-sticky":"MRT_TableHead-module_root-sticky__0kuDE","banner-tr":"MRT_TableHead-module_banner-tr__EhT-x","banner-th":"MRT_TableHead-module_banner-th__KwM5a","grid":"MRT_TableHead-module_grid__OJ-td"};
+var classes$a = {"alert":"MRT_ToolbarAlertBanner-module_alert__PAhUK","alert-stacked":"MRT_ToolbarAlertBanner-module_alert-stacked__HR7Nq","alert-bottom":"MRT_ToolbarAlertBanner-module_alert-bottom__u9L-S","alert-badge":"MRT_ToolbarAlertBanner-module_alert-badge__GwDmX","toolbar-alert":"MRT_ToolbarAlertBanner-module_toolbar-alert__3sJGU","head-overlay":"MRT_ToolbarAlertBanner-module_head-overlay__Hw7jK"};
+
+const MRT_SelectCheckbox = (_a) => {
+    var _b;
+    var { renderedRowIndex = 0, row, table } = _a, rest = __rest(_a, ["renderedRowIndex", "row", "table"]);
+    const { options: { enableMultiRowSelection, localization, mantineSelectAllCheckboxProps, mantineSelectCheckboxProps, selectAllMode, selectDisplayMode, }, state, } = table;
+    const { density, isLoading } = state;
+    const selectAll = !row;
+    const allRowsSelected = selectAll
+        ? selectAllMode === 'page'
+            ? table.getIsAllPageRowsSelected()
+            : table.getIsAllRowsSelected()
+        : undefined;
+    const isChecked = selectAll
+        ? allRowsSelected
+        : getIsRowSelected({ row, table });
+    const checkboxProps = Object.assign(Object.assign({}, (selectAll
+        ? parseFromValuesOrFunc(mantineSelectAllCheckboxProps, { table })
+        : parseFromValuesOrFunc(mantineSelectCheckboxProps, {
+            row,
+            table,
+        }))), rest);
+    const onSelectionChange = row
+        ? getMRT_RowSelectionHandler({
+            renderedRowIndex,
+            row,
+            table,
+        })
+        : undefined;
+    const onSelectAllChange = getMRT_SelectAllHandler({ table });
+    const commonProps = Object.assign(Object.assign({ 'aria-label': selectAll
+            ? localization.toggleSelectAll
+            : localization.toggleSelectRow, checked: isChecked, disabled: isLoading || (row && !row.getCanSelect()) || (row === null || row === void 0 ? void 0 : row.id) === 'mrt-row-create', onChange: (event) => {
+            event.stopPropagation();
+            if (selectAll) {
+                onSelectAllChange(event);
+            }
+            else {
+                onSelectionChange(event);
+            }
+        }, size: density === 'xs' ? 'sm' : 'md' }, checkboxProps), { onClick: (e) => {
+            var _a;
+            e.stopPropagation();
+            (_a = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.onClick) === null || _a === void 0 ? void 0 : _a.call(checkboxProps, e);
+        }, title: undefined });
+    return (jsxRuntime.jsx(core.Tooltip, { label: (_b = checkboxProps === null || checkboxProps === void 0 ? void 0 : checkboxProps.title) !== null && _b !== void 0 ? _b : (selectAll
+            ? localization.toggleSelectAll
+            : localization.toggleSelectRow), openDelay: 1000, withinPortal: true, children: jsxRuntime.jsx("span", { children: selectDisplayMode === 'switch' ? (jsxRuntime.jsx(core.Switch, Object.assign({}, commonProps))) : selectDisplayMode === 'radio' ||
+                enableMultiRowSelection === false ? (jsxRuntime.jsx(core.Radio, Object.assign({}, commonProps))) : (jsxRuntime.jsx(core.Checkbox, Object.assign({ indeterminate: !isChecked && selectAll
+                    ? table.getIsSomeRowsSelected()
+                    : (row === null || row === void 0 ? void 0 : row.getIsSomeSelected()) && row.getCanSelectSubRows() }, commonProps))) }) }));
+};
+
+const MRT_ToolbarAlertBanner = (_a) => {
+    var _b, _c, _d;
+    var { stackAlertBanner, table } = _a, rest = __rest(_a, ["stackAlertBanner", "table"]);
+    const { getFilteredSelectedRowModel, getPrePaginatedRowModel, options: { enableRowSelection, enableSelectAll, icons: { IconX }, localization, mantineToolbarAlertBannerBadgeProps, mantineToolbarAlertBannerProps, manualPagination, positionToolbarAlertBanner, renderToolbarAlertBannerContent, rowCount, }, state, } = table;
+    const { density, grouping, rowSelection, showAlertBanner } = state;
+    const alertProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineToolbarAlertBannerProps, {
+        table,
+    })), rest);
+    const badgeProps = parseFromValuesOrFunc(mantineToolbarAlertBannerBadgeProps, { table });
+    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().flatRows.length;
+    const selectedRowCount = react.useMemo(() => manualPagination
+        ? Object.values(rowSelection).filter(Boolean).length
+        : getFilteredSelectedRowModel().rows.length, [rowSelection, totalRowCount, manualPagination]);
+    const selectedAlert = selectedRowCount ? (jsxRuntime.jsxs(core.Flex, { align: "center", gap: "sm", children: [(_c = (_b = localization.selectedCountOfRowCountRowsSelected) === null || _b === void 0 ? void 0 : _b.replace('{selectedCount}', selectedRowCount.toString())) === null || _c === void 0 ? void 0 : _c.replace('{rowCount}', totalRowCount.toString()), jsxRuntime.jsx(core.Button, { onClick: (event) => getMRT_SelectAllHandler({ table })(event, false, true), size: "compact-xs", variant: "subtle", children: localization.clearSelection })] })) : null;
+    const groupedAlert = grouping.length > 0 ? (jsxRuntime.jsxs(core.Flex, { children: [localization.groupedBy, ' ', grouping.map((columnId, index) => (jsxRuntime.jsxs(react.Fragment, { children: [index > 0 ? localization.thenBy : '', jsxRuntime.jsxs(core.Badge, Object.assign({ className: classes$a['alert-badge'], rightSection: jsxRuntime.jsx(core.ActionIcon, { color: "white", onClick: () => table.getColumn(columnId).toggleGrouping(), size: "xs", variant: "subtle", children: jsxRuntime.jsx(IconX, { style: { transform: 'scale(0.8)' } }) }), variant: "filled" }, badgeProps, { children: [table.getColumn(columnId).columnDef.header, ' '] }))] }, `${index}-${columnId}`)))] })) : null;
+    return (jsxRuntime.jsx(core.Collapse, { expanded: showAlertBanner || !!selectedAlert || !!groupedAlert, transitionDuration: stackAlertBanner ? 200 : 0, children: jsxRuntime.jsx(core.Alert, Object.assign({ color: "blue", icon: false }, alertProps, { className: clsx(classes$a.alert, stackAlertBanner &&
+                !positionToolbarAlertBanner &&
+                classes$a['alert-stacked'], !stackAlertBanner &&
+                positionToolbarAlertBanner === 'bottom' &&
+                classes$a['alert-bottom'], alertProps === null || alertProps === void 0 ? void 0 : alertProps.className), children: (_d = renderToolbarAlertBannerContent === null || renderToolbarAlertBannerContent === void 0 ? void 0 : renderToolbarAlertBannerContent({
+                groupedAlert,
+                selectedAlert,
+                table,
+            })) !== null && _d !== void 0 ? _d : (jsxRuntime.jsxs(core.Flex, { className: clsx(classes$a['toolbar-alert'], positionToolbarAlertBanner === 'head-overlay' &&
+                    classes$a['head-overlay'], density), children: [enableRowSelection &&
+                        enableSelectAll &&
+                        positionToolbarAlertBanner === 'head-overlay' && (jsxRuntime.jsx(MRT_SelectCheckbox, { table: table })), jsxRuntime.jsxs(core.Stack, { children: [alertProps === null || alertProps === void 0 ? void 0 : alertProps.children, selectedAlert, groupedAlert] })] })) })) }));
+};
 
 const MRT_TableHead = (_a) => {
     var { columnVirtualizer, table } = _a, rest = __rest(_a, ["columnVirtualizer", "table"]);
-    const { getHeaderGroups, getSelectedRowModel, state, options: { enableStickyHeader, layoutMode, mantineTableHeadProps, positionToolbarAlertBanner, }, refs: { tableHeadRef }, } = table;
+    const { getHeaderGroups, getSelectedRowModel, options: { enableStickyHeader, layoutMode, mantineTableHeadProps, positionToolbarAlertBanner, }, refs: { tableHeadRef }, state, } = table;
     const { isFullScreen, showAlertBanner } = state;
     const tableHeadProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableHeadProps, {
         table,
     })), rest);
     const stickyHeader = enableStickyHeader || isFullScreen;
-    return (jsxRuntime.jsx(core.TableThead, Object.assign({}, tableHeadProps, { className: clsx(classes$a.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid'))
-            ? classes$a['root-grid']
-            : classes$a['root-table-row-group'], stickyHeader && classes$a['root-sticky'], tableHeadProps === null || tableHeadProps === void 0 ? void 0 : tableHeadProps.className), pos: stickyHeader && (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) ? 'sticky' : 'relative', ref: (ref) => {
+    return (jsxRuntime.jsx(core.TableThead, Object.assign({}, tableHeadProps, { className: clsx(classes$n.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid'))
+            ? classes$n['root-grid']
+            : classes$n['root-table-row-group'], stickyHeader && classes$n['root-sticky'], tableHeadProps === null || tableHeadProps === void 0 ? void 0 : tableHeadProps.className), pos: stickyHeader && (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) ? 'sticky' : 'relative', ref: (ref) => {
             tableHeadRef.current = ref;
             if (tableHeadProps === null || tableHeadProps === void 0 ? void 0 : tableHeadProps.ref) {
                 // @ts-ignore
                 tableHeadProps.ref.current = ref;
             }
         }, children: positionToolbarAlertBanner === 'head-overlay' &&
-            (showAlertBanner || getSelectedRowModel().rows.length > 0) ? (jsxRuntime.jsx(core.TableTr, { className: clsx(classes$a['banner-tr'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$a.grid), children: jsxRuntime.jsx(core.TableTh, { className: clsx(classes$a['banner-th'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$a.grid), colSpan: table.getVisibleLeafColumns().length, children: jsxRuntime.jsx(MRT_ToolbarAlertBanner, { table: table }) }) })) : (getHeaderGroups().map((headerGroup) => (jsxRuntime.jsx(MRT_TableHeadRow, { columnVirtualizer: columnVirtualizer, headerGroup: headerGroup, table: table }, headerGroup.id)))) })));
+            (showAlertBanner || getSelectedRowModel().rows.length > 0) ? (jsxRuntime.jsx(core.TableTr, { className: clsx(classes$n['banner-tr'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$n.grid), children: jsxRuntime.jsx(core.TableTh, { className: clsx(classes$n['banner-th'], (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$n.grid), colSpan: table.getVisibleLeafColumns().length, children: jsxRuntime.jsx(MRT_ToolbarAlertBanner, { table: table }) }) })) : (getHeaderGroups().map((headerGroup) => (jsxRuntime.jsx(MRT_TableHeadRow, { columnVirtualizer: columnVirtualizer, headerGroup: headerGroup, table: table }, headerGroup.id)))) })));
 };
 
 var classes$9 = {"root":"MRT_GlobalFilterTextInput-module_root__Xmcpv","collapse":"MRT_GlobalFilterTextInput-module_collapse__v311d"};
 
 const MRT_GlobalFilterTextInput = (_a) => {
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { state, options: { enableGlobalFilterModes, icons: { IconSearch, IconX }, localization, mantineSearchTextInputProps, manualFiltering, positionGlobalFilter, }, refs: { searchInputRef }, setGlobalFilter, } = table;
+    const { options: { enableGlobalFilterModes, icons: { IconSearch, IconX }, localization, mantineSearchTextInputProps, manualFiltering, positionGlobalFilter, }, refs: { searchInputRef }, setGlobalFilter, state, } = table;
     const { globalFilter, showGlobalFilter } = state;
     const textFieldProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineSearchTextInputProps, {
         table,
@@ -2956,8 +2956,7 @@ const useMRT_TableOptions = (_a) => {
         enableTableFooter,
         enableTableHead,
         enableToolbarInternalActions,
-        enableTopToolbar,
-        filterFns, features: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, reactTable.stockFeatures), ((enableColumnFilters || enableGlobalFilter || enableFilters) &&
+        enableTopToolbar, features: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, reactTable.stockFeatures), ((enableColumnFilters || enableGlobalFilter || enableFilters) &&
             !manualFiltering
             ? { filteredRowModel: reactTable.createFilteredRowModel(), filterFns }
             : {})), (enableSorting && !manualSorting
@@ -2968,16 +2967,16 @@ const useMRT_TableOptions = (_a) => {
             ? { expandedRowModel: reactTable.createExpandedRowModel() }
             : {})), (enableGrouping && !manualGrouping
             ? {
-                groupedRowModel: reactTable.createGroupedRowModel(),
                 aggregationFns,
+                groupedRowModel: reactTable.createGroupedRowModel(),
             }
             : {})), (enableFacetedValues
             ? {
-                facetedRowModel: reactTable.createFacetedRowModel(),
                 facetedMinMaxValues: reactTable.createFacetedMinMaxValues(),
+                facetedRowModel: reactTable.createFacetedRowModel(),
                 facetedUniqueValues: reactTable.createFacetedUniqueValues(),
             }
-            : {})), getSubRows: (row) => row === null || row === void 0 ? void 0 : row.subRows, icons,
+            : {})), filterFns, getSubRows: (row) => row === null || row === void 0 ? void 0 : row.subRows, icons,
         layoutMode,
         localization,
         manualFiltering,
@@ -3015,7 +3014,7 @@ const getMRT_RowSpacerColumnDef = (tableOptions) => {
 };
 
 const useMRT_Effects = (table) => {
-    const { getIsSomeRowsPinned, getPrePaginatedRowModel, state, options: { enablePagination, enableRowPinning, rowCount }, } = table;
+    const { getIsSomeRowsPinned, getPrePaginatedRowModel, options: { enablePagination, enableRowPinning, rowCount }, state, } = table;
     const { columnOrder, density, globalFilter, isFullScreen, isLoading, pagination, showSkeletons, sorting, } = state;
     const totalColumnCount = table.options.columns.length;
     const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().rows.length;
@@ -3307,7 +3306,7 @@ const useMRT_TableInstance = (definedTableOptions) => {
         statefulTableOptions.state.isLoading,
         statefulTableOptions.state.showSkeletons,
     ]);
-    const table = reactTable.useTable(Object.assign(Object.assign({}, statefulTableOptions), { 
+    const table = reactTable.useTable(Object.assign(Object.assign({}, statefulTableOptions), {
         // Hand TanStack-aware slices over to our external atoms — library writes
         // (e.g. `table.setPageIndex(...)`, drag-resize) flow straight into them.
         atoms: {
@@ -3379,175 +3378,15 @@ const useMRT_TableInstance = (definedTableOptions) => {
 
 const useMantineReactTable = (tableOptions) => useMRT_TableInstance(useMRT_TableOptions(tableOptions));
 
-var commonClasses = {"common-toolbar-styles":"common-styles-module_common-toolbar-styles__DnjR8"};
+var classes$8 = {"root":"MRT_TablePaper-module_root__q0v5L"};
 
-var classes$8 = {"root":"MRT_BottomToolbar-module_root__VDeWo","root-fullscreen":"MRT_BottomToolbar-module_root-fullscreen__esE15","custom-toolbar-container":"MRT_BottomToolbar-module_custom-toolbar-container__XcDRF","paginator-container":"MRT_BottomToolbar-module_paginator-container__A3eWY","paginator-container-alert-banner":"MRT_BottomToolbar-module_paginator-container-alert-banner__gyqtO"};
+var classes$7 = {"root":"MRT_TableContainer-module_root__JIsGB","root-sticky":"MRT_TableContainer-module_root-sticky__uC4qx","root-fullscreen":"MRT_TableContainer-module_root-fullscreen__aM8Jg"};
 
-var classes$7 = {"collapse":"MRT_ProgressBar-module_collapse__rOLJH","collapse-top":"MRT_ProgressBar-module_collapse-top__oCi0h"};
-
-const MRT_ProgressBar = (_a) => {
-    var { isTopToolbar, table } = _a, rest = __rest(_a, ["isTopToolbar", "table"]);
-    const { state, options: { mantineProgressProps }, } = table;
-    const { isSaving, showProgressBars } = state;
-    const linearProgressProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineProgressProps, {
-        isTopToolbar,
-        table,
-    })), rest);
-    return (jsxRuntime.jsx(core.Collapse, { className: clsx(classes$7.collapse, isTopToolbar && classes$7['collapse-top']), expanded: isSaving || showProgressBars, children: jsxRuntime.jsx(core.Progress, Object.assign({ animated: true, "aria-busy": "true", "aria-label": "Loading", radius: 0, value: 100 }, linearProgressProps)) }));
-};
-
-var classes$6 = {"root":"MRT_TablePagination-module_root__yZ8pm","pagesize":"MRT_TablePagination-module_pagesize__-vmTn","with-top-margin":"MRT_TablePagination-module_with-top-margin__aM5-m"};
-
-const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100].map((x) => x.toString());
-const MRT_TablePagination = (_a) => {
-    var _b;
-    var { position = 'bottom', table } = _a, props = __rest(_a, ["position", "table"]);
-    const { getPrePaginatedRowModel, state, options: { enableToolbarInternalActions, icons: { IconChevronLeft, IconChevronLeftPipe, IconChevronRight, IconChevronRightPipe, }, localization, mantinePaginationProps, paginationDisplayMode, rowCount, }, setPageIndex, setPageSize, } = table;
-    const { pagination: { pageIndex = 0, pageSize = 10 }, showGlobalFilter, } = state;
-    const paginationProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantinePaginationProps, {
-        table,
-    })), props);
-    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().rows.length;
-    const numberOfPages = Math.ceil(totalRowCount / pageSize);
-    const showFirstLastPageButtons = numberOfPages > 2;
-    const firstRowIndex = pageIndex * pageSize;
-    const lastRowIndex = Math.min(pageIndex * pageSize + pageSize, totalRowCount);
-    const _c = paginationProps !== null && paginationProps !== void 0 ? paginationProps : {}, { rowsPerPageOptions = defaultRowsPerPage, showRowsPerPage = true, withEdges = showFirstLastPageButtons } = _c, rest = __rest(_c, ["rowsPerPageOptions", "showRowsPerPage", "withEdges"]);
-    const needsTopMargin = position === 'top' && enableToolbarInternalActions && !showGlobalFilter;
-    return (jsxRuntime.jsxs(core.Box, { className: clsx('mrt-table-pagination', classes$6.root, needsTopMargin && classes$6['with-top-margin']), children: [(paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.showRowsPerPage) !== false && (jsxRuntime.jsxs(core.Group, { gap: "xs", children: [jsxRuntime.jsx(core.Text, { id: "rpp-label", children: localization.rowsPerPage }), jsxRuntime.jsx(core.Select, { allowDeselect: false, "aria-labelledby": "rpp-label", className: classes$6.pagesize, data: (_b = paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.rowsPerPageOptions) !== null && _b !== void 0 ? _b : defaultRowsPerPage, onChange: (value) => setPageSize(+value), value: pageSize.toString() })] })), paginationDisplayMode === 'pages' ? (jsxRuntime.jsx(core.Pagination, Object.assign({ firstIcon: IconChevronLeftPipe, lastIcon: IconChevronRightPipe, nextIcon: IconChevronRight, onChange: (newPageIndex) => setPageIndex(newPageIndex - 1), previousIcon: IconChevronLeft, total: numberOfPages, value: pageIndex + 1, withEdges: withEdges }, rest))) : paginationDisplayMode === 'default' ? (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Text, { children: `${lastRowIndex === 0 ? 0 : (firstRowIndex + 1).toLocaleString()}-${lastRowIndex.toLocaleString()} ${localization.of} ${totalRowCount.toLocaleString()}` }), jsxRuntime.jsxs(core.Group, { gap: 6, children: [withEdges && (jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToFirstPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(0), variant: "subtle", children: jsxRuntime.jsx(IconChevronLeftPipe, {}) })), jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToPreviousPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(pageIndex - 1), variant: "subtle", children: jsxRuntime.jsx(IconChevronLeft, {}) }), jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToNextPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(pageIndex + 1), variant: "subtle", children: jsxRuntime.jsx(IconChevronRight, {}) }), withEdges && (jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToLastPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(numberOfPages - 1), variant: "subtle", children: jsxRuntime.jsx(IconChevronRightPipe, {}) }))] })] })) : null] }));
-};
-
-var classes$5 = {"root":"MRT_ToolbarDropZone-module_root__eGTXb","hovered":"MRT_ToolbarDropZone-module_hovered__g7PeJ"};
-
-const MRT_ToolbarDropZone = (_a) => {
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { state, options: { enableGrouping, localization }, setHoveredColumn, setShowToolbarDropZone, } = table;
-    const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = state;
-    const handleDragEnter = (_event) => {
-        setHoveredColumn({ id: 'drop-zone' });
-    };
-    react.useEffect(() => {
-        var _a;
-        if (((_a = table.options.state) === null || _a === void 0 ? void 0 : _a.showToolbarDropZone) !== undefined) {
-            setShowToolbarDropZone(!!enableGrouping &&
-                !!draggingColumn &&
-                draggingColumn.columnDef.enableGrouping !== false &&
-                !grouping.includes(draggingColumn.id));
-        }
-    }, [enableGrouping, draggingColumn, grouping]);
-    return (jsxRuntime.jsx(core.Transition, { mounted: showToolbarDropZone, transition: "fade", children: () => {
-            var _a, _b;
-            return (jsxRuntime.jsx(core.Flex, Object.assign({ className: clsx('mrt-toolbar-dropzone', classes$5.root, (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === 'drop-zone' && classes$5.hovered), onDragEnter: handleDragEnter }, rest, { children: jsxRuntime.jsx(core.Text, { children: localization.dropToGroupBy.replace('{column}', (_b = (_a = draggingColumn === null || draggingColumn === void 0 ? void 0 : draggingColumn.columnDef) === null || _a === void 0 ? void 0 : _a.header) !== null && _b !== void 0 ? _b : '') }) })));
-        } }));
-};
-
-const MRT_BottomToolbar = (_a) => {
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { state, options: { enablePagination, mantineBottomToolbarProps, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderBottomToolbarCustomActions, }, refs: { bottomToolbarRef }, } = table;
-    const { isFullScreen } = state;
-    const isMobile = hooks.useMediaQuery('(max-width: 720px)');
-    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineBottomToolbarProps, {
-        table,
-    })), rest);
-    const stackAlertBanner = isMobile || !!renderBottomToolbarCustomActions;
-    return (jsxRuntime.jsxs(core.Box, Object.assign({}, toolbarProps, { className: clsx('mrt-bottom-toolbar', classes$8.root, commonClasses['common-toolbar-styles'], isFullScreen && classes$8['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
-            if (node) {
-                bottomToolbarRef.current = node;
-                if (toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref) {
-                    toolbarProps.ref.current = node;
-                }
-            }
-        }, children: [jsxRuntime.jsx(MRT_ProgressBar, { isTopToolbar: false, table: table }), positionToolbarAlertBanner === 'bottom' && (jsxRuntime.jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'bottom'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsxRuntime.jsx(MRT_ToolbarDropZone, { table: table })), jsxRuntime.jsxs(core.Box, { className: classes$8['custom-toolbar-container'], children: [renderBottomToolbarCustomActions ? (renderBottomToolbarCustomActions({ table })) : (jsxRuntime.jsx("span", {})), jsxRuntime.jsx(core.Box, { className: clsx(classes$8['paginator-container'], stackAlertBanner && classes$8['paginator-container-alert-banner']), children: enablePagination &&
-                            ['both', 'bottom'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsxRuntime.jsx(MRT_TablePagination, { position: "bottom", table: table })) })] })] })));
-};
-
-var classes$4 = {"root":"MRT_TopToolbar-module_root__r4-V9","root-fullscreen":"MRT_TopToolbar-module_root-fullscreen__3itT8","actions-container":"MRT_TopToolbar-module_actions-container__-uL0u","actions-container-stack-alert":"MRT_TopToolbar-module_actions-container-stack-alert__OYDL6"};
-
-var classes$3 = {"root":"MRT_ToolbarInternalButtons-module_root__NKoUG"};
-
-const MRT_ToolbarInternalButtons = (_a) => {
-    var _b;
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { options: { columnFilterDisplayMode, enableColumnFilters, enableColumnOrdering, enableColumnPinning, enableDensityToggle, enableFilters, enableFullScreenToggle, enableGlobalFilter, enableHiding, initialState, renderToolbarInternalActions, }, } = table;
-    return (jsxRuntime.jsx(core.Flex, Object.assign({}, rest, { className: clsx('mrt-toolbar-internal-buttons', classes$3.root, rest === null || rest === void 0 ? void 0 : rest.className), children: (_b = renderToolbarInternalActions === null || renderToolbarInternalActions === void 0 ? void 0 : renderToolbarInternalActions({ table })) !== null && _b !== void 0 ? _b : (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [enableFilters &&
-                    enableGlobalFilter &&
-                    !(initialState === null || initialState === void 0 ? void 0 : initialState.showGlobalFilter) && (jsxRuntime.jsx(MRT_ToggleGlobalFilterButton, { table: table })), enableFilters &&
-                    enableColumnFilters &&
-                    columnFilterDisplayMode !== 'popover' && (jsxRuntime.jsx(MRT_ToggleFiltersButton, { table: table })), (enableHiding || enableColumnOrdering || enableColumnPinning) && (jsxRuntime.jsx(MRT_ShowHideColumnsButton, { table: table })), enableDensityToggle && (jsxRuntime.jsx(MRT_ToggleDensePaddingButton, { table: table })), enableFullScreenToggle && (jsxRuntime.jsx(MRT_ToggleFullScreenButton, { table: table }))] })) })));
-};
-
-const MRT_TopToolbar = (_a) => {
-    var _b;
-    var { table } = _a, rest = __rest(_a, ["table"]);
-    const { state, options: { enableGlobalFilter, enablePagination, enableToolbarInternalActions, mantineTopToolbarProps, positionGlobalFilter, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderTopToolbarCustomActions, }, refs: { topToolbarRef }, } = table;
-    const { isFullScreen, showGlobalFilter } = state;
-    const isMobile = hooks.useMediaQuery('(max-width:720px)');
-    const isTablet = hooks.useMediaQuery('(max-width:1024px)');
-    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTopToolbarProps, { table })), rest);
-    const stackAlertBanner = isMobile ||
-        !!renderTopToolbarCustomActions ||
-        (showGlobalFilter && isTablet);
-    const globalFilterProps = {
-        style: !isTablet
-            ? {
-                zIndex: 3,
-            }
-            : undefined,
-        table,
-    };
-    return (jsxRuntime.jsxs(core.Box, Object.assign({}, toolbarProps, { className: clsx(commonClasses['common-toolbar-styles'], classes$4['root'], isFullScreen && classes$4['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
-            if (node) {
-                topToolbarRef.current = node;
-                if (toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref) {
-                    toolbarProps.ref.current = node;
-                }
-            }
-        }, children: [positionToolbarAlertBanner === 'top' && (jsxRuntime.jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'top'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsxRuntime.jsx(MRT_ToolbarDropZone, { table: table })), jsxRuntime.jsxs(core.Flex, { className: clsx(classes$4['actions-container'], stackAlertBanner && classes$4['actions-container-stack-alert']), children: [enableGlobalFilter && positionGlobalFilter === 'left' && (jsxRuntime.jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), (_b = renderTopToolbarCustomActions === null || renderTopToolbarCustomActions === void 0 ? void 0 : renderTopToolbarCustomActions({ table })) !== null && _b !== void 0 ? _b : jsxRuntime.jsx("span", {}), enableToolbarInternalActions ? (jsxRuntime.jsxs(core.Flex, { justify: 'end', wrap: 'wrap-reverse', children: [enableGlobalFilter && positionGlobalFilter === 'right' && (jsxRuntime.jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), jsxRuntime.jsx(MRT_ToolbarInternalButtons, { table: table })] })) : (enableGlobalFilter &&
-                        positionGlobalFilter === 'right' && (jsxRuntime.jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))))] }), enablePagination &&
-                ['both', 'top'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsxRuntime.jsx(core.Flex, { justify: "end", children: jsxRuntime.jsx(MRT_TablePagination, { position: "top", table: table }) })), jsxRuntime.jsx(MRT_ProgressBar, { isTopToolbar: true, table: table })] })));
-};
-
-const MRT_EditRowModal = (_a) => {
-    var _b;
-    var { open, table } = _a, rest = __rest(_a, ["open", "table"]);
-    const { state, options: { mantineCreateRowModalProps, mantineEditRowModalProps, onCreatingRowCancel, onEditingRowCancel, renderCreateRowModalContent, renderEditRowModalContent, }, setCreatingRow, setEditingRow, } = table;
-    const { creatingRow, editingRow } = state;
-    const row = (creatingRow !== null && creatingRow !== void 0 ? creatingRow : editingRow);
-    const arg = { row, table };
-    const modalProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditRowModalProps, arg)), (creatingRow && parseFromValuesOrFunc(mantineCreateRowModalProps, arg))), rest);
-    const internalEditComponents = row
-        .getAllCells()
-        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
-        .map((cell) => (jsxRuntime.jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
-    const handleCancel = () => {
-        var _a;
-        if (creatingRow) {
-            onCreatingRowCancel === null || onCreatingRowCancel === void 0 ? void 0 : onCreatingRowCancel({ row, table });
-            setCreatingRow(null);
-        }
-        else {
-            onEditingRowCancel === null || onEditingRowCancel === void 0 ? void 0 : onEditingRowCancel({ row, table });
-            setEditingRow(null);
-        }
-        row._valuesCache = {}; // reset values cache
-        (_a = modalProps.onClose) === null || _a === void 0 ? void 0 : _a.call(modalProps);
-    };
-    return (react.createElement(core.Modal, Object.assign({ opened: open, withCloseButton: false }, modalProps, { key: row.id, onClose: handleCancel }), (_b = ((creatingRow &&
-        (renderCreateRowModalContent === null || renderCreateRowModalContent === void 0 ? void 0 : renderCreateRowModalContent({
-            internalEditComponents,
-            row,
-            table,
-        }))) ||
-        (renderEditRowModalContent === null || renderEditRowModalContent === void 0 ? void 0 : renderEditRowModalContent({
-            internalEditComponents,
-            row,
-            table,
-        })))) !== null && _b !== void 0 ? _b : (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("form", { onSubmit: (e) => e.preventDefault(), children: jsxRuntime.jsx(core.Stack, { gap: "lg", pb: 24, pt: 16, children: internalEditComponents }) }), jsxRuntime.jsx(core.Flex, { justify: "flex-end", children: jsxRuntime.jsx(MRT_EditActionButtons, { row: row, table: table, variant: "text" }) })] }))));
-};
+var classes$6 = {"root":"MRT_Table-module_root__ms2uS","root-grid":"MRT_Table-module_root-grid__2Pynz"};
 
 const useMRT_ColumnVirtualizer = (table) => {
     var _a, _b, _c, _d;
-    const { getStartLeafColumns, getEndLeafColumns, state, getVisibleLeafColumns, options: { columnVirtualizerInstanceRef, columnVirtualizerOptions, enableColumnPinning, enableColumnVirtualization, }, refs: { tableContainerRef }, } = table;
+    const { getEndLeafColumns, getStartLeafColumns, getVisibleLeafColumns, options: { columnVirtualizerInstanceRef, columnVirtualizerOptions, enableColumnPinning, enableColumnVirtualization, }, refs: { tableContainerRef }, state, } = table;
     const { columnPinning, draggingColumn } = state;
     if (!enableColumnVirtualization)
         return undefined;
@@ -3603,12 +3442,10 @@ const useMRT_ColumnVirtualizer = (table) => {
     return columnVirtualizer;
 };
 
-var classes$2 = {"root":"MRT_Table-module_root__ms2uS","root-grid":"MRT_Table-module_root-grid__2Pynz"};
-
 const MRT_Table = (_a) => {
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { getFlatHeaders, state, options: { columns, enableTableFooter, enableTableHead, layoutMode, mantineTableProps, memoMode, }, } = table;
-    const { columnSizing, columnResizing, columnVisibility, density } = state;
+    const { getFlatHeaders, options: { columns, enableTableFooter, enableTableHead, layoutMode, mantineTableProps, memoMode, }, state, } = table;
+    const { columnResizing, columnSizing, columnVisibility, density } = state;
     const tableProps = Object.assign(Object.assign({ highlightOnHover: true, horizontalSpacing: density, verticalSpacing: density }, parseFromValuesOrFunc(mantineTableProps, { table })), rest);
     const columnSizeVars = react.useMemo(() => {
         const headers = getFlatHeaders();
@@ -3628,26 +3465,63 @@ const MRT_Table = (_a) => {
     };
     const { colorScheme } = core.useMantineColorScheme();
     const { stripedColor } = tableProps;
-    return (jsxRuntime.jsxs(core.Table, Object.assign({ className: clsx('mrt-table', classes$2.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$2['root-grid'], tableProps.className) }, tableProps, { __vars: Object.assign(Object.assign(Object.assign({}, columnSizeVars), { '--mrt-striped-row-background-color': stripedColor, '--mrt-striped-row-hover-background-color': stripedColor
+    return (jsxRuntime.jsxs(core.Table, Object.assign({ className: clsx('mrt-table', classes$6.root, (layoutMode === null || layoutMode === void 0 ? void 0 : layoutMode.startsWith('grid')) && classes$6['root-grid'], tableProps.className) }, tableProps, { __vars: Object.assign(Object.assign(Object.assign({}, columnSizeVars), { '--mrt-striped-row-background-color': stripedColor, '--mrt-striped-row-hover-background-color': stripedColor
                 ? colorScheme === 'dark'
                     ? core.lighten(stripedColor, 0.08)
                     : core.darken(stripedColor, 0.12)
                 : undefined }), tableProps.__vars), children: [enableTableHead && jsxRuntime.jsx(MRT_TableHead, Object.assign({}, commonTableGroupProps)), memoMode === 'table-body' || columnResizing.isResizingColumn ? (jsxRuntime.jsx(Memo_MRT_TableBody, Object.assign({}, commonTableGroupProps, { tableProps: tableProps }))) : (jsxRuntime.jsx(MRT_TableBody, Object.assign({}, commonTableGroupProps, { tableProps: tableProps }))), enableTableFooter && jsxRuntime.jsx(MRT_TableFooter, Object.assign({}, commonTableGroupProps))] })));
 };
 
-var classes$1 = {"root":"MRT_TableContainer-module_root__JIsGB","root-sticky":"MRT_TableContainer-module_root-sticky__uC4qx","root-fullscreen":"MRT_TableContainer-module_root-fullscreen__aM8Jg"};
+const MRT_EditRowModal = (_a) => {
+    var _b;
+    var { open, table } = _a, rest = __rest(_a, ["open", "table"]);
+    const { options: { mantineCreateRowModalProps, mantineEditRowModalProps, onCreatingRowCancel, onEditingRowCancel, renderCreateRowModalContent, renderEditRowModalContent, }, setCreatingRow, setEditingRow, state, } = table;
+    const { creatingRow, editingRow } = state;
+    const row = (creatingRow !== null && creatingRow !== void 0 ? creatingRow : editingRow);
+    const arg = { row, table };
+    const modalProps = Object.assign(Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineEditRowModalProps, arg)), (creatingRow && parseFromValuesOrFunc(mantineCreateRowModalProps, arg))), rest);
+    const internalEditComponents = row
+        .getAllCells()
+        .filter((cell) => cell.column.columnDef.columnDefType === 'data')
+        .map((cell) => (jsxRuntime.jsx(MRT_EditCellTextInput, { cell: cell, table: table }, cell.id)));
+    const handleCancel = () => {
+        var _a;
+        if (creatingRow) {
+            onCreatingRowCancel === null || onCreatingRowCancel === void 0 ? void 0 : onCreatingRowCancel({ row, table });
+            setCreatingRow(null);
+        }
+        else {
+            onEditingRowCancel === null || onEditingRowCancel === void 0 ? void 0 : onEditingRowCancel({ row, table });
+            setEditingRow(null);
+        }
+        row._valuesCache = {}; // reset values cache
+        (_a = modalProps.onClose) === null || _a === void 0 ? void 0 : _a.call(modalProps);
+    };
+    return (react.createElement(core.Modal, Object.assign({ opened: open, withCloseButton: false }, modalProps, { key: row.id, onClose: handleCancel }), (_b = ((creatingRow &&
+        (renderCreateRowModalContent === null || renderCreateRowModalContent === void 0 ? void 0 : renderCreateRowModalContent({
+            internalEditComponents,
+            row,
+            table,
+        }))) ||
+        (renderEditRowModalContent === null || renderEditRowModalContent === void 0 ? void 0 : renderEditRowModalContent({
+            internalEditComponents,
+            row,
+            table,
+        })))) !== null && _b !== void 0 ? _b : (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx("form", { onSubmit: (e) => e.preventDefault(), children: jsxRuntime.jsx(core.Stack, { gap: "lg", pb: 24, pt: 16, children: internalEditComponents }) }), jsxRuntime.jsx(core.Flex, { justify: "flex-end", children: jsxRuntime.jsx(MRT_EditActionButtons, { row: row, table: table, variant: "text" }) })] }))));
+};
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? react.useLayoutEffect : react.useEffect;
 const MRT_TableContainer = (_a) => {
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { state, options: { createDisplayMode, editDisplayMode, enableStickyHeader, mantineLoadingOverlayProps, mantineTableContainerProps, }, refs: { bottomToolbarRef, tableContainerRef, topToolbarRef }, } = table;
+    const { options: { createDisplayMode, editDisplayMode, enableStickyHeader, mantineLoadingOverlayProps, mantineTableContainerProps, }, refs: { bottomToolbarRef, tableContainerRef, tableHeadRef, topToolbarRef, }, state, } = table;
     const { creatingRow, editingRow, isFullScreen, isLoading, showLoadingOverlay, } = state;
     const [totalToolbarHeight, setTotalToolbarHeight] = react.useState(0);
+    const [tableHeadHeight, setTableHeadHeight] = react.useState(0);
     const tableContainerProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTableContainerProps, { table })), rest);
     const { ref: tableContainerPropRef } = tableContainerProps, resolvedTableContainerProps = __rest(tableContainerProps, ["ref"]);
     const loadingOverlayProps = parseFromValuesOrFunc(mantineLoadingOverlayProps, { table });
     useIsomorphicLayoutEffect(() => {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         const topToolbarHeight = typeof document !== 'undefined'
             ? ((_b = (_a = topToolbarRef.current) === null || _a === void 0 ? void 0 : _a.offsetHeight) !== null && _b !== void 0 ? _b : 0)
             : 0;
@@ -3655,10 +3529,12 @@ const MRT_TableContainer = (_a) => {
             ? ((_d = (_c = bottomToolbarRef === null || bottomToolbarRef === void 0 ? void 0 : bottomToolbarRef.current) === null || _c === void 0 ? void 0 : _c.offsetHeight) !== null && _d !== void 0 ? _d : 0)
             : 0;
         setTotalToolbarHeight(topToolbarHeight + bottomToolbarHeight);
+        setTableHeadHeight((_f = (_e = tableHeadRef.current) === null || _e === void 0 ? void 0 : _e.offsetHeight) !== null && _f !== void 0 ? _f : 0);
     });
     const createModalOpen = createDisplayMode === 'modal' && creatingRow;
     const editModalOpen = editDisplayMode === 'modal' && editingRow;
-    return (jsxRuntime.jsxs(core.ScrollArea.Autosize, Object.assign({}, resolvedTableContainerProps, { __vars: Object.assign({ '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, resolvedTableContainerProps.__vars), className: clsx('mrt-table-container', classes$1.root, enableStickyHeader && classes$1['root-sticky'], isFullScreen && classes$1['root-fullscreen'], resolvedTableContainerProps.className), viewportRef: (node) => {
+    const stickyHeader = enableStickyHeader || isFullScreen;
+    return (jsxRuntime.jsxs(core.ScrollArea.Autosize, Object.assign({ offsetScrollbars: "present", type: "auto" }, resolvedTableContainerProps, { __vars: Object.assign({ '--mrt-table-head-height': `${tableHeadHeight}`, '--mrt-top-toolbar-height': `${totalToolbarHeight}` }, resolvedTableContainerProps.__vars), className: clsx('mrt-table-container', classes$7.root, stickyHeader && classes$7['root-sticky'], isFullScreen && classes$7['root-fullscreen'], resolvedTableContainerProps.className), viewportRef: (node) => {
             if (node) {
                 tableContainerRef.current = node;
                 if (typeof tableContainerPropRef === 'function') {
@@ -3671,15 +3547,141 @@ const MRT_TableContainer = (_a) => {
         }, children: [jsxRuntime.jsx(core.LoadingOverlay, Object.assign({ visible: isLoading || showLoadingOverlay, zIndex: 2 }, loadingOverlayProps)), jsxRuntime.jsx(MRT_Table, { table: table }), (createModalOpen || editModalOpen) && (jsxRuntime.jsx(MRT_EditRowModal, { open: true, table: table }))] })));
 };
 
-var classes = {"root":"MRT_TablePaper-module_root__q0v5L"};
+var commonClasses = {"common-toolbar-styles":"common-styles-module_common-toolbar-styles__DnjR8"};
+
+var classes$5 = {"root":"MRT_BottomToolbar-module_root__VDeWo","root-fullscreen":"MRT_BottomToolbar-module_root-fullscreen__esE15","custom-toolbar-container":"MRT_BottomToolbar-module_custom-toolbar-container__XcDRF","paginator-container":"MRT_BottomToolbar-module_paginator-container__A3eWY","paginator-container-alert-banner":"MRT_BottomToolbar-module_paginator-container-alert-banner__gyqtO"};
+
+var classes$4 = {"collapse":"MRT_ProgressBar-module_collapse__rOLJH","collapse-top":"MRT_ProgressBar-module_collapse-top__oCi0h"};
+
+const MRT_ProgressBar = (_a) => {
+    var { isTopToolbar, table } = _a, rest = __rest(_a, ["isTopToolbar", "table"]);
+    const { options: { mantineProgressProps }, state, } = table;
+    const { isSaving, showProgressBars } = state;
+    const linearProgressProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineProgressProps, {
+        isTopToolbar,
+        table,
+    })), rest);
+    return (jsxRuntime.jsx(core.Collapse, { className: clsx(classes$4.collapse, isTopToolbar && classes$4['collapse-top']), expanded: isSaving || showProgressBars, children: jsxRuntime.jsx(core.Progress, Object.assign({ animated: true, "aria-busy": "true", "aria-label": "Loading", radius: 0, value: 100 }, linearProgressProps)) }));
+};
+
+var classes$3 = {"root":"MRT_TablePagination-module_root__yZ8pm","pagesize":"MRT_TablePagination-module_pagesize__-vmTn","with-top-margin":"MRT_TablePagination-module_with-top-margin__aM5-m"};
+
+const defaultRowsPerPage = [5, 10, 15, 20, 25, 30, 50, 100].map((x) => x.toString());
+const MRT_TablePagination = (_a) => {
+    var _b;
+    var { position = 'bottom', table } = _a, props = __rest(_a, ["position", "table"]);
+    const { getPrePaginatedRowModel, options: { enableToolbarInternalActions, icons: { IconChevronLeft, IconChevronLeftPipe, IconChevronRight, IconChevronRightPipe, }, localization, mantinePaginationProps, paginationDisplayMode, rowCount, }, setPageIndex, setPageSize, state, } = table;
+    const { pagination: { pageIndex = 0, pageSize = 10 }, showGlobalFilter, } = state;
+    const paginationProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantinePaginationProps, {
+        table,
+    })), props);
+    const totalRowCount = rowCount !== null && rowCount !== void 0 ? rowCount : getPrePaginatedRowModel().rows.length;
+    const numberOfPages = Math.ceil(totalRowCount / pageSize);
+    const showFirstLastPageButtons = numberOfPages > 2;
+    const firstRowIndex = pageIndex * pageSize;
+    const lastRowIndex = Math.min(pageIndex * pageSize + pageSize, totalRowCount);
+    const _c = paginationProps !== null && paginationProps !== void 0 ? paginationProps : {}, { rowsPerPageOptions = defaultRowsPerPage, showRowsPerPage = true, withEdges = showFirstLastPageButtons } = _c, rest = __rest(_c, ["rowsPerPageOptions", "showRowsPerPage", "withEdges"]);
+    const needsTopMargin = position === 'top' && enableToolbarInternalActions && !showGlobalFilter;
+    return (jsxRuntime.jsxs(core.Box, { className: clsx('mrt-table-pagination', classes$3.root, needsTopMargin && classes$3['with-top-margin']), children: [(paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.showRowsPerPage) !== false && (jsxRuntime.jsxs(core.Group, { gap: "xs", children: [jsxRuntime.jsx(core.Text, { id: "rpp-label", children: localization.rowsPerPage }), jsxRuntime.jsx(core.Select, { allowDeselect: false, "aria-labelledby": "rpp-label", className: classes$3.pagesize, data: (_b = paginationProps === null || paginationProps === void 0 ? void 0 : paginationProps.rowsPerPageOptions) !== null && _b !== void 0 ? _b : defaultRowsPerPage, onChange: (value) => setPageSize(+value), value: pageSize.toString() })] })), paginationDisplayMode === 'pages' ? (jsxRuntime.jsx(core.Pagination, Object.assign({ firstIcon: IconChevronLeftPipe, lastIcon: IconChevronRightPipe, nextIcon: IconChevronRight, onChange: (newPageIndex) => setPageIndex(newPageIndex - 1), previousIcon: IconChevronLeft, total: numberOfPages, value: pageIndex + 1, withEdges: withEdges }, rest))) : paginationDisplayMode === 'default' ? (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [jsxRuntime.jsx(core.Text, { children: `${lastRowIndex === 0 ? 0 : (firstRowIndex + 1).toLocaleString()}-${lastRowIndex.toLocaleString()} ${localization.of} ${totalRowCount.toLocaleString()}` }), jsxRuntime.jsxs(core.Group, { gap: 6, children: [withEdges && (jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToFirstPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(0), variant: "subtle", children: jsxRuntime.jsx(IconChevronLeftPipe, {}) })), jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToPreviousPage, color: "gray", disabled: pageIndex <= 0, onClick: () => setPageIndex(pageIndex - 1), variant: "subtle", children: jsxRuntime.jsx(IconChevronLeft, {}) }), jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToNextPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(pageIndex + 1), variant: "subtle", children: jsxRuntime.jsx(IconChevronRight, {}) }), withEdges && (jsxRuntime.jsx(core.ActionIcon, { "aria-label": localization.goToLastPage, color: "gray", disabled: lastRowIndex >= totalRowCount, onClick: () => setPageIndex(numberOfPages - 1), variant: "subtle", children: jsxRuntime.jsx(IconChevronRightPipe, {}) }))] })] })) : null] }));
+};
+
+var classes$2 = {"root":"MRT_ToolbarDropZone-module_root__eGTXb","hovered":"MRT_ToolbarDropZone-module_hovered__g7PeJ"};
+
+const MRT_ToolbarDropZone = (_a) => {
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { options: { enableGrouping, localization }, setHoveredColumn, setShowToolbarDropZone, state, } = table;
+    const { draggingColumn, grouping, hoveredColumn, showToolbarDropZone } = state;
+    const handleDragEnter = (_event) => {
+        setHoveredColumn({ id: 'drop-zone' });
+    };
+    react.useEffect(() => {
+        var _a;
+        if (((_a = table.options.state) === null || _a === void 0 ? void 0 : _a.showToolbarDropZone) !== undefined) {
+            setShowToolbarDropZone(!!enableGrouping &&
+                !!draggingColumn &&
+                draggingColumn.columnDef.enableGrouping !== false &&
+                !grouping.includes(draggingColumn.id));
+        }
+    }, [enableGrouping, draggingColumn, grouping]);
+    return (jsxRuntime.jsx(core.Transition, { mounted: showToolbarDropZone, transition: "fade", children: () => {
+            var _a, _b;
+            return (jsxRuntime.jsx(core.Flex, Object.assign({ className: clsx('mrt-toolbar-dropzone', classes$2.root, (hoveredColumn === null || hoveredColumn === void 0 ? void 0 : hoveredColumn.id) === 'drop-zone' && classes$2.hovered), onDragEnter: handleDragEnter }, rest, { children: jsxRuntime.jsx(core.Text, { children: localization.dropToGroupBy.replace('{column}', (_b = (_a = draggingColumn === null || draggingColumn === void 0 ? void 0 : draggingColumn.columnDef) === null || _a === void 0 ? void 0 : _a.header) !== null && _b !== void 0 ? _b : '') }) })));
+        } }));
+};
+
+const MRT_BottomToolbar = (_a) => {
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { options: { enablePagination, mantineBottomToolbarProps, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderBottomToolbarCustomActions, }, refs: { bottomToolbarRef }, state, } = table;
+    const { isFullScreen } = state;
+    const isMobile = hooks.useMediaQuery('(max-width: 720px)');
+    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineBottomToolbarProps, {
+        table,
+    })), rest);
+    const stackAlertBanner = isMobile || !!renderBottomToolbarCustomActions;
+    return (jsxRuntime.jsxs(core.Box, Object.assign({}, toolbarProps, { className: clsx('mrt-bottom-toolbar', classes$5.root, commonClasses['common-toolbar-styles'], isFullScreen && classes$5['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
+            if (node) {
+                bottomToolbarRef.current = node;
+                if (toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref) {
+                    toolbarProps.ref.current = node;
+                }
+            }
+        }, children: [jsxRuntime.jsx(MRT_ProgressBar, { isTopToolbar: false, table: table }), positionToolbarAlertBanner === 'bottom' && (jsxRuntime.jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'bottom'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsxRuntime.jsx(MRT_ToolbarDropZone, { table: table })), jsxRuntime.jsxs(core.Box, { className: classes$5['custom-toolbar-container'], children: [renderBottomToolbarCustomActions ? (renderBottomToolbarCustomActions({ table })) : (jsxRuntime.jsx("span", {})), jsxRuntime.jsx(core.Box, { className: clsx(classes$5['paginator-container'], stackAlertBanner && classes$5['paginator-container-alert-banner']), children: enablePagination &&
+                            ['both', 'bottom'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsxRuntime.jsx(MRT_TablePagination, { position: "bottom", table: table })) })] })] })));
+};
+
+var classes$1 = {"root":"MRT_TopToolbar-module_root__r4-V9","root-fullscreen":"MRT_TopToolbar-module_root-fullscreen__3itT8","actions-container":"MRT_TopToolbar-module_actions-container__-uL0u","actions-container-stack-alert":"MRT_TopToolbar-module_actions-container-stack-alert__OYDL6"};
+
+var classes = {"root":"MRT_ToolbarInternalButtons-module_root__NKoUG"};
+
+const MRT_ToolbarInternalButtons = (_a) => {
+    var _b;
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { options: { columnFilterDisplayMode, enableColumnFilters, enableColumnOrdering, enableColumnPinning, enableDensityToggle, enableFilters, enableFullScreenToggle, enableGlobalFilter, enableHiding, initialState, renderToolbarInternalActions, }, } = table;
+    return (jsxRuntime.jsx(core.Flex, Object.assign({}, rest, { className: clsx('mrt-toolbar-internal-buttons', classes.root, rest === null || rest === void 0 ? void 0 : rest.className), children: (_b = renderToolbarInternalActions === null || renderToolbarInternalActions === void 0 ? void 0 : renderToolbarInternalActions({ table })) !== null && _b !== void 0 ? _b : (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [enableFilters &&
+                    enableGlobalFilter &&
+                    !(initialState === null || initialState === void 0 ? void 0 : initialState.showGlobalFilter) && (jsxRuntime.jsx(MRT_ToggleGlobalFilterButton, { table: table })), enableFilters &&
+                    enableColumnFilters &&
+                    columnFilterDisplayMode !== 'popover' && (jsxRuntime.jsx(MRT_ToggleFiltersButton, { table: table })), (enableHiding || enableColumnOrdering || enableColumnPinning) && (jsxRuntime.jsx(MRT_ShowHideColumnsButton, { table: table })), enableDensityToggle && (jsxRuntime.jsx(MRT_ToggleDensePaddingButton, { table: table })), enableFullScreenToggle && (jsxRuntime.jsx(MRT_ToggleFullScreenButton, { table: table }))] })) })));
+};
+
+const MRT_TopToolbar = (_a) => {
+    var _b;
+    var { table } = _a, rest = __rest(_a, ["table"]);
+    const { options: { enableGlobalFilter, enablePagination, enableToolbarInternalActions, mantineTopToolbarProps, positionGlobalFilter, positionPagination, positionToolbarAlertBanner, positionToolbarDropZone, renderTopToolbarCustomActions, }, refs: { topToolbarRef }, state, } = table;
+    const { isFullScreen, showGlobalFilter } = state;
+    const isMobile = hooks.useMediaQuery('(max-width:720px)');
+    const isTablet = hooks.useMediaQuery('(max-width:1024px)');
+    const toolbarProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantineTopToolbarProps, { table })), rest);
+    const stackAlertBanner = isMobile ||
+        !!renderTopToolbarCustomActions ||
+        (showGlobalFilter && isTablet);
+    const globalFilterProps = {
+        style: !isTablet
+            ? {
+                zIndex: 3,
+            }
+            : undefined,
+        table,
+    };
+    return (jsxRuntime.jsxs(core.Box, Object.assign({}, toolbarProps, { className: clsx(commonClasses['common-toolbar-styles'], classes$1['root'], isFullScreen && classes$1['root-fullscreen'], toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.className), ref: (node) => {
+            if (node) {
+                topToolbarRef.current = node;
+                if (toolbarProps === null || toolbarProps === void 0 ? void 0 : toolbarProps.ref) {
+                    toolbarProps.ref.current = node;
+                }
+            }
+        }, children: [positionToolbarAlertBanner === 'top' && (jsxRuntime.jsx(MRT_ToolbarAlertBanner, { stackAlertBanner: stackAlertBanner, table: table })), ['both', 'top'].includes(positionToolbarDropZone !== null && positionToolbarDropZone !== void 0 ? positionToolbarDropZone : '') && (jsxRuntime.jsx(MRT_ToolbarDropZone, { table: table })), jsxRuntime.jsxs(core.Flex, { className: clsx(classes$1['actions-container'], stackAlertBanner && classes$1['actions-container-stack-alert']), children: [enableGlobalFilter && positionGlobalFilter === 'left' && (jsxRuntime.jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), (_b = renderTopToolbarCustomActions === null || renderTopToolbarCustomActions === void 0 ? void 0 : renderTopToolbarCustomActions({ table })) !== null && _b !== void 0 ? _b : jsxRuntime.jsx("span", {}), enableToolbarInternalActions ? (jsxRuntime.jsxs(core.Flex, { justify: 'end', wrap: 'wrap-reverse', children: [enableGlobalFilter && positionGlobalFilter === 'right' && (jsxRuntime.jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))), jsxRuntime.jsx(MRT_ToolbarInternalButtons, { table: table })] })) : (enableGlobalFilter &&
+                        positionGlobalFilter === 'right' && (jsxRuntime.jsx(MRT_GlobalFilterTextInput, Object.assign({}, globalFilterProps))))] }), enablePagination &&
+                ['both', 'top'].includes(positionPagination !== null && positionPagination !== void 0 ? positionPagination : '') && (jsxRuntime.jsx(core.Flex, { justify: "end", children: jsxRuntime.jsx(MRT_TablePagination, { position: "top", table: table }) })), jsxRuntime.jsx(MRT_ProgressBar, { isTopToolbar: true, table: table })] })));
+};
 
 const MRT_TablePaper = (_a) => {
     var _b, _c;
     var { table } = _a, rest = __rest(_a, ["table"]);
-    const { state, options: { enableBottomToolbar, enableTopToolbar, mantinePaperProps, renderBottomToolbar, renderTopToolbar, }, refs: { tablePaperRef }, } = table;
+    const { options: { enableBottomToolbar, enableTopToolbar, mantinePaperProps, renderBottomToolbar, renderTopToolbar, }, refs: { tablePaperRef }, state, } = table;
     const { isFullScreen } = state;
     const tablePaperProps = Object.assign(Object.assign({}, parseFromValuesOrFunc(mantinePaperProps, { table })), rest);
-    return (jsxRuntime.jsxs(core.Paper, Object.assign({ shadow: "xs", withBorder: true }, tablePaperProps, { className: clsx('mrt-table-paper', classes.root, isFullScreen && 'mrt-table-paper-fullscreen', tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.className), ref: (ref) => {
+    return (jsxRuntime.jsxs(core.Paper, Object.assign({ shadow: "xs", withBorder: true }, tablePaperProps, { className: clsx('mrt-table-paper', classes$8.root, isFullScreen && 'mrt-table-paper-fullscreen', tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.className), ref: (ref) => {
             tablePaperRef.current = ref;
             if (tablePaperProps === null || tablePaperProps === void 0 ? void 0 : tablePaperProps.ref) {
                 tablePaperProps.ref.current = ref;

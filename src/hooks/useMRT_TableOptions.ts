@@ -221,7 +221,6 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
     enableTableHead,
     enableToolbarInternalActions,
     enableTopToolbar,
-    filterFns,
     features: {
       ...stockFeatures,
       ...((enableColumnFilters || enableGlobalFilter || enableFilters) &&
@@ -239,18 +238,19 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
         : {}),
       ...(enableGrouping && !manualGrouping
         ? {
-            groupedRowModel: createGroupedRowModel(),
             aggregationFns,
+            groupedRowModel: createGroupedRowModel(),
           }
         : {}),
       ...(enableFacetedValues
         ? {
-            facetedRowModel: createFacetedRowModel(),
             facetedMinMaxValues: createFacetedMinMaxValues(),
+            facetedRowModel: createFacetedRowModel(),
             facetedUniqueValues: createFacetedUniqueValues(),
           }
         : {}),
     },
+    filterFns,
     getSubRows: (row: TData) => (row as any)?.subRows,
     icons,
     layoutMode,

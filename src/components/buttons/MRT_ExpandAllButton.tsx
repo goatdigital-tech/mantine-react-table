@@ -1,11 +1,12 @@
 import clsx from 'clsx'
 
-import { ActionIcon, Tooltip } from '@mantine/core'
-import { parseFromValuesOrFunc } from '../../utils/utils'
 import classes from './MRT_ExpandAllButton.module.css'
+
+import { ActionIcon, Tooltip } from '@mantine/core'
 import type { ActionIconProps } from '@mantine/core'
 
 import type { MRT_RowData, MRT_TableInstance } from '../../types'
+import { parseFromValuesOrFunc } from '../../utils/utils'
 
 interface Props<TData extends MRT_RowData> extends ActionIconProps {
   table: MRT_TableInstance<TData>
@@ -19,13 +20,13 @@ export const MRT_ExpandAllButton = <TData extends MRT_RowData>({
     getCanSomeRowsExpand,
     getIsAllRowsExpanded,
     getIsSomeRowsExpanded,
-    state,
     options: {
       icons: { IconChevronsDown },
       localization,
       mantineExpandAllButtonProps,
       renderDetailPanel,
     },
+    state,
     toggleAllRowsExpanded,
   } = table
   const { density, isLoading } = state
